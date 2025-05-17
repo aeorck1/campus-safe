@@ -67,7 +67,7 @@ export const mockIncidents = [
     coordinates: [7.4429, 3.8967], // University of Ibadan coordinates
     status: "investigating",
     severity: "medium",
-    reportedAt: "2023-05-14 10:30 AM",
+    reportedAt: "2025-05-14 10:30 AM",
     reportedBy: "anonymous",
     tags: ["property damage", "safety hazard"],
     upvotes: 12,

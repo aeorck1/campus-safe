@@ -28,9 +28,9 @@ const formSchema = z
       message: "Password must be at least 8 characters.",
     }),
     confirmPassword: z.string(),
-    role: z.string({
-      required_error: "Please select a role.",
-    }),
+    // role: z.string({
+    //   required_error: "Please select a role.",
+    // }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
@@ -50,7 +50,7 @@ export default function SignupPage() {
       email: "",
       password: "",
       confirmPassword: "",
-      role: "",
+      // role: "",
     },
   })
 
@@ -149,7 +149,7 @@ export default function SignupPage() {
                   </FormItem>
                 )}
               />
-              <FormField
+              {/* <FormField
                 control={form.control}
                 name="role"
                 render={({ field }) => (
@@ -170,7 +170,7 @@ export default function SignupPage() {
                     <FormMessage />
                   </FormItem>
                 )}
-              />
+              /> */}
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Creating account..." : "Create account"}
               </Button>

@@ -179,13 +179,13 @@ export default function LandingPage() {
             })}
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
-            <Button size="lg" asChild>
+            <Button size="lg" asChild className="text-white">
               <Link href="/report">
                 Report an Incident
-                <ArrowRight className="ml-2 h-5 w-5" />
+                <ArrowRight className="ml-2 h-5 w-5 filter-invert-1" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" asChild>
+            <Button size="lg" variant="outline" asChild className="hover:bg-green-400">
               <Link href="/incidents">View Incidents</Link>
             </Button>
           </animated.div>
@@ -242,7 +242,7 @@ export default function LandingPage() {
         <Card>
           <CardContent className="p-0">
             <div className="h-[500px] rounded-md overflow-hidden">
-              <CampusMap incidents={mockIncidents.slice(0, 5)} />
+              <CampusMap incidents={mockIncidents.slice(0, 4)} />
             </div>
           </CardContent>
           <CardFooter className="flex justify-center p-6">
