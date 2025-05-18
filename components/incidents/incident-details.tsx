@@ -85,7 +85,7 @@ export function IncidentDetails({ id }: { id: string }) {
 
   return (
     <div>
-      <div className="flex items-center mb-6 width-4/5 margin-auto">
+      <div className="flex items-center mb-6 md:w-[90%] m-auto w-[95%]">
         <Button variant="outline" size="sm" asChild className="mr-4">
           <Link href="/incidents">
             <ArrowLeft className="mr-2 h-4 w-4" />

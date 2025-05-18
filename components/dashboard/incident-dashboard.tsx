@@ -28,7 +28,7 @@ export function IncidentDashboard() {
   const [activeTab, setActiveTab] = useState("overview")
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 md:w-[90%] m-auto my-[20px] w-[95%]">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>

@@ -32,7 +32,7 @@ export function CampusMapView() {
   })
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 flex-1 m-auto max-w-full md:w-[90%] w-[95%] my-[20px]">
       <div className="flex flex-wrap gap-2">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-[130px]">
