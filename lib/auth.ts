@@ -1,5 +1,6 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
+import axios from "axios"
 
 const API_BASE_URL = "http://127.0.0.1:8000/api/v1/"
 
@@ -76,11 +77,12 @@ type AuthState = {
   accessToken: string | null
   login: (email: string, password: string) => Promise<{ success: boolean; message: string }>
   signup: (
-    name: string,
-    email: string,
-    password: string,
-    role: string,
-  ) => Promise<{ success: boolean; message: string }>
+  first_name: string,
+  last_name: string,
+  email: string,
+  username: string,
+  password: string
+   ) => Promise<{ success: boolean; message: string }>
   loginWithApi: (
     username: string,
     password: string
@@ -97,7 +99,7 @@ export const useAuthStore = create<AuthState>()(
       accessToken: null,
 
       login: async (email, password) => {
-        // Simulate API call delay
+        // Simulate API call delay for mock login
         await new Promise((resolve) => setTimeout(resolve, 1000))
 
         const user = mockUsers.find(
@@ -105,7 +107,6 @@ export const useAuthStore = create<AuthState>()(
         )
 
         if (user) {
-          // Create a new object without the password
           const { password: _, ...userWithoutPassword } = user
           set({ user: userWithoutPassword as User, isAuthenticated: true })
           return { success: true, message: "Login successful" }
@@ -114,60 +115,58 @@ export const useAuthStore = create<AuthState>()(
         return { success: false, message: "Invalid email or password" }
       },
 
-      signup: async (name, email, password, role) => {
-        // Simulate API call delay
-        await new Promise((resolve) => setTimeout(resolve, 1000))
+      signup: async (first_name, last_name, email, username, password) => {
+        try {
+          const response = await axios.post(
+            `${API_BASE_URL}users/students/register`,
+            {
+              first_name,
+              last_name,
+              email,
+              username,
+              password,
+            },
+            {
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          )
 
-        // Check if user already exists
-        const existingUser = mockUsers.find((user) => user.email.toLowerCase() === email.toLowerCase())
+          const data = response.data
 
-        if (existingUser) {
-          return { success: false, message: "Email already in use" }
+          if (data && data.access_token) {
+            set({
+              user: data.user || null,
+              isAuthenticated: true,
+              accessToken: data.access_token,
+            })
+            return { success: true, message: "Account created successfully" }
+          } else {
+            return { success: false, message: data.detail || "Registration failed" }
+          }
+        } catch (error: any) {
+          const message =
+            error?.response?.data?.detail ||
+            error?.message ||
+            "Network error. Please try again."
+          return { success: false, message }
         }
-
-        // Create new user
-        const newUser = {
-          id: (mockUsers.length + 1).toString(),
-          name,
-          email,
-          password,
-          role: role as "admin" | "security" | "student" | "faculty" | "guest",
-          avatar: `/avatars/0${Math.floor(Math.random() * 5) + 1}.png`,
-          department: "Not specified",
-          joinedAt: new Date().toISOString().split("T")[0],
-        }
-
-        // In a real app, we would save this to a database
-        mockUsers.push(newUser)
-
-        // Create a new object without the password
-        const { password: _, ...userWithoutPassword } = newUser
-        set({ user: userWithoutPassword as User, isAuthenticated: true })
-
-        return { success: true, message: "Account created successfully" }
       },
 
-      // Real API login method
       loginWithApi: async (username, password) => {
-        
         try {
-          const response = await fetch(`${API_BASE_URL}auth/login/`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ username, password }),
-          })
-
-          if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}))
-            return { 
-              success: false, 
-              message: errorData.detail || "Invalid email or password" 
+          const response = await axios.post(
+            `${API_BASE_URL}auth/login/`,
+            { username, password },
+            {
+              headers: {
+                "Content-Type": "application/json",
+              },
             }
-          }
+          )
 
-          const data = await response.json()
+          const data = response.data
 
           if (data && data.access_token) {
             set({
@@ -179,9 +178,12 @@ export const useAuthStore = create<AuthState>()(
           } else {
             return { success: false, message: data.detail || "Login failed" }
           }
-        } catch (error) {
-          console.error("Login error:", error)
-          return { success: false, message: "Network error. Please try again." }
+        } catch (error: any) {
+          const message =
+            error?.response?.data?.detail ||
+            error?.message ||
+            "Network error. Please try again."
+          return { success: false, message }
         }
       },
 
@@ -205,4 +207,4 @@ export function useRequireAuth() {
 // Example usage in a component:
 // const { isAuthenticated, user } = useRequireAuth();
 // if (!isAuthenticated) {
-//   return <Redirect to="/login" />;                                           
+//   return <Redirect to="/login" />;

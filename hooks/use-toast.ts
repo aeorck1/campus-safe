@@ -9,13 +9,14 @@ import type {
 } from "@/components/ui/toast"
 
 const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+const TOAST_REMOVE_DELAY = 1000 // Changed from 1000000 to 1000 (1 second)
 
 type ToasterToast = ToastProps & {
   id: string
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
+  duration?: number // Add duration type
 }
 
 const actionTypes = {
@@ -142,7 +143,7 @@ function dispatch(action: Action) {
 
 type Toast = Omit<ToasterToast, "id">
 
-function toast({ ...props }: Toast) {
+function toast({ duration = 5000, ...props }: Toast) { // Add default duration
   const id = genId()
 
   const update = (props: ToasterToast) =>
@@ -158,11 +159,19 @@ function toast({ ...props }: Toast) {
       ...props,
       id,
       open: true,
+      duration, // Include duration in the toast
       onOpenChange: (open) => {
         if (!open) dismiss()
       },
     },
   })
+
+  // Auto-dismiss after duration
+  if (duration > 0) {
+    setTimeout(() => {
+      dismiss()
+    }, duration)
+  }
 
   return {
     id: id,

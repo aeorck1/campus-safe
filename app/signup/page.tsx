@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Shield } from "lucide-react"
+import { Eye, EyeOff } from "lucide-react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -13,16 +14,22 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
 import { useAuthStore } from "@/lib/auth"
 
 const formSchema = z
   .object({
-    name: z.string().min(2, {
-      message: "Name must be at least 2 characters.",
+    first_name: z.string().min(2, {
+      message: "First name must be at least 2 characters.",
+    }),
+    last_name: z.string().min(2, {
+      message: "Last name must be at least 2 characters.",
     }),
     email: z.string().email({
       message: "Please enter a valid email address.",
+    }),
+    username: z.string().min(3, {
+      message: "Username must be at least 3 characters.",
     }),
     password: z.string().min(8, {
       message: "Password must be at least 8 characters.",
@@ -41,13 +48,17 @@ export default function SignupPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const signup = useAuthStore((state) => state.signup)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
+      first_name: "",
+      last_name: "",
       email: "",
+      username: "",
       password: "",
       confirmPassword: "",
       // role: "",
@@ -58,7 +69,16 @@ export default function SignupPage() {
     setIsLoading(true)
 
     try {
-      const result = await signup(values.name, values.email, values.password, values.role)
+      
+
+      // Call the zustand signup method (which does the API call)
+      const result = await signup(
+        values.first_name,
+        values.last_name,
+        values.email,
+        values.username,
+        values.password
+      )
 
       if (result.success) {
         toast({
@@ -76,7 +96,10 @@ export default function SignupPage() {
     } catch (error) {
       toast({
         title: "Signup failed",
-        description: "An unexpected error occurred. Please try again.",
+        description:
+          error && typeof error === "object" && "message" in error
+            ? (error as { message: string }).message
+            : "An unexpected error occurred. Please try again.",
         variant: "destructive",
       })
     } finally {
@@ -97,19 +120,34 @@ export default function SignupPage() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Full Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="John Doe" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="flex gap-2">
+                <FormField
+                  control={form.control}
+                  name="first_name"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>First Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="John" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="last_name"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Last Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Doe" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
               <FormField
                 control={form.control}
                 name="email"
@@ -130,7 +168,21 @@ export default function SignupPage() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
+                      <div className="relative">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          {...field}
+                        />
+                        <button
+                          type="button"
+                          tabIndex={-1}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground"
+                          onClick={() => setShowPassword((v) => !v)}
+                        >
+                          {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -143,7 +195,21 @@ export default function SignupPage() {
                   <FormItem>
                     <FormLabel>Confirm Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
+                      <div className="relative">
+                        <Input
+                          type={showConfirmPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          {...field}
+                        />
+                        <button
+                          type="button"
+                          tabIndex={-1}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground"
+                          onClick={() => setShowConfirmPassword((v) => !v)}
+                        >
+                          {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
