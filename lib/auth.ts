@@ -1,8 +1,11 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 
+const API_BASE_URL = "http://127.0.0.1:8000/api/v1/"
+
 // Mock user data
-export const mockUsers = [
+export const mockUsers = 
+[
   {
     id: "1",
     name: "Admin User",
@@ -59,22 +62,28 @@ export const mockUsers = [
 export type User = {
   id: string
   name: string
-  email: string
+  email?: string
   role: "admin" | "security" | "student" | "faculty" | "guest"
   avatar?: string
   department?: string
   joinedAt: string
+  username: string // Optional for API login
 }
 
 type AuthState = {
   user: User | null
   isAuthenticated: boolean
+  accessToken: string | null
   login: (email: string, password: string) => Promise<{ success: boolean; message: string }>
   signup: (
     name: string,
     email: string,
     password: string,
     role: string,
+  ) => Promise<{ success: boolean; message: string }>
+  loginWithApi: (
+    username: string,
+    password: string
   ) => Promise<{ success: boolean; message: string }>
   logout: () => void
 }
@@ -85,6 +94,7 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       isAuthenticated: false,
+      accessToken: null,
 
       login: async (email, password) => {
         // Simulate API call delay
@@ -137,8 +147,46 @@ export const useAuthStore = create<AuthState>()(
         return { success: true, message: "Account created successfully" }
       },
 
+      // Real API login method
+      loginWithApi: async (username, password) => {
+        
+        try {
+          const response = await fetch(`${API_BASE_URL}auth/login/`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ username, password }),
+          })
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}))
+            return { 
+              success: false, 
+              message: errorData.detail || "Invalid email or password" 
+            }
+          }
+
+          const data = await response.json()
+
+          if (data && data.access_token) {
+            set({
+              user: data.user || null,
+              isAuthenticated: true,
+              accessToken: data.access_token,
+            })
+            return { success: true, message: "Login successful" }
+          } else {
+            return { success: false, message: data.detail || "Login failed" }
+          }
+        } catch (error) {
+          console.error("Login error:", error)
+          return { success: false, message: "Network error. Please try again." }
+        }
+      },
+
       logout: () => {
-        set({ user: null, isAuthenticated: false })
+        set({ user: null, isAuthenticated: false, accessToken: null })
       },
     }),
     {
@@ -152,3 +200,9 @@ export function useRequireAuth() {
   const { isAuthenticated, user } = useAuthStore()
   return { isAuthenticated, user }
 }
+// This hook can be used in components to check if the user is authenticated
+// and access the user data. If not authenticated, you can redirect or show a message.
+// Example usage in a component:
+// const { isAuthenticated, user } = useRequireAuth();
+// if (!isAuthenticated) {
+//   return <Redirect to="/login" />;                                           

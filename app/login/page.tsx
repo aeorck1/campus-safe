@@ -16,9 +16,10 @@ import { useToast } from "@/components/ui/use-toast"
 import { useAuthStore } from "@/lib/auth"
 
 const formSchema = z.object({
-  email: z.string().email({
-    message: "Please enter a valid email address.",
-  }),
+  // email: z.string().email({
+  //   message: "Please enter a valid email address.",
+  // }),
+  username: z.string(),
   password: z.string().min(1, {
     message: "Password is required.",
   }),
@@ -28,12 +29,13 @@ export default function LoginPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
-  const login = useAuthStore((state) => state.login)
+  // Use the login method from the zustand store
+  const login = useAuthStore((state) => state.loginWithApi)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: "",
+      username: "",
       password: "",
     },
   })
@@ -42,7 +44,8 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      const result = await login(values.email, values.password)
+      // Call the zustand login method
+      const result = await login(values.username, values.password)
 
       if (result.success) {
         toast({
@@ -56,6 +59,8 @@ export default function LoginPage() {
           description: result.message,
           variant: "destructive",
         })
+        console.error("Login failed:", result.message)
+        
       }
     } catch (error) {
       toast({
@@ -63,6 +68,7 @@ export default function LoginPage() {
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       })
+      
     } finally {
       setIsLoading(false)
     }
@@ -83,7 +89,7 @@ export default function LoginPage() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
-                name="email"
+                name="username"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Email</FormLabel>
@@ -133,6 +139,17 @@ export default function LoginPage() {
           </div>
         </CardFooter>
       </Card>
+
+       <button
+      onClick={() =>
+        toast({
+          title: "Test Toast",
+          description: "This is a test notification.",
+        })
+      }
+    >
+      Show Toast
+    </button>
     </div>
   )
 }

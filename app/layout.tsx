@@ -25,8 +25,9 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <SiteHeader />
           <div className="flex-1 flex flex-col">{children}</div>
+           <Toaster />
           <SiteFooter />
-          <Toaster />
+        
         </ThemeProvider>
       </body>
     </html>
