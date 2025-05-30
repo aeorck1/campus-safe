@@ -93,7 +93,7 @@ type AuthState = {
 // Create auth store with persistence
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       isAuthenticated: false,
       accessToken: null,
@@ -115,46 +115,50 @@ export const useAuthStore = create<AuthState>()(
         return { success: false, message: "Invalid email or password" }
       },
 
-      signup: async (first_name, last_name, email, username, password) => {
-        try {
-          const response = await axios.post(
-            `${API_BASE_URL}users/students/register`,
-            {
-              first_name,
-              last_name,
-              email,
-              username,
-              password,
-            },
-            {
-              headers: {
-                "Content-Type": "application/json",
-              },
-            }
-          )
-
-          const data = response.data
-
-          if (data && data.access_token) {
-            set({
-              user: data.user || null,
-              isAuthenticated: true,
-              accessToken: data.access_token,
-            })
-            return { success: true, message: "Account created successfully" }
-          } else {
-            return { success: false, message: data.detail || "Registration failed" }
-          }
-        } catch (error: any) {
-          const message =
-            error?.response?.data?.detail ||
-            error?.message ||
-            "Network error. Please try again."
-          return { success: false, message }
-        }
+    signup: async (
+  first_name: string,
+  last_name: string,
+  email: string,
+  username: string,
+  password: string
+): Promise<{ success: boolean; message: string }> => {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}users/students/register/`,
+      {
+        first_name,
+        last_name,
+        email,
+        username,
+        password,
       },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    )
 
-      loginWithApi: async (username, password) => {
+    const data = response.data
+
+    if (response.status === 201 || response.status === 200) {
+      return { success: true, message: "Account created successfully. Please login." }
+    } else {
+      return { success: false, message: data.detail || "Registration failed" }
+    }
+  } catch (error: any) {
+    const message =
+      error?.response?.data?.detail ||
+      error?.message ||
+      "Network error. Please try again."
+    return { success: false, message }
+  }
+},
+
+      loginWithApi: async (
+        username: string,
+        password: string
+      ): Promise<{ success: boolean; message: string }> => {
         try {
           const response = await axios.post(
             `${API_BASE_URL}auth/login/`,
@@ -169,6 +173,7 @@ export const useAuthStore = create<AuthState>()(
           const data = response.data
 
           if (data && data.access_token) {
+            axios.defaults.headers.common["Authorization"] = `Bearer ${data.access_token}`
             set({
               user: data.user || null,
               isAuthenticated: true,
@@ -186,9 +191,27 @@ export const useAuthStore = create<AuthState>()(
           return { success: false, message }
         }
       },
+      // incidentsListAdmin: async () => {
+      //   try {
+      //     const response = await axios.get(`${API_BASE_URL}admin/incidents/`, {
+      //       headers: {
+      //         Authorization: `Bearer ${get().accessToken}`,
+      //       },
+      //     })
+
+      //     return { success: true, data: response.data }
+      //   } catch (error: any) {
+      //     const message =
+      //       error?.response?.data?.detail ||
+      //       error?.message ||
+      //       "Network error. Please try again."
+      //     return { success: false, message }
+      //   }
+      // },
 
       logout: () => {
         set({ user: null, isAuthenticated: false, accessToken: null })
+        delete axios.defaults.headers.common["Authorization"]
       },
     }),
     {

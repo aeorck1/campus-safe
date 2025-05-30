@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Shield } from "lucide-react"
@@ -51,6 +51,7 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const signup = useAuthStore((state) => state.signup)
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -69,8 +70,6 @@ export default function SignupPage() {
     setIsLoading(true)
 
     try {
-      
-
       // Call the zustand signup method (which does the API call)
       const result = await signup(
         values.first_name,
@@ -84,8 +83,9 @@ export default function SignupPage() {
         toast({
           title: "Account created",
           description: "Your account has been created successfully",
+          // variant: "success",
         })
-        router.push("/dashboard")
+        router.push("/login")
       } else {
         toast({
           title: "Signup failed",
@@ -106,6 +106,12 @@ export default function SignupPage() {
       setIsLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace("/dashboard") // or your desired page
+    }
+  }, [isAuthenticated, router])
 
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-8rem)] py-8">
@@ -161,6 +167,21 @@ export default function SignupPage() {
                   </FormItem>
                 )}
               />
+
+               <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Username</FormLabel>
+                    <FormControl>
+                      <Input placeholder="your.username" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={form.control}
                 name="password"

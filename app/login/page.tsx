@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Shield } from "lucide-react"
@@ -31,6 +31,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   // Use the login method from the zustand store
   const login = useAuthStore((state) => state.loginWithApi)
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -51,6 +52,7 @@ export default function LoginPage() {
         toast({
           title: "Login successful",
           description: "Welcome back to Campus Safety Platform",
+          
         })
         router.push("/dashboard")
       } else {
@@ -74,6 +76,12 @@ export default function LoginPage() {
     }
   }
 
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace("/dashboard") // or your desired page
+    }
+  }, [isAuthenticated, router])
+
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-8rem)]">
       <Card className="w-full max-w-md">
@@ -94,7 +102,7 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="your.email@ui.edu.ng" {...field} />
+                      <Input placeholder="your username" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -119,7 +127,7 @@ export default function LoginPage() {
             </form>
           </Form>
           <div className="mt-4 text-center text-sm">
-            <Link href="/forgot-password" className="text-campus-primary hover:underline">
+            <Link href="/reset-password" className="text-campus-primary hover:underline">
               Forgot password?
             </Link>
           </div>
@@ -140,16 +148,7 @@ export default function LoginPage() {
         </CardFooter>
       </Card>
 
-       <button
-      onClick={() =>
-        toast({
-          title: "Test Toast",
-          description: "This is a test notification.",
-        })
-      }
-    >
-      Show Toast
-    </button>
+     
     </div>
   )
 }
