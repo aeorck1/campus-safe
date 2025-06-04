@@ -5,7 +5,10 @@ import { useSpring, animated, config, useTrail, useInView } from "@react-spring/
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import dynamic from "next/dynamic"
+import { useEffect, useState } from "react"
 import { mockIncidents } from "@/lib/mock-data"
+import {useAuthStore} from "@/lib/auth"
+
 
 // Dynamically import the CampusMap component with no SSR
 const CampusMap = dynamic(() => import("@/components/map/campus-map").then((mod) => mod.CampusMap), {
@@ -17,6 +20,9 @@ const CampusMap = dynamic(() => import("@/components/map/campus-map").then((mod)
   ),
 })
 
+//import useAuthStore for getPublicStats
+
+
 // Animated number counter component
 function AnimatedCounter({ n, delay = 0 }: { n: number; delay?: number }) {
   const { number } = useSpring({
@@ -26,11 +32,38 @@ function AnimatedCounter({ n, delay = 0 }: { n: number; delay?: number }) {
     config: { mass: 1, tension: 20, friction: 10 },
   })
 
-  return <animated.div>{number.to((n) => n.toFixed(0))}</animated.div>
+  return <animated.div>
+    {number.to((value) => Number(value).toFixed(0))}
+  </animated.div>
 }
 
 export default function LandingPage() {
   // For the hero section
+  const stateCount = 0
+  const [totalIncidents, setTotalIncidents] = useState(stateCount)
+  const [resolvedIncidents, setResolvedIncidents] = useState(stateCount)
+  const [averageResponseTime, setAverageResponseTime] = useState(stateCount)
+  const [userSatisfaction, setUserSatisfaction] = useState(stateCount)
+
+
+  const publicStats = useAuthStore((state) => state.getPublicStats)
+  useEffect(() => {
+    // Fetch public stats when the component mounts
+    publicStats()
+      .then((data) => {
+        console.log("Public stats data:", data.data)
+        setTotalIncidents(data.data.total_incidents || 0)
+        setResolvedIncidents(data.data.resolved_incidents || 0)
+        setAverageResponseTime(data.data.average_response_time || 0)
+        setUserSatisfaction(data.data.user_satisfaction || 0)
+
+      })
+      .catch((error) => {
+        console.error("Failed to fetch public stats:", error)
+      })
+  }, [])
+
+
   const heroAnimation = useSpring({
     from: { opacity: 0, y: 50 },
     to: { opacity: 1, y: 0 },
@@ -100,24 +133,7 @@ export default function LandingPage() {
       linkText: "Join Discussion",
       color: "bg-campus-warning/10",
     },
-    {
-      icon: <Shield className="h-6 w-6 text-campus-danger" />,
-      title: "Security Dashboard",
-      description: "Dedicated dashboard for security personnel to manage and respond to incidents efficiently.",
-      link: "/security",
-      linkText: "Security Access",
-      color: "bg-campus-danger/10",
-    },
-    {
-      icon: <Bell className="h-6 w-6 text-campus-info" />,
-      title: "Notifications",
-      description: "Receive alerts and updates about incidents in your area or those you've reported.",
-      link: "/settings",
-      linkText: "Manage Alerts",
-      color: "bg-campus-info/10",
-    },
   ]
-
   const featureTrail = useTrail(featureCards.length, {
     opacity: featuresInView ? 1 : 0,
     y: featuresInView ? 0 : 50,
@@ -185,7 +201,7 @@ export default function LandingPage() {
                 <ArrowRight className="ml-2 h-5 w-5 filter-invert-1" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" asChild className="hover:bg-green-400">
+            <Button size="lg" variant="outline" asChild className="hover:bg-blue-400 hover:text-white">
               <Link href="/incidents">View Incidents</Link>
             </Button>
           </animated.div>
@@ -198,7 +214,7 @@ export default function LandingPage() {
           <Card className="feature-card border-campus-primary/20">
             <CardHeader className="pb-2">
               <CardTitle className="text-2xl font-bold text-campus-primary">
-                <AnimatedCounter n={127} />
+                <AnimatedCounter n={totalIncidents} />
               </CardTitle>
               <CardDescription>Total Incidents Reported</CardDescription>
             </CardHeader>
@@ -206,7 +222,7 @@ export default function LandingPage() {
           <Card className="feature-card border-campus-secondary/20">
             <CardHeader className="pb-2">
               <CardTitle className="text-2xl font-bold text-campus-secondary">
-                <AnimatedCounter n={104} delay={200} />
+                <AnimatedCounter n={resolvedIncidents} delay={200} />
               </CardTitle>
               <CardDescription>Incidents Resolved</CardDescription>
             </CardHeader>
@@ -214,7 +230,7 @@ export default function LandingPage() {
           <Card className="feature-card border-campus-warning/20">
             <CardHeader className="pb-2">
               <CardTitle className="text-2xl font-bold text-campus-warning flex">
-                <AnimatedCounter n={32} delay={400} />m
+                <AnimatedCounter n={averageResponseTime} delay={400} />m
               </CardTitle>
               <CardDescription>Average Response Time</CardDescription>
             </CardHeader>
@@ -222,7 +238,7 @@ export default function LandingPage() {
           <Card className="feature-card border-campus-accent/20">
             <CardHeader className="pb-2">
               <CardTitle className="text-2xl font-bold text-campus-accent flex">
-                <AnimatedCounter n={98} delay={600} />%
+                <AnimatedCounter n={userSatisfaction} delay={600} />%
               </CardTitle>
               <CardDescription>User Satisfaction</CardDescription>
             </CardHeader>
@@ -242,7 +258,7 @@ export default function LandingPage() {
         <Card>
           <CardContent className="p-0">
             <div className="h-[500px] rounded-md overflow-hidden">
-              <CampusMap incidents={mockIncidents.slice(0, 4)} />
+              <CampusMap incidents={mockIncidents.slice(0, 10)} />
             </div>
           </CardContent>
           <CardFooter className="flex justify-center p-6">
@@ -265,7 +281,7 @@ export default function LandingPage() {
             efficiently.
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify">
           {featureTrail.map((style, index) => (
             <animated.div key={index} style={style}>
               <Card className="feature-card h-full transition-transform duration-300 hover:scale-105 hover:shadow-lg">
@@ -290,18 +306,18 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <animated.section
+      <section
         ref={ctaRef}
+        className="bg-gradient-to-r from-campus-primary via-campus-secondary to-campus-primary bg-[length:200%_100%] py-16"
         style={{
           ...ctaAnimation,
-          background: useSpring({
+          backgroundPosition: useSpring({
             from: { backgroundPosition: "0% 50%" },
             to: { backgroundPosition: "100% 50%" },
             config: { duration: 15000 },
             loop: { reverse: true },
-          }).backgroundPosition,
+          }).backgroundPosition.get(),
         }}
-        className="bg-gradient-to-r from-campus-primary via-campus-secondary to-campus-primary bg-[length:200%_100%] py-16"
       >
         <div className="container mx-auto px-4 text-center bg-gradient-to-r from-campus-primary via-campus-secondary to-campus-primary bg-[length:200%_100%] py-16">
           <h2 className="text-3xl font-bold text-white mb-6">Ready to help keep our campus safe?</h2>
@@ -322,7 +338,7 @@ export default function LandingPage() {
             </Button>
           </animated.div>
         </div>
-      </animated.section>
+      </section>
     </div>
   )
 }

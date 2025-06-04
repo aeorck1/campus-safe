@@ -1,10 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import { z } from "zod"
+import { boolean, z } from "zod"
 import { MapPin, AlertTriangle, Info, Check } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -15,7 +15,10 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Card, CardContent } from "@/components/ui/card"
 import { CampusMap } from "@/components/map/campus-map"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
+import { useAuthStore } from "@/lib/auth"
+
+
 
 const formSchema = z.object({
   title: z.string().min(5, {
@@ -27,14 +30,15 @@ const formSchema = z.object({
   location: z.string().min(3, {
     message: "Location is required.",
   }),
-  severity: z.enum(["low", "medium", "high"], {
-    required_error: "Please select a severity level.",
+  coordinates: z.number().array().length(2, {
+    message: "Coordinates must be an array with latitude and longitude.",
+  }).default([7.4443, 3.9003]), // Default to University of Ibadan, Ibadan
+  severity: z.string().min(1, {
+    message: "Severity is required.",
   }),
-  tags: z.array(z.string()).min(1, {
-    message: "Please select at least one tag.",
-  }),
+  tags: z.array(z.string()).default([]),
   anonymous: z.boolean().default(false),
-  contactInfo: z.string().email().optional(),
+  contactInfo: z.string().email("Please enter a valid email address.").optional().or(z.literal("")),
 })
 
 export function ReportIncidentForm() {
@@ -42,8 +46,9 @@ export function ReportIncidentForm() {
   const { toast } = useToast()
   const [step, setStep] = useState(1)
   const [coordinates, setCoordinates] = useState<[number, number]>([34.0522, -118.2437])
+  const [isLocating, setIsLocating] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-
+  const report = useAuthStore((state)=> state.reportIncident)
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -55,24 +60,36 @@ export function ReportIncidentForm() {
       anonymous: false,
       contactInfo: "",
     },
+    control: boolean
   })
+
+
+
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true)
 
     // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
-    console.log({ ...values, coordinates })
-
+    const result = await report({ ...values, tags: values.tags.join(","), coordinates })
+    if (result.success) {
+      toast({
+        title: "Incident reported successfully",
+        description: "Your report has been submitted and will be reviewed shortly.",
+      })
+      router.push("/dashboard")
+    console.log("Payload",{ ...values, coordinates })
+  }
+  else{
     toast({
-      title: "Incident reported successfully",
-      description: "Your report has been submitted and will be reviewed shortly.",
+      title: "Error reporting incident",
+      description: result.message || "An unexpected error occurred. Please try again.",
+      variant: "destructive",
     })
+  }
 
     setIsSubmitting(false)
-    router.push("/")
-  }
+  } 
+
 
   const tags = [
     { id: "property-damage", label: "Property Damage" },
@@ -85,6 +102,41 @@ export function ReportIncidentForm() {
     { id: "accessibility", label: "Accessibility Issue" },
     { id: "other", label: "Other" },
   ]
+
+  // Handler to get user's current location
+  const handleDetectLocation = () => {
+    if (!navigator.geolocation) {
+      toast({
+        title: "Location not supported",
+        description: "Geolocation is not supported by your browser.",
+        variant: "destructive",
+      })
+      return
+    }
+    setIsLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords
+        setCoordinates([latitude, longitude])
+        // Fill the location field with the detected coordinates
+        form.setValue("location", `Lat: ${latitude}, Lng: ${longitude}`)
+        toast({
+          title: "Location detected",
+          description: `Latitude: ${latitude}, Longitude: ${longitude}`,
+          variant: "success",
+        })
+        setIsLocating(false)
+      },
+      (error) => {
+        toast({
+          title: "Unable to detect location",
+          description: error.message,
+          variant: "destructive",
+        })
+        setIsLocating(false)
+      }
+    )
+  }
 
   return (
     <Form {...form}>
@@ -202,13 +254,28 @@ export function ReportIncidentForm() {
                   <FormControl>
                     <div className="flex space-x-2">
                       <Input placeholder="Building name, room number, or area" {...field} />
-                      <Button type="button" variant="outline" size="icon" className="shrink-0">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="shrink-0"
+                        onClick={handleDetectLocation}
+                        disabled={isLocating}
+                        title="Detect my location"
+                      >
                         <MapPin className="h-4 w-4" />
                       </Button>
                     </div>
                   </FormControl>
-                  <FormDescription>Specify where the incident occurred</FormDescription>
+                  <FormDescription>
+                    Specify where the incident occurred. You can also use the pin icon to detect your current location.
+                  </FormDescription>
                   <FormMessage />
+                  {coordinates && (
+                    <div className="text-xs text-muted-foreground mt-1">
+                      <span>Latitude: {coordinates[0]}, Longitude: {coordinates[1]}</span>
+                    </div>
+                  )}
                 </FormItem>
               )}
             />
@@ -373,7 +440,7 @@ export function ReportIncidentForm() {
             </div>
 
             <div className="pt-4 flex justify-between">
-              <Button type="button" variant="outline" onClick={() => setStep(2)}>
+              <Button type="button" onClick={() => setStep(2)}>
                 Previous Step
               </Button>
               <Button type="submit" disabled={isSubmitting}>

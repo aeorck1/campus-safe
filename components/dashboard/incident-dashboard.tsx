@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import dynamic from "next/dynamic"
 import { AlertTriangle, ArrowUpRight, Clock, Filter, MapPin, ThumbsUp } from "lucide-react"
@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator"
 import { IncidentStats } from "@/components/dashboard/incident-stats"
 import { RecentActivity } from "@/components/dashboard/recent-activity"
 import { mockIncidents } from "@/lib/mock-data"
+import { useAuthStore } from "@/lib/auth"
 
 // Dynamically import the CampusMap component with no SSR
 const CampusMap = dynamic(() => import("@/components/map/campus-map").then((mod) => mod.CampusMap), {
@@ -25,6 +26,19 @@ const CampusMap = dynamic(() => import("@/components/map/campus-map").then((mod)
 })
 
 export function IncidentDashboard() {
+  const [incidents, setIncidents]= useState([])
+  const fetchIncidents = useAuthStore ((state) => state.incidents)
+  useEffect (() => {
+    fetchIncidents()
+  .then ((data)=> {
+    console.log("Incidents Data:", data.data)
+  })
+  // Add dependency array to useEffect
+  .catch ((error) => {
+    console.error("Error fetching incidents:", error)
+  }
+)
+  }, [])
   const [activeTab, setActiveTab] = useState("overview")
 
   return (

@@ -100,8 +100,8 @@ export default function ProfilePage() {
                 <div className="flex flex-col md:flex-row gap-8">
                   <div className="flex flex-col items-center space-y-4">
                     <Avatar className="h-32 w-32">
-                      <AvatarImage src={user.avatar || "/avatars/01.png"} alt={user.name} />
-                      <AvatarFallback className="text-4xl">{user.name.charAt(0)}</AvatarFallback>
+                      {/* <AvatarImage src={user.avatar || "/avatars/01.png"} alt={user.name} /> */}
+                      {/* <AvatarFallback className="text-4xl">{user.name.charAt(0)}</AvatarFallback> */}
                     </Avatar>
                     <Button variant="outline" size="sm">
                       <Camera className="mr-2 h-4 w-4" />

@@ -11,7 +11,7 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata = {
   title: "UI Campus Incident Reporting Platform",
   description: "Report and track incidents around University of Ibadan campus",
-    generator: 'v0.dev'
+    
 }
 
 export default function RootLayout({

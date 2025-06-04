@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import dynamic from "next/dynamic"
 import { AlertTriangle, ArrowLeft, Clock, MapPin, MessageSquare, Share2, ThumbsUp, User } from "lucide-react"
@@ -12,7 +12,8 @@ import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { mockIncidents } from "@/lib/mock-data"
-import { useToast } from "@/components/ui/use-toast"
+import { useAuthStore } from "@/lib/auth"
+import { useToast } from "@/hooks/use-toast"
 
 // Dynamically import the CampusMap component with no SSR
 const CampusMap = dynamic(() => import("@/components/map/campus-map").then((mod) => mod.CampusMap), {
@@ -30,24 +31,41 @@ export function IncidentDetails({ id }: { id: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [upvoted, setUpvoted] = useState(false)
 
-  // Find the incident by ID
-  const incident = mockIncidents.find((inc) => inc.id === id)
+// Find the incident by ID
+// const incident = mockIncidents.find((inc) => inc.id === id)
+// Find the incident by ID
+const incidents = useAuthStore((state) => state.incidents);
+const [incident, setIncident] = useState<any>(null);
 
-  if (!incident) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <AlertTriangle className="h-12 w-12 text-muted-foreground mb-4" />
-        <h2 className="text-2xl font-bold mb-2">Incident Not Found</h2>
-        <p className="text-muted-foreground mb-6">The incident you're looking for doesn't exist or has been removed.</p>
-        <Button asChild>
-          <Link href="/incidents">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Incidents
-          </Link>
-        </Button>
-      </div>
-    )
-  }
+useEffect(() => {
+  const fetchIncident = async () => {
+    if (typeof incidents === "function") {
+      const result = await incidents();
+      if (result && result.success && Array.isArray(result.data)) {
+        const found = result.data.find((inc: any) => inc.id === id);
+        setIncident(found);
+        console.log(found)
+      }
+    }
+  };
+  fetchIncident();
+}, [incidents, id]);
+
+if (!incident) {
+  return (
+    <div className="flex flex-col items-center justify-center py-12">
+      <AlertTriangle className="h-12 w-12 text-muted-foreground mb-4" />
+      <h2 className="text-2xl font-bold mb-2">Incident Not Found</h2>
+      <p className="text-muted-foreground mb-6">The incident you're looking for doesn't exist or has been removed.</p>
+      <Button asChild>
+        <Link href="/incidents">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Incidents
+        </Link>
+      </Button>
+    </div>
+  )
+}
 
   const handleUpvote = () => {
     setUpvoted(!upvoted)
@@ -85,7 +103,7 @@ export function IncidentDetails({ id }: { id: string }) {
 
   return (
     <div>
-      <div className="flex items-center mb-6 md:w-[90%] m-auto w-[95%]">
+      <div className="flex items-center mb-6 md:w-[100%] m-auto w-[95%]">
         <Button variant="outline" size="sm" asChild className="mr-4">
           <Link href="/incidents">
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -128,12 +146,17 @@ export function IncidentDetails({ id }: { id: string }) {
                     {incident.location}
                     <Separator orientation="vertical" className="mx-2 h-3" />
                     <Clock className="h-3.5 w-3.5 mr-1" />
-                    {incident.reportedAt}
-                    {incident.reportedBy !== "anonymous" && (
+                    {/* {incident.reportedAt} */}
+                    {incident.date_created
+                      ? new Date(incident.date_created).toLocaleDateString("en-GB")
+                      : ""}
+                    {/* {incident.reportedBy !== "anonymous" && (
+                     */}
+                     {incident.created_by_user !== "anonymous" && (
                       <>
                         <Separator orientation="vertical" className="mx-2 h-3" />
                         <User className="h-3.5 w-3.5 mr-1" />
-                        {incident.reportedBy}
+                        {incident.created_by_user}
                       </>
                     )}
                   </div>
@@ -155,11 +178,11 @@ export function IncidentDetails({ id }: { id: string }) {
             <CardContent>
               <p className="whitespace-pre-line mb-4">{incident.description}</p>
               <div className="flex flex-wrap gap-2 mb-6">
-                {incident.tags.map((tag) => (
+                {/* {incident.tags.map((tag) => (
                   <Badge key={tag} variant="secondary">
                     {tag}
                   </Badge>
-                ))}
+                ))} */}
               </div>
               <div className="flex items-center gap-4">
                 <Button variant={upvoted ? "default" : "outline"} size="sm" onClick={handleUpvote} className="hover: opacity-80">
@@ -187,7 +210,7 @@ export function IncidentDetails({ id }: { id: string }) {
                   incident.comments.map((comment) => (
                     <div key={comment.id} className="flex gap-4">
                       <Avatar>
-                        <AvatarFallback>{comment.user.substring(0, 2).toUpperCase()}</AvatarFallback>
+                        {/* <AvatarFallback>{comment.user.substring(0, 2).toUpperCase()}</AvatarFallback> */}
                       </Avatar>
                       <div className="flex-1 space-y-1">
                         <div className="flex items-center justify-between">
@@ -244,7 +267,7 @@ export function IncidentDetails({ id }: { id: string }) {
                   </div>
                   <div>
                     <p className="text-sm font-medium">Reported</p>
-                    <p className="text-xs text-muted-foreground">{incident.reportedAt}</p>
+                    <p className="text-xs text-muted-foreground">{incident.date_created ? new Date(incident.date_created).toLocaleDateString("en-GB") : ""}</p>
                   </div>
                 </div>
 
@@ -287,8 +310,8 @@ export function IncidentDetails({ id }: { id: string }) {
               <CardTitle className="text-lg">Similar Incidents</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {mockIncidents
+              {/* <div className="space-y-4">
+                {incident
                   .filter(
                     (inc) =>
                       inc.id !== incident.id &&
@@ -330,7 +353,7 @@ export function IncidentDetails({ id }: { id: string }) {
                     inc.id !== incident.id &&
                     (inc.tags.some((tag) => incident.tags.includes(tag)) || inc.location === incident.location),
                 ).length === 0 && <p className="text-sm text-muted-foreground">No similar incidents found</p>}
-              </div>
+              </div> */}
             </CardContent>
           </Card>
         </div>

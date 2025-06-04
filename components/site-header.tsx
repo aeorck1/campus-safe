@@ -58,7 +58,7 @@ export function SiteHeader() {
           <Link href="/" className="hidden items-center space-x-2 md:flex">
             <Shield className="h-6 w-6 text-campus-primary" />
             <span className="hidden font-bold sm:inline-block bg-clip-text text-transparent bg-gradient-to-r from-campus-primary to-campus-secondary">
-              UI Campus Safety
+              UI Crowd Source
             </span>
           </Link>
           <nav className="hidden gap-6 md:flex">
@@ -86,7 +86,7 @@ export function SiteHeader() {
               <Link href="/" className="flex items-center space-x-2">
                 <Shield className="h-6 w-6 text-campus-primary" />
                 <span className="font-bold bg-clip-text text-transparent bg-gradient-to-r from-campus-primary to-campus-secondary">
-                  UI Campus Safety
+                  UI Crowd Source
                 </span>
               </Link>
               <nav className="mt-8 flex flex-col gap-4">

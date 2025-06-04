@@ -9,11 +9,11 @@ export function SiteFooter() {
           <div className="flex items-center gap-2 mb-2">
             <Shield className="h-5 w-5 text-campus-primary" />
             <span className="font-bold bg-clip-text text-transparent bg-gradient-to-r from-campus-primary to-campus-secondary">
-              Campus Safety
+              Crowd Source
             </span>
           </div>
           <p className="text-center text-sm text-muted-foreground md:text-left">
-            &copy; {new Date().getFullYear()} Campus Safety Platform. All rights reserved.
+            &copy; {new Date().getFullYear()} Crowd Source. All rights reserved.
           </p>
         </div>
         <div className="flex items-center gap-6 text-sm text-muted-foreground">

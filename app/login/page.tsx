@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Shield } from "lucide-react"
+import { Shield, Eye, EyeOff } from "lucide-react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -29,6 +29,7 @@ export default function LoginPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   // Use the login method from the zustand store
   const login = useAuthStore((state) => state.loginWithApi)
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
@@ -44,18 +45,20 @@ export default function LoginPage() {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true)
 
-    try {
+    
       // Call the zustand login method
-      const result = await login(values.username, values.password)
+      const result = await login({ username: values.username, password: values.password })
 
       if (result.success) {
         toast({
           title: "Login successful",
-          description: "Welcome back to Campus Safety Platform",
+          description: "Welcome back to Crowd Source 😁",
+          variant: "success",
           
         })
         router.push("/dashboard")
-      } else {
+      }
+       else {
         toast({
           title: "Login failed",
           description: result.message,
@@ -64,16 +67,10 @@ export default function LoginPage() {
         console.error("Login failed:", result.message)
         
       }
-    } catch (error) {
-      toast({
-        title: "Login failed",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      })
-      
-    } finally {
+    
+
       setIsLoading(false)
-    }
+
   }
 
   useEffect(() => {
@@ -115,14 +112,28 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
+                      <div className="relative">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          {...field}
+                        />
+                        <button
+                          type="button"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground"
+                          tabIndex={-1}
+                          onClick={() => setShowPassword((v) => !v)}
+                        >
+                          {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                        </button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Logging in..." : "Login"}
+                {isLoading ? "Logging in.." : "Login"}
               </Button>
             </form>
           </Form>
@@ -139,12 +150,11 @@ export default function LoginPage() {
               Sign up
             </Link>
           </div>
-          <div className="mt-4 text-center text-xs text-muted-foreground">
-            <p>Demo accounts:</p>
-            <p>Admin: admin@ui.edu.ng / password123</p>
-            <p>Security: security@ui.edu.ng / password123</p>
-            <p>Student: john.doe@ui.edu.ng / password123</p>
-          </div>
+          <div className="text-center text-sm mt-2">
+            <Link href="/" className="text-campus-primary hover:underline">
+              Back to home
+            </Link>
+            </div>
         </CardFooter>
       </Card>
 

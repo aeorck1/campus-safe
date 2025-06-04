@@ -16,6 +16,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { useAuthStore } from "@/lib/auth"
+import { error } from "console"
 
 const formSchema = z
   .object({
@@ -66,46 +67,45 @@ export default function SignupPage() {
     },
   })
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    setIsLoading(true)
+const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  setIsLoading(true)
 
-    try {
-      // Call the zustand signup method (which does the API call)
-      const result = await signup(
-        values.first_name,
-        values.last_name,
-        values.email,
-        values.username,
-        values.password
-      )
+  try {
+    const result = await signup({
+      first_name: values.first_name,
+      last_name: values.last_name,
+      email: values.email,
+      username: values.username,
+      password: values.password,
+    })
 
-      if (result.success) {
-        toast({
-          title: "Account created",
-          description: "Your account has been created successfully",
-          // variant: "success",
-        })
-        router.push("/login")
-      } else {
-        toast({
-          title: "Signup failed",
-          description: result.message,
-          variant: "destructive",
-        })
-      }
-    } catch (error) {
+    if (result.success) {
+      toast({
+        title: "Account created",
+        description: result.message,
+        variant: "success",
+      })
+      router.push("/login")
+    } else {
+      console.log("Signup error:", result)
       toast({
         title: "Signup failed",
-        description:
-          error && typeof error === "object" && "message" in error
-            ? (error as { message: string }).message
-            : "An unexpected error occurred. Please try again.",
+        description: result.message || "An error occurred during registration.",
         variant: "destructive",
       })
-    } finally {
-      setIsLoading(false)
     }
+  } catch (error) {
+    
+    toast({
+      title: "Unexpected error",
+      description: "Something went wrong. Please try again.",
+      variant: "destructive",
+    })
+  } finally {
+    setIsLoading(false)
   }
+}
+
 
   useEffect(() => {
     if (isAuthenticated) {

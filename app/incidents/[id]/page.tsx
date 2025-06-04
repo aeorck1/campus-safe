@@ -4,7 +4,7 @@ import { IncidentDetailsSkeleton } from "@/components/skeletons/incident-details
 
 export default function IncidentPage({ params }: { params: { id: string } }) {
   return (
-    <div className="space-y-6 border-b pb-6">
+    <div className="space-y-6 border-b pb-6 m-auto max-w-full md:w-[90%] w-[95%] my-[20px]">
       <Suspense fallback={<IncidentDetailsSkeleton />}>
         <IncidentDetails id={params.id} />
       </Suspense>
