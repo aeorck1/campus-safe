@@ -193,13 +193,14 @@ signup: async (
 
           if (data && data.access_token) {
             axios.defaults.headers.common["Authorization"] = `Bearer ${data.access_token}`
+            const user = data.user && typeof data.user === 'object' ? data.user : null;
             set({
-              user: data.user || null,
+              user: user,
               isAuthenticated: true,
               accessToken: data.access_token,
               refreshToken: data.refresh_token
             })
-            return { success: true, message: "Login successful" }
+            return { success: true, message: data.user }
           } else {
             return { success: false, message: data.detail || "Login failed" }
           }
@@ -517,7 +518,7 @@ getAllIncidentTags: async () => {
     return { success: false, message };
   }
 },
-
+// Get Incidents by ID ⚠️I am not using this
 getIncidentTagById: async (incidentCatId: string) => {
   try {
     const response = await axiosInstance.get(`/incident-categories/${incidentCatId}/`);
@@ -527,6 +528,7 @@ getIncidentTagById: async (incidentCatId: string) => {
     return { success: false, message };
   }
 },
+
 
 // ---------- ADMIN ----------
 getAdminIncidentTags: async () => {

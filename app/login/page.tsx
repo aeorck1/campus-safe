@@ -42,36 +42,38 @@ export default function LoginPage() {
     },
   })
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    setIsLoading(true)
+const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  setIsLoading(true)
 
-    
-      // Call the zustand login method
-      const result = await login({ username: values.username, password: values.password })
-
-      if (result.success) {
-        toast({
-          title: "Login successful",
-          description: "Welcome back to Crowd Source 😁",
-          variant: "success",
-          
-        })
-        router.push("/dashboard")
-      }
-       else {
-        toast({
-          title: "Login failed",
-          description: result.message,
-          variant: "destructive",
-        })
-        console.error("Login failed:", result.message)
-        
-      }
-    
-
-      setIsLoading(false)
-
+  try {
+    const result = await login({ username: values.username, password: values.password })
+console.log("Login result:", result)
+    if (result.success) {
+      toast({
+        title: "Login successful",
+        description: `Welcome back to Crowd Source, ${result.message.first_name} 😁`,
+        variant: "success",
+      })
+      router.push("/dashboard")
+    } else {
+      toast({
+        title: "Login failed",
+        description: result.message,
+        variant: "destructive",
+      })
+      console.error("Login failed:", result.message)
+    }
+  } catch (error) {
+    toast({
+      title: "Unexpected error",
+      description: "Something went wrong. Please try again.",
+      variant: "destructive",
+    })
+    console.error("Unexpected error:", error)
+  } finally {
+    setIsLoading(false)
   }
+}
 
   useEffect(() => {
     if (isAuthenticated) {

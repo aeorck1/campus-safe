@@ -30,12 +30,20 @@ const formSchema = z.object({
   location: z.string().min(3, {
     message: "Location is required.",
   }),
-  coordinates: z.number().array().length(2, {
-    message: "Coordinates must be an array with latitude and longitude.",
-  }).default([7.4443, 3.9003]), // Default to University of Ibadan, Ibadan
-  severity: z.string().min(1, {
-    message: "Severity is required.",
-  }),
+  // coordinates will be set dynamically from the map/location detector, so just validate shape here
+  coordinates: z.tuple([z.number(), z.number()]).default([7.4443, 3.9003]), // Default to University of Ibadan coordinates
+  // Severity is a radio button, so we can use a string with specific values
+  severity: z.enum(["low", "medium", "high"], {
+    errorMap: (issue, _ctx) => {
+      if (issue.code === "invalid_type") {
+        return { message: "Please select a severity level." }
+      }
+      return { message: "Invalid severity level." }
+    },
+  }).transform((val) => val.toLowerCase()), // Ensure it's always lowercase
+  // severity: z.string().min(1, {
+  //   message: "Severity is required.",
+  // }),
   tags: z.array(z.string()).default([]),
   anonymous: z.boolean().default(false),
   contactInfo: z.string().email("Please enter a valid email address.").optional().or(z.literal("")),
@@ -45,7 +53,7 @@ export function ReportIncidentForm() {
   const router = useRouter()
   const { toast } = useToast()
   const [step, setStep] = useState(1)
-  const [coordinates, setCoordinates] = useState<[number, number]>([34.0522, -118.2437])
+  const [coordinates, setCoordinates] = useState<[number, number]>([7.4443, 3.9003])
   const [isLocating, setIsLocating] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const report = useAuthStore((state)=> state.reportIncident)
@@ -63,14 +71,25 @@ export function ReportIncidentForm() {
     control: boolean
   })
 
+const fetchTags = useAuthStore((state) => state.getAllIncidentTags)
 
-
+console.log("Form tags", fetchTags)
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true)
 
     // Simulate API call
-    const result = await report({ ...values, tags: values.tags.join(","), coordinates })
+    const severityMap: Record<string, "LOW" | "MEDIUM" | "HIGH"> = {
+      low: "LOW",
+      medium: "MEDIUM",
+      high: "HIGH",
+    }
+    const result = await report({ 
+      ...values, 
+      tags: values.tags.join(","), 
+      coordinates,
+      severity: severityMap[values.severity], // values.severity comes directly from the radio button
+    })
     if (result.success) {
       toast({
         title: "Incident reported successfully",
