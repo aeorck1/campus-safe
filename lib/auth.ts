@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware"
 import axios from "axios"
 import axiosAuth from "./axiosAuth"
 import axiosInstance from "./axiosInstance"
+import { object } from "zod"
 // const API_BASE_URL = "https://campussecuritybackend.onrender.com/api/v1/"
 
 
@@ -31,10 +32,10 @@ export type Comments = {
 
 export type Coordinate =[number, number]
 export type ReportIncident ={
-  tags:string,
+  tags:string[],
   title: string,
   description: string,
-  severity: "LOW",
+  severity: "LOW" | "MEDIUM" | "HIGH",
   location: string,
   // latitude: number,
   // longitude: number
@@ -43,7 +44,7 @@ export type ReportIncident ={
 
 export type VoteIncident = {
   incident_id: string,
-  vote: "up" | "down"
+  up_voted: boolean,
 }
 
 export type ReportAnonymous ={
@@ -67,6 +68,13 @@ export type SignUp = {
     email: string,
     username: string,
     password: string
+}
+
+export type Comment = {
+  object_id: string,
+  comment: string,
+  object_type: string,
+  parent_comment?: string // Optional for top-level comments
 }
 export type AuthState = {
   user: User | null
@@ -193,9 +201,8 @@ signup: async (
 
           if (data && data.access_token) {
             axios.defaults.headers.common["Authorization"] = `Bearer ${data.access_token}`
-            const user = data.user && typeof data.user === 'object' ? data.user : null;
             set({
-              user: user,
+              user: data.user || null,
               isAuthenticated: true,
               accessToken: data.access_token,
               refreshToken: data.refresh_token
@@ -444,7 +451,7 @@ reportIncident: async (data: object) => {
   }
 },
 
-voteIncident: async (data: { incident_id: string; vote: "up" | "down" }) => {
+voteIncident: async (data: { incident_id: string; up_voted: boolean }) => {
   try {
     const response = await axiosAuth.post("/incident-votes/", data);
     return { success: true, data: response.data };

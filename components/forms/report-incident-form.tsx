@@ -30,20 +30,15 @@ const formSchema = z.object({
   location: z.string().min(3, {
     message: "Location is required.",
   }),
-  // coordinates will be set dynamically from the map/location detector, so just validate shape here
-  coordinates: z.tuple([z.number(), z.number()]).default([7.4443, 3.9003]), // Default to University of Ibadan coordinates
-  // Severity is a radio button, so we can use a string with specific values
-  severity: z.enum(["low", "medium", "high"], {
+  coordinates: z.tuple([z.number(), z.number()]).default([7.4443, 3.9003]),
+  severity: z.enum(["LOW", "MEDIUM", "HIGH"], {
     errorMap: (issue, _ctx) => {
-      if (issue.code === "invalid_type") {
+      if (issue.code === "invalid_enum_value") {
         return { message: "Please select a severity level." }
       }
       return { message: "Invalid severity level." }
     },
-  }).transform((val) => val.toLowerCase()), // Ensure it's always lowercase
-  // severity: z.string().min(1, {
-  //   message: "Severity is required.",
-  // }),
+  }),
   tags: z.array(z.string()).default([]),
   anonymous: z.boolean().default(false),
   contactInfo: z.string().email("Please enter a valid email address.").optional().or(z.literal("")),
@@ -56,39 +51,46 @@ export function ReportIncidentForm() {
   const [coordinates, setCoordinates] = useState<[number, number]>([7.4443, 3.9003])
   const [isLocating, setIsLocating] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [tags,setTagsData] = useState<{ id: string; label: string, name: string }[]>([])
   const report = useAuthStore((state)=> state.reportIncident)
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      location: "",
-      severity: "medium",
-      tags: [],
-      anonymous: false,
-      contactInfo: "",
-    },
-    control: boolean
+const form = useForm<z.infer<typeof formSchema>>({
+  resolver: zodResolver(formSchema),
+  defaultValues: {
+    title: "",
+    description: "",
+    location: "",
+    coordinates: [7.4443, 3.9003],
+    severity: "MEDIUM", // Updated to match schema
+    tags: [],
+    anonymous: false,
+    contactInfo: "",
+  },
+})
+
+
+
+  const fetchTags = useAuthStore ((state) => state.getAllIncidentTags)
+  useEffect (() => {
+    fetchTags()
+  .then ((data)=> {
+    console.log("Tags Data:🚀🚀", data.data)
+    setTagsData(data.data)
   })
-
-const fetchTags = useAuthStore((state) => state.getAllIncidentTags)
-
-console.log("Form tags", fetchTags)
+  // Add dependency array to useEffect
+  .catch ((error) => {
+    console.error("Error fetching tags:", error)
+  }
+)
+  }, [])
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true)
-
-    // Simulate API call
-    const severityMap: Record<string, "LOW" | "MEDIUM" | "HIGH"> = {
-      low: "LOW",
-      medium: "MEDIUM",
-      high: "HIGH",
-    }
-    const result = await report({ 
+    try{
+      const result = await report({ 
       ...values, 
-      tags: values.tags.join(","), 
+      tags: values.tags, // <-- send as array, not joined string
       coordinates,
-      severity: severityMap[values.severity], // values.severity comes directly from the radio button
+      severity: values.severity, // values.severity comes directly from the radio button
     })
     if (result.success) {
       toast({
@@ -98,6 +100,7 @@ console.log("Form tags", fetchTags)
       router.push("/dashboard")
     console.log("Payload",{ ...values, coordinates })
   }
+  
   else{
     toast({
       title: "Error reporting incident",
@@ -105,22 +108,21 @@ console.log("Form tags", fetchTags)
       variant: "destructive",
     })
   }
+  
 
     setIsSubmitting(false)
   } 
+  catch (error) {
+  console.error("Error submitting report:", error)
+  toast({
+    title: "Error submitting report",
+    description: "An unexpected error occurred while submitting your report. Please try again later.",
+    variant: "destructive",
+  })
+  setIsSubmitting(false)
+}
+}
 
-
-  const tags = [
-    { id: "property-damage", label: "Property Damage" },
-    { id: "safety-hazard", label: "Safety Hazard" },
-    { id: "security-concern", label: "Security Concern" },
-    { id: "theft", label: "Theft" },
-    { id: "vandalism", label: "Vandalism" },
-    { id: "suspicious-activity", label: "Suspicious Activity" },
-    { id: "facility-issue", label: "Facility Issue" },
-    { id: "accessibility", label: "Accessibility Issue" },
-    { id: "other", label: "Other" },
-  ]
 
   // Handler to get user's current location
   const handleDetectLocation = () => {
@@ -215,7 +217,7 @@ console.log("Form tags", fetchTags)
                     >
                       <FormItem className="flex items-center space-x-3 space-y-0">
                         <FormControl>
-                          <RadioGroupItem value="low" />
+                          <RadioGroupItem value="LOW" />
                         </FormControl>
                         <FormLabel className="font-normal flex items-center">
                           <Info className="mr-2 h-4 w-4 text-blue-500" />
@@ -224,7 +226,7 @@ console.log("Form tags", fetchTags)
                       </FormItem>
                       <FormItem className="flex items-center space-x-3 space-y-0">
                         <FormControl>
-                          <RadioGroupItem value="medium" />
+                          <RadioGroupItem value="MEDIUM" />
                         </FormControl>
                         <FormLabel className="font-normal flex items-center">
                           <AlertTriangle className="mr-2 h-4 w-4 text-yellow-500" />
@@ -233,7 +235,7 @@ console.log("Form tags", fetchTags)
                       </FormItem>
                       <FormItem className="flex items-center space-x-3 space-y-0">
                         <FormControl>
-                          <RadioGroupItem value="high" />
+                          <RadioGroupItem value="HIGH" />
                         </FormControl>
                         <FormLabel className="font-normal flex items-center">
                           <AlertTriangle className="mr-2 h-4 w-4 text-red-500" />
@@ -339,7 +341,7 @@ console.log("Form tags", fetchTags)
                                   }}
                                 />
                               </FormControl>
-                              <FormLabel className="font-normal">{tag.label}</FormLabel>
+                              <FormLabel className="font-normal">{tag.name}</FormLabel>
                             </FormItem>
                           )
                         }}

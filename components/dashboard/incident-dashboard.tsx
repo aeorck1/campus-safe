@@ -14,6 +14,7 @@ import { IncidentStats } from "@/components/dashboard/incident-stats"
 import { RecentActivity } from "@/components/dashboard/recent-activity"
 import { mockIncidents } from "@/lib/mock-data"
 import { useAuthStore } from "@/lib/auth"
+import { any } from "zod"
 
 // Dynamically import the CampusMap component with no SSR
 const CampusMap = dynamic(() => import("@/components/map/campus-map").then((mod) => mod.CampusMap), {
@@ -31,7 +32,7 @@ export function IncidentDashboard() {
   useEffect (() => {
     fetchIncidents()
   .then ((data)=> {
-    console.log("Incidents Data:", data.data)
+    console.log("Incidents Data:🚀🚀", data.data)
   })
   // Add dependency array to useEffect
   .catch ((error) => {
@@ -79,7 +80,7 @@ export function IncidentDashboard() {
               </CardHeader>
               <CardContent className="p-0">
                 <div className="h-[400px] rounded-md border">
-                  <CampusMap incidents={mockIncidents} />
+                  <CampusMap incidents={mockIncidents as any} />
                 </div>
               </CardContent>
               <CardFooter>
@@ -175,7 +176,7 @@ export function IncidentDashboard() {
             </CardHeader>
             <CardContent>
               <div className="h-[600px] rounded-md border">
-                <CampusMap incidents={mockIncidents} />
+                <CampusMap incidents={mockIncidents as any} />
               </div>
             </CardContent>
           </Card>

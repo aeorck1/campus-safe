@@ -56,6 +56,7 @@ export default function LandingPage() {
         setResolvedIncidents(data.data.resolved_incidents || 0)
         setAverageResponseTime(data.data.average_response_time || 0)
         setUserSatisfaction(data.data.user_satisfaction || 0)
+        
 
       })
       .catch((error) => {

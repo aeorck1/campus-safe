@@ -35,6 +35,8 @@ export function IncidentDetails({ id }: { id: string }) {
 // const incident = mockIncidents.find((inc) => inc.id === id)
 // Find the incident by ID
 const incidents = useAuthStore((state) => state.incidents);
+const upvote = useAuthStore((state) => state.voteIncident)
+const postComment = useAuthStore((state) => state.postComment)
 const [incident, setIncident] = useState<any>(null);
 
 useEffect(() => {
@@ -69,17 +71,24 @@ if (!incident) {
 
   const handleUpvote = () => {
     setUpvoted(!upvoted)
+    upvote({ incident_id: incident.id, up_voted: !upvoted })
+
     toast({
       title: upvoted ? "Upvote removed" : "Incident upvoted",
       description: upvoted
         ? "You have removed your upvote from this incident"
         : "Thank you for confirming this incident",
+      variant: upvoted ? "destructive" : "success",
     })
   }
 
   const handleCommentSubmit = () => {
     if (!comment.trim()) return
-
+    postComment({
+      object_id: incident.id,
+      comment: comment,
+      object_type: "incident",
+    })
     setIsSubmitting(true)
 
     // Simulate API call
@@ -156,7 +165,9 @@ if (!incident) {
                       <>
                         <Separator orientation="vertical" className="mx-2 h-3" />
                         <User className="h-3.5 w-3.5 mr-1" />
-                        {incident.created_by_user}
+                        {incident.reported_by.first_name
+                          ? `${incident.reported_by.first_name} ${incident.reported_by.last_name}`
+                          : incident.reported_by.username || "Anonymous"}
                       </>
                     )}
                   </div>
@@ -187,7 +198,7 @@ if (!incident) {
               <div className="flex items-center gap-4">
                 <Button variant={upvoted ? "default" : "outline"} size="sm" onClick={handleUpvote} className="hover: opacity-80">
                   <ThumbsUp className="mr-2 h-4 w-4" />
-                  Upvote {upvoted ? incident.upvotes + 1 : incident.upvotes}
+                  Upvote {upvoted ? incident.up_votes + 1 : incident.up_votes}
                 </Button>
                 <Button variant="outline" size="sm" onClick={handleShare}>
                   <Share2 className="mr-2 h-4 w-4" />
@@ -207,7 +218,7 @@ if (!incident) {
             <CardContent>
               <div className="space-y-4 mb-6">
                 {incident.comments && incident.comments.length > 0 ? (
-                  incident.comments.map((comment) => (
+                  incident.comments.map((comment:any) => (
                     <div key={comment.id} className="flex gap-4">
                       <Avatar>
                         {/* <AvatarFallback>{comment.user.substring(0, 2).toUpperCase()}</AvatarFallback> */}
@@ -272,7 +283,7 @@ if (!incident) {
                 </div>
 
                 {incident.comments &&
-                  incident.comments.map((comment, index) => (
+                  incident.comments.map((comment:any, index:any) => (
                     <div key={index} className="flex gap-3">
                       <div className="flex flex-col items-center">
                         <div className="h-2 w-2 rounded-full bg-primary" />
