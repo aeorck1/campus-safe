@@ -35,7 +35,6 @@ export function IncidentDetails({ id }: { id: string }) {
   const [upvoted, setUpvoted] = useState(false)
 
 // Find the incident by ID
-// const incident = mockIncidents.find((inc) => inc.id === id)
 // Find the incident by ID
 const incidents = useAuthStore((state) => state.incidents);
 const upvote = useAuthStore((state) => state.voteIncident)
@@ -166,18 +165,18 @@ const handleCommentSubmit = async () => {
                   <div className="flex items-center gap-2">
                     <div
                       className={`p-1.5 rounded-full ${
-                        incident.severity === "high"
+                        incident.severity === "HIGH"
                           ? "bg-red-100 dark:bg-red-900"
-                          : incident.severity === "medium"
+                          : incident.severity === "MEDIUM"
                             ? "bg-yellow-100 dark:bg-yellow-900"
                             : "bg-blue-100 dark:bg-blue-900"
                       }`}
                     >
                       <AlertTriangle
                         className={`h-4 w-4 ${
-                          incident.severity === "high"
+                          incident.severity === "HIGH"
                             ? "text-red-600 dark:text-red-400"
-                            : incident.severity === "medium"
+                            : incident.severity === "MEDIUM"
                               ? "text-yellow-600 dark:text-yellow-400"
                               : "text-blue-600 dark:text-blue-400"
                         }`}
@@ -209,9 +208,9 @@ const handleCommentSubmit = async () => {
                 </div>
                 <Badge
                   variant={
-                    incident.status === "resolved"
+                    incident.status === "RESOLVED"
                       ? "outline"
-                      : incident.status === "investigating"
+                      : incident.status === "INVESTIGATING"
                         ? "secondary"
                         : "destructive"
                   }
@@ -224,11 +223,12 @@ const handleCommentSubmit = async () => {
             <CardContent>
               <p className="whitespace-pre-line mb-4">{incident.description}</p>
               <div className="flex flex-wrap gap-2 mb-6">
-                {/* {incident.tags.map((tag) => (
-                  <Badge key={tag} variant="secondary">
-                    {tag}
-                  </Badge>
-                ))} */}
+                {Array.isArray(incident.tags) &&
+                  incident.tags.map((tag: { id: string; name: string }) => (
+                    <Badge key={tag.id} variant="secondary">
+                      {tag.name}
+                    </Badge>
+                  ))}
               </div>
               <div className="flex items-center gap-4">
                 <Button variant={upvoted ? "default" : "outline"} size="sm" onClick={handleUpvote} className="hover: opacity-80">

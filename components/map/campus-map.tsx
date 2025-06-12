@@ -33,7 +33,9 @@ interface Incident {
   title: string
   description: string
   location: string
-  coordinates: [number, number]
+  // coordinates: [number, number]
+  latitude: number
+  longitude: number
   status: string
   severity: string
   reportedAt: string
@@ -109,8 +111,8 @@ export function CampusMap({
         />
         <SetMapView center={center} zoom={zoom} />
 
-        {incidents.map((incident) => (
-          <Marker key={incident.id} position={incident.coordinates} icon={markerIcon(incident.severity)}>
+        {/* {incidents.map((incident) => (
+          <Marker key={incident.id} position={[incident.latitude, incident.longitude]} icon={markerIcon(incident.severity)}>
             <Popup className="leaflet-popup">
               <div className="p-1">
                 <div className="flex justify-between items-start mb-2">
@@ -145,7 +147,7 @@ export function CampusMap({
               </div>
             </Popup>
           </Marker>
-        ))}
+        ))} */}
       </MapContainer>
     </div>
   )

@@ -57,8 +57,16 @@ export function IncidentsList() {
     }
   }, [fetchIncidents])
 
-  // Get all unique tags from incidents
-  const allTags = Array.from(new Set(incidents.flatMap((incident) => incident.tags || [])))
+// Get all unique tags from incidents
+const tagMap = new Map<string, { id: string; name: string }>();
+incidents.forEach((incident) => {
+  (incident.tags || []).forEach((tag: { id: string; name: string }) => {
+    if (!tagMap.has(tag.id)) {
+      tagMap.set(tag.id, tag);
+    }
+  });
+});
+const allTags = Array.from(tagMap.values());
 
   // Filter and sort incidents
   const filteredIncidents = incidents
@@ -90,7 +98,7 @@ export function IncidentsList() {
       } else if (sortBy === "upvotes") {
         return (b.upvotes || 0) - (a.upvotes || 0)
       } else if (sortBy === "severity") {
-        const severityOrder = { high: 3, medium: 2, low: 1 }
+        const severityOrder = { HIGH: 3, MEDIUM: 2, LOW: 1 }
         return (
           severityOrder[b.severity as keyof typeof severityOrder] -
           severityOrder[a.severity as keyof typeof severityOrder]
@@ -137,9 +145,9 @@ export function IncidentsList() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Severities</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="HIGH">High</SelectItem>
+                  <SelectItem value="MEDIUM">Medium</SelectItem>
+                  <SelectItem value="LOW">Low</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -153,19 +161,19 @@ export function IncidentsList() {
                 <DropdownMenuContent className="w-56">
                   <DropdownMenuLabel>Filter by Tags</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  {allTags.map((tag) => (
+                  {allTags.map((tag: { id: string; name: string }) => (
                     <DropdownMenuCheckboxItem
-                      key={tag}
-                      checked={selectedTags.includes(tag)}
+                      key={tag.id}
+                      checked={selectedTags.includes(tag.name)}
                       onCheckedChange={(checked) => {
                         if (checked) {
-                          setSelectedTags([...selectedTags, tag])
+                          setSelectedTags([...selectedTags, tag.id])
                         } else {
-                          setSelectedTags(selectedTags.filter((t) => t !== tag))
+                          setSelectedTags(selectedTags.filter((t) => t !== tag.name))
                         }
                       }}
                     >
-                      {tag}
+                      {tag.name}
                     </DropdownMenuCheckboxItem>
                   ))}
                 </DropdownMenuContent>
