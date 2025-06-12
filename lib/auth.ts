@@ -37,9 +37,9 @@ export type ReportIncident ={
   description: string,
   severity: "LOW" | "MEDIUM" | "HIGH",
   location: string,
-  // latitude: number,
-  // longitude: number
-  coordinates: Coordinate
+  latitude: number,
+  longitude: number
+  
 }
 
 export type VoteIncident = {

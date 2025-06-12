@@ -30,7 +30,8 @@ const formSchema = z.object({
   location: z.string().min(3, {
     message: "Location is required.",
   }),
-  coordinates: z.tuple([z.number(), z.number()]).default([7.4443, 3.9003]),
+  longitude: z.number().default(7.4443),
+  latitude: z.number().default(3.9003),
   severity: z.enum(["LOW", "MEDIUM", "HIGH"], {
     errorMap: (issue, _ctx) => {
       if (issue.code === "invalid_enum_value") {
@@ -43,6 +44,14 @@ const formSchema = z.object({
   anonymous: z.boolean().default(false),
   contactInfo: z.string().email("Please enter a valid email address.").optional().or(z.literal("")),
 })
+
+const reverseGeocode = async (lat: number, lon: number): Promise<string> => {
+  const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`);
+  const data = await response.json();
+  return data.display_name || "Unknown location";
+};
+
+
 
 export function ReportIncidentForm() {
   const router = useRouter()
@@ -59,7 +68,8 @@ const form = useForm<z.infer<typeof formSchema>>({
     title: "",
     description: "",
     location: "",
-    coordinates: [7.4443, 3.9003],
+    longitude: 7.4443,
+    latitude: 3.9003,
     severity: "MEDIUM", // Updated to match schema
     tags: [],
     anonymous: false,
@@ -89,7 +99,8 @@ const form = useForm<z.infer<typeof formSchema>>({
       const result = await report({ 
       ...values, 
       tags: values.tags, // <-- send as array, not joined string
-      coordinates,
+      longitude: coordinates[1], // coordinates come from the map pin
+      latitude: coordinates[0], // coordinates come from the map pin
       severity: values.severity, // values.severity comes directly from the radio button
     })
     if (result.success) {
@@ -125,39 +136,32 @@ const form = useForm<z.infer<typeof formSchema>>({
 
 
   // Handler to get user's current location
-  const handleDetectLocation = () => {
-    if (!navigator.geolocation) {
+const handleDetectLocation = () => {
+  setIsLocating(true);
+
+  navigator.geolocation.getCurrentPosition(
+    async (position) => {
+      const { latitude, longitude } = position.coords;
+      const address = await reverseGeocode(latitude, longitude);
+
+      setCoordinates([latitude, longitude]);
+      console.log("Here is the coordinates", coordinates);
+      form.setValue("location", address); // Set in the text box
+
+      setIsLocating(false);
+    },
+    (error) => {
+      console.error("Geolocation error:", error);
       toast({
-        title: "Location not supported",
-        description: "Geolocation is not supported by your browser.",
+        title: "Location error",
+        description: "Unable to detect your location.",
         variant: "destructive",
-      })
-      return
+      });
+      setIsLocating(false);
     }
-    setIsLocating(true)
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords
-        setCoordinates([latitude, longitude])
-        // Fill the location field with the detected coordinates
-        form.setValue("location", `Lat: ${latitude}, Lng: ${longitude}`)
-        toast({
-          title: "Location detected",
-          description: `Latitude: ${latitude}, Longitude: ${longitude}`,
-          variant: "success",
-        })
-        setIsLocating(false)
-      },
-      (error) => {
-        toast({
-          title: "Unable to detect location",
-          description: error.message,
-          variant: "destructive",
-        })
-        setIsLocating(false)
-      }
-    )
-  }
+  );
+};
+
 
   return (
     <Form {...form}>
@@ -305,10 +309,12 @@ const form = useForm<z.infer<typeof formSchema>>({
               <CardContent className="p-4">
                 <p className="text-sm font-medium mb-2">Pin Location on Map</p>
                 <p className="text-xs text-muted-foreground mb-4">
-                  Click on the map to mark the exact location of the incident
+                  {/* Click on the map to mark the exact location of the incident */}
                 </p>
                 <div className="h-[300px] rounded-md border">
                   <CampusMap incidents={[]} center={coordinates} zoom={16} />
+                  
+
                 </div>
               </CardContent>
             </Card>

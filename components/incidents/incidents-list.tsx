@@ -267,19 +267,20 @@ export function IncidentsList() {
                           })
                           : ""}
                       </div>
-                      {/* <div className="mt-2 flex flex-wrap gap-1">
-                        {incident.tags.map((tag) => (
-                            <Badge key={tag} variant="outline" className="text-xs text-orange-600 bg-orange-100">
-                            {tag}
-                            </Badge>
-                        ))}
-                      </div> */}
+                        <div className="mt-2 flex flex-wrap gap-1">
+                        {Array.isArray(incident.tags) &&
+                          incident.tags.map((tag: { id: string; name: string }) => (
+                          <Badge key={tag.id} variant="outline" className="text-xs text-orange-600 bg-orange-100">
+                            {tag.name}
+                          </Badge>
+                          ))}
+                        </div>
                     </div>
                     <div className="ml-4 flex flex-col items-center">
                       <Button variant="ghost" size="icon" className="h-8 w-8">
                         <ThumbsUp className="h-4 w-4" />
                       </Button>
-                      <span className="text-xs">{incident.upvotes}</span>
+                      <span className="text-xs">{incident.up_votes}</span>
                       <Button variant="outline" size="sm" asChild className="mt-2">
                         <Link href={`/incidents/${incident.id}`}>Details</Link>
                       </Button>

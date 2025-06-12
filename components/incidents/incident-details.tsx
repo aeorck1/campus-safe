@@ -12,6 +12,9 @@ import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { mockIncidents } from "@/lib/mock-data"
+import z from "zod"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { useAuthStore } from "@/lib/auth"
 import { useToast } from "@/hooks/use-toast"
 
@@ -82,25 +85,57 @@ if (!incident) {
     })
   }
 
-  const handleCommentSubmit = () => {
-    if (!comment.trim()) return
-    postComment({
-      object_id: incident.id,
-      comment: comment,
-      object_type: "incident",
-    })
-    setIsSubmitting(true)
+const commentSchema = z.object({
+  comment: z.string().min(1, "Comment cannot be empty").max(500, "Comment cannot exceed 500 characters"),
 
-    // Simulate API call
-    setTimeout(() => {
+})
+
+const handleCommentSubmit = async () => {
+  if (isSubmitting || !incident || !comment.trim()) return;
+
+  setIsSubmitting(true);
+
+  try {
+    const result = await postComment({
+      object_id: incident.id,
+      comment: comment.trim(),
+      object_type: "INCIDENT",
+    });
+
+    if (result && result.success) {
       toast({
         title: "Comment added",
         description: "Your comment has been added to this incident",
-      })
-      setComment("")
-      setIsSubmitting(false)
-    }, 1000)
+        variant: "success",
+      });
+      setComment("");
+
+      // Refetch incident
+      const fetchedIncidents = await incidents();
+      if (fetchedIncidents?.success) {
+        const updatedIncident = fetchedIncidents.data.find((inc: any) => inc.id === id);
+        setIncident(updatedIncident);
+      }
+
+    } else {
+      toast({
+        title: "Error adding comment",
+        description: result?.message || "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    }
+  } catch (error) {
+    console.error("Error posting comment:", error);
+    toast({
+      title: "Unexpected error",
+      description: "Something went wrong while posting your comment. Please try again.",
+      variant: "destructive",
+    });
+  } finally {
+    setIsSubmitting(false);
   }
+};
+
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href)
@@ -152,7 +187,7 @@ if (!incident) {
                   </div>
                   <div className="flex items-center mt-2 text-sm text-muted-foreground">
                     <MapPin className="h-3.5 w-3.5 mr-1" />
-                    {incident.location}
+                    {incident.location || "Unknown Location"}
                     <Separator orientation="vertical" className="mx-2 h-3" />
                     <Clock className="h-3.5 w-3.5 mr-1" />
                     {/* {incident.reportedAt} */}
@@ -221,14 +256,16 @@ if (!incident) {
                   incident.comments.map((comment:any) => (
                     <div key={comment.id} className="flex gap-4">
                       <Avatar>
-                        {/* <AvatarFallback>{comment.user.substring(0, 2).toUpperCase()}</AvatarFallback> */}
+                        <AvatarFallback>{comment.comment_by.first_name.substring(0, 2).toUpperCase()}</AvatarFallback>
                       </Avatar>
                       <div className="flex-1 space-y-1">
                         <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium">{comment.user}</p>
-                          <span className="text-xs text-muted-foreground">{comment.timestamp}</span>
+                          <p className="text-sm font-medium">{comment.comment_by.first_name}</p>
+                          <span className="text-xs text-muted-foreground">{comment.date_created
+                            ? `${new Date(comment.date_created).toLocaleDateString("en-GB")} at ${new Date(comment.date_created).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`
+                            : ""}</span>
                         </div>
-                        <p className="text-sm">{comment.content}</p>
+                        <p className="text-sm">{comment.comment}</p>
                       </div>
                     </div>
                   ))
@@ -237,17 +274,27 @@ if (!incident) {
                 )}
               </div>
 
-              <div className="space-y-4">
-                <Textarea
-                  placeholder="Add a comment or update..."
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                  className="min-h-[100px]"
-                />
-                <Button onClick={handleCommentSubmit} disabled={!comment.trim() || isSubmitting}>
-                  {isSubmitting ? "Submitting..." : "Submit Comment"}
-                </Button>
-              </div>
+             <div className="space-y-4">
+  <Textarea
+    placeholder="Add a comment or update..."
+    value={comment}
+    onChange={(e) => setComment(e.target.value)}
+    className="min-h-[100px]"
+    maxLength={500}
+  />
+  <div className="flex justify-between items-center">
+    <span className="text-xs text-muted-foreground">
+      {comment.length}/500 characters
+    </span>
+    <Button 
+      onClick={handleCommentSubmit} 
+      disabled={!comment.trim() || isSubmitting}
+    >
+      {isSubmitting ? "Submitting..." : "Submit Comment"}
+    </Button>
+  </div>
+</div>
+
             </CardContent>
           </Card>
         </div>
@@ -278,7 +325,9 @@ if (!incident) {
                   </div>
                   <div>
                     <p className="text-sm font-medium">Reported</p>
-                    <p className="text-xs text-muted-foreground">{incident.date_created ? new Date(incident.date_created).toLocaleDateString("en-GB") : ""}</p>
+                    <p className="text-xs text-muted-foreground">{incident.date_created
+                            ? `${new Date(incident.date_created).toLocaleDateString("en-GB")} at ${new Date(incident.date_created).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`
+                            : ""}</p>
                   </div>
                 </div>
 
@@ -290,8 +339,12 @@ if (!incident) {
                         {index < incident.comments.length - 1 && <div className="h-full w-px bg-border" />}
                       </div>
                       <div>
-                        <p className="text-sm font-medium">Update from {comment.user}</p>
-                        <p className="text-xs text-muted-foreground">{comment.timestamp}</p>
+                        <p className="text-sm font-medium">Update from {comment.comment_by.first_name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {comment.date_created
+                            ? `${new Date(comment.date_created).toLocaleDateString("en-GB")} at ${new Date(comment.date_created).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`
+                            : ""}
+                        </p>
                       </div>
                     </div>
                   ))}
@@ -321,50 +374,60 @@ if (!incident) {
               <CardTitle className="text-lg">Similar Incidents</CardTitle>
             </CardHeader>
             <CardContent>
-              {/* <div className="space-y-4">
-                {incident
-                  .filter(
-                    (inc) =>
-                      inc.id !== incident.id &&
-                      (inc.tags.some((tag) => incident.tags.includes(tag)) || inc.location === incident.location),
-                  )
-                  .slice(0, 3)
-                  .map((inc) => (
-                    <div key={inc.id} className="flex items-start gap-3">
-                      <div
-                        className={`p-1.5 rounded-full ${
-                          inc.severity === "high"
-                            ? "bg-red-100 dark:bg-red-900"
-                            : inc.severity === "medium"
+              <div className="space-y-4">
+                {Array.isArray(incidents) &&
+                  incidents
+                    .filter(
+                      (inc: any) =>
+                        inc.id !== incident.id &&
+                        Array.isArray(inc.tags) &&
+                        Array.isArray(incident.tags) &&
+                        (inc.tags.some((tag: string) => incident.tags.includes(tag)) ||
+                          inc.location === incident.location)
+                    )
+                    .slice(0, 3)
+                    .map((inc: any) => (
+                      <div key={inc.id} className="flex items-start gap-3">
+                        <div
+                          className={`p-1.5 rounded-full ${
+                            inc.severity === "high"
+                              ? "bg-red-100 dark:bg-red-900"
+                              : inc.severity === "medium"
                               ? "bg-yellow-100 dark:bg-yellow-900"
                               : "bg-blue-100 dark:bg-blue-900"
-                        }`}
-                      >
-                        <AlertTriangle
-                          className={`h-3.5 w-3.5 ${
-                            inc.severity === "high"
-                              ? "text-red-600 dark:text-red-400"
-                              : inc.severity === "medium"
+                          }`}
+                        >
+                          <AlertTriangle
+                            className={`h-3.5 w-3.5 ${
+                              inc.severity === "high"
+                                ? "text-red-600 dark:text-red-400"
+                                : inc.severity === "medium"
                                 ? "text-yellow-600 dark:text-yellow-400"
                                 : "text-blue-600 dark:text-blue-400"
-                          }`}
-                        />
+                            }`}
+                          />
+                        </div>
+                        <div>
+                          <Link href={`/incidents/${inc.id}`} className="text-sm font-medium hover:underline">
+                            {inc.title}
+                          </Link>
+                          <p className="text-xs text-muted-foreground mt-1">{inc.location}</p>
+                        </div>
                       </div>
-                      <div>
-                        <Link href={`/incidents/${inc.id}`} className="text-sm font-medium hover:underline">
-                          {inc.title}
-                        </Link>
-                        <p className="text-xs text-muted-foreground mt-1">{inc.location}</p>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
 
-                {mockIncidents.filter(
-                  (inc) =>
-                    inc.id !== incident.id &&
-                    (inc.tags.some((tag) => incident.tags.includes(tag)) || inc.location === incident.location),
-                ).length === 0 && <p className="text-sm text-muted-foreground">No similar incidents found</p>}
-              </div> */}
+                {Array.isArray(incidents) &&
+                  incidents.filter(
+                    (inc: any) =>
+                      inc.id !== incident.id &&
+                      Array.isArray(inc.tags) &&
+                      Array.isArray(incident.tags) &&
+                      (inc.tags.some((tag: string) => incident.tags.includes(tag)) ||
+                        inc.location === incident.location)
+                  ).length === 0 && (
+                    <p className="text-sm text-muted-foreground">No similar incidents found</p>
+                  )}
+              </div>
             </CardContent>
           </Card>
         </div>
