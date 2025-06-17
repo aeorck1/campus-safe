@@ -73,17 +73,33 @@ if (!incident) {
   )
 }
 
-  const handleUpvote = () => {
-    setUpvoted(!upvoted)
-    upvote({ incident_id: incident.id, up_voted: !upvoted })
-
-    toast({
-      title: upvoted ? "Upvote removed" : "Incident upvoted",
-      description: upvoted
-        ? "You have removed your upvote from this incident"
-        : "Thank you for confirming this incident",
-      variant: upvoted ? "destructive" : "success",
-    })
+  const handleUpvote = async () => {
+    const user = useAuthStore.getState().user
+    if (!user) {
+      toast({
+        title: "You are not a logged in User",
+        description: "Please log in to upvote incidents.",
+        variant: "destructive",
+      })
+      return
+    }
+    try {
+      setUpvoted(!upvoted)
+      await upvote({ incident_id: incident.id, up_voted: !upvoted })
+      toast({
+        title: upvoted ? "Upvote removed" : "Incident upvoted",
+        description: upvoted
+          ? "You have removed your upvote from this incident"
+          : "Thank you for confirming this incident",
+        variant: upvoted ? "destructive" : "success",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update upvote. Please try again.",
+        variant: "destructive",
+      })
+    }
   }
 
 const commentSchema = z.object({
