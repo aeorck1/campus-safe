@@ -32,6 +32,7 @@ export function IncidentDashboard() {
   useEffect (() => {
     fetchIncidents()
   .then ((data)=> {
+    setIncidents(data.data)
     console.log("Incidents Data:🚀🚀", data.data)
   })
   // Add dependency array to useEffect
@@ -80,7 +81,9 @@ export function IncidentDashboard() {
               </CardHeader>
               <CardContent className="p-0">
                 <div className="h-[400px] rounded-md border">
-                  <CampusMap incidents={mockIncidents as any} />
+                  {/* <CampusMap incidents={mockIncidents as any} /> */}
+
+                  <CampusMap incidents={incidents as any} />
                 </div>
               </CardContent>
               <CardFooter>
@@ -115,7 +118,7 @@ export function IncidentDashboard() {
           <div>
             <h3 className="text-lg font-medium mb-4">Recent Incidents</h3>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {mockIncidents.slice(0, 3).map((incident) => (
+              {incidents.slice(0, 3).map((incident:any) => (
                 <Card key={incident.id}>
                   <CardHeader className="pb-2">
                     <div className="flex justify-between items-start">
@@ -139,18 +142,19 @@ export function IncidentDashboard() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-muted-foreground line-clamp-2">{incident.description}</p>
-                    <div className="flex gap-2 mt-3">
-                      {incident.tags.map((tag) => (
-                        <Badge key={tag} variant="secondary" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
+                    <div className="flex gap-2 mt-3 flex-wrap">
+                      {Array.isArray(incident.tags) &&
+                        incident.tags.map((tag: { id: string; name: string }) => (
+                          <Badge key={tag.id} variant="secondary" className="text-xs">
+                            {tag.name}
+                          </Badge>
+                        ))}
                     </div>
                   </CardContent>
                   <CardFooter className="flex justify-between pt-2">
                     <div className="flex items-center text-xs text-muted-foreground">
                       <Clock className="h-3 w-3 mr-1" />
-                      {incident.reportedAt}
+                      {incident.date_created}
                     </div>
                     <div className="flex items-center gap-4">
                       <Button variant="ghost" size="icon" className="h-8 w-8">

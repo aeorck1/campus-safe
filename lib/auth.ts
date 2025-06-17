@@ -48,10 +48,10 @@ export type VoteIncident = {
 }
 
 export type ReportAnonymous ={
-  tags:string,
+  tags:string[],
   title: string,
   description: string,
-  severity: "LOW",
+  severity: "LOW" | "MEDIUM" | "HIGH",
   location: string,
   latitude: number,
   longitude: number

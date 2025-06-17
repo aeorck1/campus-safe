@@ -64,7 +64,8 @@ export const mockIncidents = [
     description:
       "A window on the second floor of the Faculty of Science building has been broken. Glass shards on the ground pose a safety hazard.",
     location: "Faculty of Science, Room 204",
-    coordinates: [7.4429, 3.8967], // University of Ibadan coordinates
+    latitude: 7.4429,
+    longitude: 3.8967, // University of Ibadan coordinates
     status: "investigating",
     severity: "medium",
     reportedAt: "2025-05-14 10:30 AM",
@@ -92,7 +93,8 @@ export const mockIncidents = [
     description:
       "Noticed someone trying door handles at Mellanby Hall around midnight. Wearing dark clothing and a backpack.",
     location: "Mellanby Hall",
-    coordinates: [7.4435, 3.898], // Mellanby Hall area
+    latitude: 7.4435,
+    longitude: 3.898, // Mellanby Hall area
     status: "active",
     severity: "high",
     reportedAt: "2023-05-14 00:15 AM",
@@ -114,7 +116,8 @@ export const mockIncidents = [
     description:
       "The entire west wing of the Kenneth Dike Library has lost power. Emergency lights are on but computers and study areas are affected.",
     location: "Kenneth Dike Library, West Wing",
-    coordinates: [7.4418, 3.8972], // Library area
+    latitude: 7.4418,
+    longitude: 3.8972, // Library area
     status: "resolved",
     severity: "medium",
     reportedAt: "2023-05-13 3:45 PM",
@@ -142,7 +145,8 @@ export const mockIncidents = [
     description:
       "Water leaking from ceiling in the basement level of the Administration Building. Several inches of standing water.",
     location: "Administration Building, Basement",
-    coordinates: [7.4425, 3.896], // Admin building area
+    latitude: 7.4425,
+    longitude: 3.896, // Admin building area
     status: "active",
     severity: "high",
     reportedAt: "2023-05-14 8:20 AM",
@@ -164,7 +168,8 @@ export const mockIncidents = [
     description:
       "My bike was stolen from the rack outside the Faculty of Engineering between 2-4 PM. It's a red Trek mountain bike with a black basket.",
     location: "Faculty of Engineering, North Entrance",
-    coordinates: [7.444, 3.8955], // Engineering faculty area
+    latitude: 7.444,
+    longitude: 3.8955, // Engineering faculty area
     status: "investigating",
     severity: "medium",
     reportedAt: "2023-05-13 4:30 PM",
@@ -192,7 +197,8 @@ export const mockIncidents = [
     description:
       "Several lights are out in the Student Union Building parking lot making it very dark at night. Safety concern for students walking to cars.",
     location: "Student Union Building Parking Lot",
-    coordinates: [7.4415, 3.899], // SUB area
+    latitude: 7.4415,
+    longitude: 3.899, // SUB area
     status: "investigating",
     severity: "low",
     reportedAt: "2023-05-12 9:15 PM",
@@ -214,7 +220,8 @@ export const mockIncidents = [
     description:
       "Large graffiti tag on the east-facing wall of the Faculty of Arts. Appears to have happened overnight.",
     location: "Faculty of Arts, East Wall",
-    coordinates: [7.441, 3.8975], // Arts faculty area
+    latitude: 7.441,
+    longitude: 3.8975, // Arts faculty area
     status: "resolved",
     severity: "low",
     reportedAt: "2023-05-13 7:45 AM",

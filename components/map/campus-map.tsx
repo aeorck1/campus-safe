@@ -111,12 +111,12 @@ export function CampusMap({
         />
         <SetMapView center={center} zoom={zoom} />
 
-        {/* {incidents.map((incident) => (
+        {incidents.map((incident) => (
           <Marker key={incident.id} position={[incident.latitude, incident.longitude]} icon={markerIcon(incident.severity)}>
             <Popup className="leaflet-popup">
               <div className="p-1">
                 <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-medium text-sm">{incident.title}</h3>
+                  <h3 className="font-medium text-sm">{incident.title.substring(0, 5)}...</h3>
                   <Badge
                     variant={
                       incident.status === "resolved"
@@ -140,14 +140,14 @@ export function CampusMap({
                 </div>
                 <div className="flex justify-between items-center mt-2">
                   <span className="text-xs text-muted-foreground">{incident.reportedAt}</span>
-                  <Button variant="outline" size="sm" asChild className="h-7 text-xs">
+                 {incident.id!=="new"? <Button variant="outline" size="sm" asChild className="h-7 text-xs">
                     <Link href={`/incidents/${incident.id}`}>Details</Link>
-                  </Button>
+                  </Button> : null}
                 </div>
               </div>
             </Popup>
           </Marker>
-        ))} */}
+        ))}
       </MapContainer>
     </div>
   )

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { boolean, z } from "zod"
 import { MapPin, AlertTriangle, Info, Check } from "lucide-react"
 
@@ -17,6 +17,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { CampusMap } from "@/components/map/campus-map"
 import { useToast } from "@/hooks/use-toast"
 import { useAuthStore } from "@/lib/auth"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 
 
@@ -62,6 +63,8 @@ export function ReportIncidentForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [tags,setTagsData] = useState<{ id: string; label: string, name: string }[]>([])
   const report = useAuthStore((state)=> state.reportIncident)
+  const anonymousReport = useAuthStore((state)=> state.reportIncidentAnonymous)
+
 const form = useForm<z.infer<typeof formSchema>>({
   resolver: zodResolver(formSchema),
   defaultValues: {
@@ -77,7 +80,14 @@ const form = useForm<z.infer<typeof formSchema>>({
   },
 })
 
-
+ const watchedTitle = form.watch("title");
+const watchedDescription = form.watch("description");
+const isButtonDisabled = watchedTitle.trim().length < 5 || watchedDescription.trim().length < 10;
+const watchedLocation = form.watch('location');
+const watchedCoordinates = form.watch(['latitude', 'longitude']);
+const watchedCategories = form.watch('tags');
+const isStep2Disabled = !watchedLocation || watchedCoordinates.some(coord => coord === undefined) || watchedCategories.length === 0;
+// Fetch tags from the store when the component mounts
 
   const fetchTags = useAuthStore ((state) => state.getAllIncidentTags)
   useEffect (() => {
@@ -107,9 +117,10 @@ const form = useForm<z.infer<typeof formSchema>>({
       toast({
         title: "Incident reported successfully",
         description: "Your report has been submitted and will be reviewed shortly.",
+        variant: "success",
       })
-      router.push("/dashboard")
-    console.log("Payload",{ ...values, coordinates })
+      router.push("/incidents")
+    
   }
   
   else{
@@ -133,7 +144,45 @@ const form = useForm<z.infer<typeof formSchema>>({
   setIsSubmitting(false)
 }
 }
+  const onSubmitAnonymous = async (values: z.infer<typeof formSchema>) => {
+    setIsSubmitting(true)
+    try{
+      const result = await anonymousReport({ 
+      ...values, 
+      tags: values.tags, // <-- send as array, not joined string
+      longitude: coordinates[1], // coordinates come from the map pin
+      latitude: coordinates[0], // coordinates come from the map pin
+      severity: values.severity, // values.severity comes directly from the radio button
+    })
+    if (result.success) {
+      toast({
+        title: "Incident reported successfully",
+        description: "Your report has been submitted and will be reviewed shortly.",
+        variant: "success",
+      })
+      router.push("/incidents")
+    }
+  else{
+    toast({
+      title: "Error reporting incident",
+      description: result.message || "An unexpected error occurred. Please try again.",
+      variant: "destructive",
+    })
+  }
 
+
+    setIsSubmitting(false)
+  } 
+  catch (error) {
+  console.error("Error submitting report:", error)
+  toast({
+    title: "Error submitting report",
+    description: "An unexpected error occurred while submitting your report. Please try again later.",
+    variant: "destructive",
+  })
+  setIsSubmitting(false)
+}
+}
 
   // Handler to get user's current location
 const handleDetectLocation = () => {
@@ -165,7 +214,13 @@ const handleDetectLocation = () => {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit((values) => {
+        if (values.anonymous) {
+          onSubmitAnonymous(values)
+        } else {
+          onSubmit(values)
+        }
+      })} className="space-y-8">
         {step === 1 && (
           <div className="space-y-6">
             <div className="flex items-center space-x-2">
@@ -253,11 +308,30 @@ const handleDetectLocation = () => {
               )}
             />
 
-            <div className="pt-4 flex justify-end">
-              <Button type="button" onClick={() => setStep(2)}>
-                Next Step
-              </Button>
-            </div>
+     <div className="pt-4 flex justify-end">
+  <TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span>
+          <Button
+            type="button"
+            onClick={() => setStep(2)}
+            disabled={isButtonDisabled}
+          >
+            Next Step
+          </Button>
+        </span>
+      </TooltipTrigger>
+      {isButtonDisabled && (
+        <TooltipContent side="top">
+          <p>
+            Title must be at least 5 characters and description at least 10 characters.
+          </p>
+        </TooltipContent>
+      )}
+    </Tooltip>
+  </TooltipProvider>
+</div>
           </div>
         )}
 
@@ -312,9 +386,23 @@ const handleDetectLocation = () => {
                   {/* Click on the map to mark the exact location of the incident */}
                 </p>
                 <div className="h-[300px] rounded-md border">
-                  <CampusMap incidents={[]} center={coordinates} zoom={16} />
-                  
-
+                  <CampusMap 
+                  incidents={[{
+                    id: "new",
+                    title: form.watch("title") || "New Incident",
+                    description: form.watch("description") || "",
+                    location: form.watch("location") || "",
+                    longitude: coordinates[1],
+                    latitude: coordinates[0],
+                    status: "Reporting",
+                    severity: form.watch("severity")?.toLowerCase() || "low",
+                    reportedAt: new Date().toLocaleString(), // formatted date and time
+                    tags: form.watch("tags") || [],
+                    upvotes: 0,
+                  }]} 
+                  center={coordinates} 
+                  zoom={16} 
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -359,14 +447,37 @@ const handleDetectLocation = () => {
               )}
             />
 
-            <div className="pt-4 flex justify-between">
+          
+
+             <div className="pt-4 flex justify-between">
+
               <Button type="button" variant="outline" onClick={() => setStep(1)}>
                 Previous Step
               </Button>
-              <Button type="button" onClick={() => setStep(3)}>
-                Next Step
-              </Button>
-            </div>
+  <TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span>
+          <Button
+            type="button"
+            onClick={() => setStep(3)}
+            // disabled={isButtonDisabled}
+            disabled={isStep2Disabled}
+          >
+            Next Step
+          </Button>
+        </span>
+      </TooltipTrigger>
+      {isStep2Disabled && (
+        <TooltipContent side="top">
+          <p>
+            Please fill in all required fields before proceeding to the next step.
+          </p>
+        </TooltipContent>
+      )}
+    </Tooltip>
+  </TooltipProvider>
+</div>
           </div>
         )}
 

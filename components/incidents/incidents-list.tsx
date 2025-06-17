@@ -85,8 +85,9 @@ const allTags = Array.from(tagMap.values());
       const matchesSeverity = severityFilter === "all" || incident.severity === severityFilter
 
       // Tags filter
-      const matchesTags = selectedTags.length === 0 || selectedTags.some((tag) => (incident.tags || []).includes(tag))
-
+      const matchesTags =
+        selectedTags.length === 0 ||
+        (Array.isArray(incident.tags) && incident.tags.some(tag => selectedTags.includes(tag.id)))
       return matchesSearch && matchesStatus && matchesSeverity && matchesTags
     })
     .sort((a, b) => {
@@ -164,12 +165,12 @@ const allTags = Array.from(tagMap.values());
                   {allTags.map((tag: { id: string; name: string }) => (
                     <DropdownMenuCheckboxItem
                       key={tag.id}
-                      checked={selectedTags.includes(tag.name)}
+                      checked={selectedTags.includes(tag.id)}
                       onCheckedChange={(checked) => {
                         if (checked) {
                           setSelectedTags([...selectedTags, tag.id])
                         } else {
-                          setSelectedTags(selectedTags.filter((t) => t !== tag.name))
+                          setSelectedTags(selectedTags.filter((t) => t !== tag.id))
                         }
                       }}
                     >

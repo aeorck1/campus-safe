@@ -45,10 +45,12 @@ useEffect(() => {
   const fetchIncident = async () => {
     if (typeof incidents === "function") {
       const result = await incidents();
+      console.log("Incidents fetched:", result)
       if (result && result.success && Array.isArray(result.data)) {
         const found = result.data.find((inc: any) => inc.id === id);
+      
         setIncident(found);
-        console.log(found)
+        console.log("Foind ths",found)
       }
     }
   };
@@ -199,9 +201,9 @@ const handleCommentSubmit = async () => {
                       <>
                         <Separator orientation="vertical" className="mx-2 h-3" />
                         <User className="h-3.5 w-3.5 mr-1" />
-                        {incident.reported_by.first_name
+                        {incident.reported_by?.first_name
                           ? `${incident.reported_by.first_name} ${incident.reported_by.last_name}`
-                          : incident.reported_by.username || "Anonymous"}
+                          : incident.reported_by?.username || "Anonymous"}
                       </>
                     )}
                   </div>
@@ -306,7 +308,7 @@ const handleCommentSubmit = async () => {
             </CardHeader>
             <CardContent>
               <div className="h-[300px] rounded-md border mb-4">
-                <CampusMap incidents={[incident]} center={incident.coordinates} zoom={17} />
+                <CampusMap incidents={[incident]} center={[incident.latitude, incident.longitude]} zoom={17} />
               </div>
               <p className="text-sm text-muted-foreground">{incident.location}</p>
             </CardContent>
