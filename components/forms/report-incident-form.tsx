@@ -21,6 +21,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 
 
 
+
+
+
 const formSchema = z.object({
   title: z.string().min(5, {
     message: "Title must be at least 5 characters.",
@@ -47,9 +50,22 @@ const formSchema = z.object({
 })
 
 const reverseGeocode = async (lat: number, lon: number): Promise<string> => {
-  const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`);
-  const data = await response.json();
-  return data.display_name || "Unknown location";
+  try {
+    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`);
+    const data = await response.json();
+    return data.display_name || "Unknown location";
+  } catch (error) {
+    // Show toast if available in this scope
+    if (typeof window !== "undefined") {
+      // Dynamically import useToast to avoid hook usage outside component
+      toast({
+        title: "Location Error",
+        description: "Failed to fetch address from coordinates.",
+        variant: "destructive",
+      });
+    }
+    return "Unknown location";
+  }
 };
 
 
@@ -64,6 +80,7 @@ export function ReportIncidentForm() {
   const [tags,setTagsData] = useState<{ id: string; label: string, name: string }[]>([])
   const report = useAuthStore((state)=> state.reportIncident)
   const anonymousReport = useAuthStore((state)=> state.reportIncidentAnonymous)
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
 
 const form = useForm<z.infer<typeof formSchema>>({
   resolver: zodResolver(formSchema),
@@ -75,7 +92,7 @@ const form = useForm<z.infer<typeof formSchema>>({
     latitude: 3.9003,
     severity: "MEDIUM", // Updated to match schema
     tags: [],
-    anonymous: false,
+    anonymous: !isAuthenticated, // Default to true if not authenticated
     contactInfo: "",
   },
 })
@@ -86,7 +103,7 @@ const isButtonDisabled = watchedTitle.trim().length < 5 || watchedDescription.tr
 const watchedLocation = form.watch('location');
 const watchedCoordinates = form.watch(['latitude', 'longitude']);
 const watchedCategories = form.watch('tags');
-const isStep2Disabled = !watchedLocation || watchedCoordinates.some(coord => coord === undefined) || watchedCategories.length === 0;
+const isStep2Disabled = watchedLocation.trim().length < 10 || watchedCoordinates.some(coord => coord === undefined) || watchedCategories.length === 0;
 // Fetch tags from the store when the component mounts
 
   const fetchTags = useAuthStore ((state) => state.getAllIncidentTags)
@@ -127,7 +144,7 @@ const isStep2Disabled = !watchedLocation || watchedCoordinates.some(coord => coo
     toast({
       title: "Error reporting incident",
       description: result.message || "An unexpected error occurred. Please try again.",
-      variant: "destructive",
+      variant: "destructive"
     })
   }
   
@@ -161,7 +178,9 @@ const isStep2Disabled = !watchedLocation || watchedCoordinates.some(coord => coo
         variant: "success",
       })
       router.push("/incidents")
-    }
+    
+  }
+  
   else{
     toast({
       title: "Error reporting incident",
@@ -169,7 +188,7 @@ const isStep2Disabled = !watchedLocation || watchedCoordinates.some(coord => coo
       variant: "destructive",
     })
   }
-
+  
 
     setIsSubmitting(false)
   } 
@@ -196,8 +215,14 @@ const handleDetectLocation = () => {
       setCoordinates([latitude, longitude]);
       console.log("Here is the coordinates", coordinates);
       form.setValue("location", address); // Set in the text box
+toast({
+  title: "Location Detected",
+  description: "Your Location has been detected 📌",
+  variant: "success"
 
+})
       setIsLocating(false);
+
     },
     (error) => {
       console.error("Geolocation error:", error);
@@ -496,7 +521,7 @@ const handleDetectLocation = () => {
               render={({ field }) => (
                 <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                   <FormControl>
-                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                    <Checkbox checked={field.value} onCheckedChange={field.onChange} disabled={!isAuthenticated} />
                   </FormControl>
                   <div className="space-y-1 leading-none">
                     <FormLabel>Submit this report anonymously</FormLabel>

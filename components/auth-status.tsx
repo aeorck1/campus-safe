@@ -24,7 +24,7 @@ export function AuthStatus() {
 
   // Handle protected routes
   useEffect(() => {
-    const protectedRoutes = ["/dashboard", "/admin", "/security", "/report", "/profile", "/settings"]
+    const protectedRoutes = ["/dashboard", "/admin", "/security", "/profile", "/settings"]
     const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route))
 
     if (isProtectedRoute && !isAuthenticated) {

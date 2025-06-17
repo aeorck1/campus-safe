@@ -102,7 +102,7 @@ export function SiteHeader() {
                     {route.label}
                   </Link>
                 ))}
-                {!isAuthenticated && (
+                {isAuthenticated && (
                   <Link href="/report" className="flex items-center text-campus-primary font-medium">
                     <Plus className="mr-2 h-4 w-4" />
                     Report Incident
