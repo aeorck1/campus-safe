@@ -245,7 +245,7 @@ toast({
         } else {
           onSubmit(values)
         }
-      })} className="space-y-8">
+      })} className="space-y-8 ">
         {step === 1 && (
           <div className="space-y-6">
             <div className="flex items-center space-x-2">
@@ -442,7 +442,7 @@ toast({
                     <FormDescription>Select all categories that apply to this incident</FormDescription>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
-                    {tags.map((tag) => (
+                    {tags?.map((tag) => (
                       <FormField
                         key={tag.id}
                         control={form.control}

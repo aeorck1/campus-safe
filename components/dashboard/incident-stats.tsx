@@ -1,8 +1,27 @@
 import { AlertTriangle, CheckCircle2, Clock, ShieldAlert } from "lucide-react"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useAuthStore } from "@/lib/auth"
+import { useEffect, useState } from "react"
 
 export function IncidentStats() {
+
+  const [incidentStats, setIncidentsStats]=useState([])
+
+  const fetchStats= useAuthStore((state)=> state.getIncidentStatistics)
+  useEffect(()=>
+  {fetchStats()
+  .then((data=>{
+    setIncidentsStats(data.data)
+    console.log("Here is the incident stats",incidentStats)
+  }))
+
+.catch((error=>{
+  console.error(error)
+}))
+  },
+  []
+)
   return (
     <>
       <Card>
