@@ -40,6 +40,7 @@ const incidents = useAuthStore((state) => state.incidents);
 const upvote = useAuthStore((state) => state.voteIncident)
 const postComment = useAuthStore((state) => state.postComment)
 const [incident, setIncident] = useState<any>(null);
+const loggedIn= useAuthStore((state) => state.user) !== null;
 
 useEffect(() => {
   const fetchIncident = async () => {
@@ -292,26 +293,32 @@ const handleCommentSubmit = async () => {
                 )}
               </div>
 
-             <div className="space-y-4">
-  <Textarea
-    placeholder="Add a comment or update..."
-    value={comment}
-    onChange={(e) => setComment(e.target.value)}
-    className="min-h-[100px]"
-    maxLength={500}
-  />
-  <div className="flex justify-between items-center">
-    <span className="text-xs text-muted-foreground">
-      {comment.length}/500 characters
-    </span>
-    <Button 
-      onClick={handleCommentSubmit} 
-      disabled={!comment.trim() || isSubmitting}
-    >
-      {isSubmitting ? "Submitting..." : "Submit Comment"}
-    </Button>
-  </div>
-</div>
+            <div className="space-y-4">
+              <Textarea
+                placeholder="Add a comment or update..."
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                className="min-h-[100px]"
+                maxLength={500}
+                disabled={!loggedIn}
+              />
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-muted-foreground">
+                  {comment.length}/500 characters
+                </span>
+                <Button 
+                  onClick={handleCommentSubmit} 
+                  disabled={!comment.trim() || isSubmitting || !useAuthStore.getState().user}
+                >
+                  {isSubmitting ? "Submitting..." : "Submit Comment"}
+                </Button>
+              </div>
+              {!useAuthStore.getState().user && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  Please sign in to add a comment.
+                </p>
+              )}
+            </div>
 
             </CardContent>
           </Card>
