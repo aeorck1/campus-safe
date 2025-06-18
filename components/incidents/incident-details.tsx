@@ -215,13 +215,15 @@ const handleCommentSubmit = async () => {
                     {/* {incident.reportedBy !== "anonymous" && (
                      */}
                      {incident.created_by_user !== "anonymous" && (
-                      <>
+                        <>
                         <Separator orientation="vertical" className="mx-2 h-3" />
-                        <User className="h-3.5 w-3.5 mr-1" />
-                        {incident.reported_by?.first_name
+                        <User className="h-3.5 w-3.5 mr-1 font-[800] text-3xl" />
+                        <span className="font-semibold text-secondary">
+                          {incident.reported_by?.first_name
                           ? `${incident.reported_by.first_name} ${incident.reported_by.last_name}`
                           : incident.reported_by?.username || "Anonymous"}
-                      </>
+                        </span>
+                        </>
                     )}
                   </div>
                 </div>
