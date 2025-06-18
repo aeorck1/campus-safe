@@ -87,7 +87,7 @@ const allTags = Array.from(tagMap.values());
       // Tags filter
       const matchesTags =
         selectedTags.length === 0 ||
-        (Array.isArray(incident.tags) && incident.tags.some(tag => selectedTags.includes(tag.id)))
+        (Array.isArray(incident.tags) && incident.tags.some((tag: { id: string }) => selectedTags.includes(tag.id)))
       return matchesSearch && matchesStatus && matchesSeverity && matchesTags
     })
     .sort((a, b) => {
