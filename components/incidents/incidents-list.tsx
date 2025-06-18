@@ -134,9 +134,9 @@ const allTags = Array.from(tagMap.values());
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="investigating">Investigating</SelectItem>
-                  <SelectItem value="resolved">Resolved</SelectItem>
+                  <SelectItem value="ACTIVE">Active</SelectItem>
+                  <SelectItem value="INVESTIGATING">Investigating</SelectItem>
+                  <SelectItem value="RESOLVED">Resolved</SelectItem>
                 </SelectContent>
               </Select>
 
