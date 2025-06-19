@@ -132,11 +132,12 @@ export function CampusMap({
                 </div>
                 <p className="text-xs text-muted-foreground mb-2">{incident.description.substring(0, 100)}...</p>
                 <div className="flex flex-wrap gap-1 mb-2">
-                  {incident.tags.map((tag) => (
-                    <Badge key={tag} variant="secondary" className="text-xs">
-                      {tag}
-                    </Badge>
-                  ))}
+                  {Array.isArray(incident.tags) &&
+                    incident.tags.map((tag, idx) => (
+                      <Badge key={`${typeof tag === "object" && tag !== null && "id" in tag ? tag.id : `${tag}-${idx}`}`} variant="secondary" className="text-xs">
+                        {typeof tag === "object" && tag !== null && "name" in tag ? tag.name: String(tag)}
+                      </Badge>
+                    ))}
                 </div>
                 <div className="flex justify-between items-center mt-2">
                   <span className="text-xs text-muted-foreground">{incident.reportedAt}</span>

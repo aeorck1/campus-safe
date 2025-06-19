@@ -1,5 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-
+import { useAuthStore } from "@/lib/auth"
+import { useEffect } from "react"
 export function RecentActivity() {
   const activities = [
     {
@@ -58,6 +59,24 @@ export function RecentActivity() {
       time: "3 hours ago",
     },
   ]
+
+  // const recentActivities= useAuthStore ((state)=> state.)
+
+  //   const fetchIncidents = useAuthStore ((state) => state.incidents)
+  //   useEffect (() => {
+  //     fetchIncidents()
+  //   .then ((data)=> {
+  //     setIncidents(data.data)
+  //     console.log("Incidents Data:🚀🚀", data.data)
+  //   })
+  //   // Add dependency array to useEffect
+  //   .catch ((error) => {
+  //     console.error("Error fetching incidents:", error)
+  //   }
+  // )
+  //   }, [])
+
+
 
   return (
     <div className="space-y-4">

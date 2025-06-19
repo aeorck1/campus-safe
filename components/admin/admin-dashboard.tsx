@@ -146,6 +146,7 @@ export function AdminDashboard() {
                             </Avatar>
                             <div>
                               <p className="font-medium">{user.name}</p>
+                              {/* <p className="font-medium">{user.first_name} {user.last_name}</p> */}
                               <p className="text-sm text-muted-foreground">{user.email}</p>
                             </div>
                           </div>
@@ -153,7 +154,7 @@ export function AdminDashboard() {
                         <TableCell>
                           <Badge
                             variant={
-                              user.role === "admin" ? "default" : user.role === "security" ? "secondary" : "outline"
+                              user.role === "admin" ? "default" : user.role === "security" ? "secondary" : "outlineStudent"
                             }
                           >
                             {user.role}
@@ -181,13 +182,20 @@ export function AdminDashboard() {
                                 Reset Password
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem
+                          {  user.role!=="admin"?  <DropdownMenuItem
                                 className="text-destructive focus:text-destructive"
                                 onClick={() => handleDeleteUser(user.id)}
                               >
                                 <Trash className="mr-2 h-4 w-4" />
                                 Delete User
-                              </DropdownMenuItem>
+                              </DropdownMenuItem>: <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                onClick={() => handleDeleteUser(user.id)}
+                                disabled={true}
+                              >
+                                <Trash className="mr-2 h-4 w-4" />
+                                Delete User
+                              </DropdownMenuItem>}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
@@ -262,9 +270,9 @@ export function AdminDashboard() {
                           <Badge
                             variant={
                               incident.status === "resolved"
-                                ? "outline"
+                                ? "secondary"
                                 : incident.status === "investigating"
-                                  ? "secondary"
+                                  ? "outline"
                                   : "destructive"
                             }
                           >
