@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Filter, Layers } from "lucide-react"
 import dynamic from "next/dynamic"
 
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { mockIncidents } from "@/lib/mock-data"
+import { AuthState, useAuthStore } from "@/lib/auth"
 
 // Dynamically import the CampusMap component with no SSR
 const CampusMap = dynamic(() => import("@/components/map/campus-map").then((mod) => mod.CampusMap), {
@@ -23,9 +24,28 @@ export function CampusMapView() {
   const [statusFilter, setStatusFilter] = useState("all")
   const [severityFilter, setSeverityFilter] = useState("all")
   const [mapLayer, setMapLayer] = useState("default")
+  const [fetchedIncident, setIncidents] = useState<AuthState[]>([])
+
+  const incidents = useAuthStore((state)=>state.incidents)
+
+useEffect(() => {
+    // Fetch incidents from the server or API if needed
+    const fetchIncidents = async () => {
+      try {
+        const data = await incidents()
+        console.log("Here are the incident data",data.data)
+        setIncidents(data.data)
+      }
+      catch(error){
+        console.log("Error fetching incidents:", error)
+      }
+    }
+    fetchIncidents()
+  }, [])
+
 
   // Filter incidents
-  const filteredIncidents = mockIncidents.filter((incident) => {
+  const filteredIncidents = fetchedIncident.filter((incident) => {
     const matchesStatus = statusFilter === "all" || incident.status === statusFilter
     const matchesSeverity = severityFilter === "all" || incident.severity === severityFilter
     return matchesStatus && matchesSeverity
@@ -40,9 +60,9 @@ export function CampusMapView() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="investigating">Investigating</SelectItem>
-            <SelectItem value="resolved">Resolved</SelectItem>
+            <SelectItem value="ACTIVE">Active</SelectItem>
+            <SelectItem value="INVESTIGATING">Investigating</SelectItem>
+            <SelectItem value="RESOLVED">Resolved</SelectItem>
           </SelectContent>
         </Select>
 
@@ -52,9 +72,9 @@ export function CampusMapView() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Severities</SelectItem>
-            <SelectItem value="high">High</SelectItem>
-            <SelectItem value="medium">Medium</SelectItem>
-            <SelectItem value="low">Low</SelectItem>
+            <SelectItem value="HIGH">High</SelectItem>
+            <SelectItem value="MEDIUM">Medium</SelectItem>
+            <SelectItem value="LOW">Low</SelectItem>
           </SelectContent>
         </Select>
 

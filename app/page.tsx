@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import dynamic from "next/dynamic"
 import { useEffect, useState } from "react"
-import { mockIncidents } from "@/lib/mock-data"
 import {useAuthStore} from "@/lib/auth"
 
 
@@ -44,24 +43,38 @@ export default function LandingPage() {
   const [resolvedIncidents, setResolvedIncidents] = useState(stateCount)
   const [averageResponseTime, setAverageResponseTime] = useState(stateCount)
   const [userSatisfaction, setUserSatisfaction] = useState(stateCount)
-
+  const [incidents, setIncidents] = useState<any[]>([])
 
   const publicStats = useAuthStore((state) => state.getPublicStats)
+  const incidentsMap = useAuthStore((state)=>state.incidents)
+  useEffect(() => {
+    // Fetch incidents when the component mounts
+    const fetchIncidents = async () => {
+      try {
+        const data = await incidentsMap()
+        console.log("Here are the incident data", data.data)
+        setIncidents(data.data)
+      } catch (error) {
+        console.error("Failed to fetch incidents:", error)
+      }
+    }
+    fetchIncidents()
+  }, [incidentsMap])
   useEffect(() => {
     // Fetch public stats when the component mounts
-    publicStats()
-      .then((data) => {
+    const fetchStats = async () => {
+      try {
+        const data = await publicStats()
         console.log("Public stats data:", data.data)
         setTotalIncidents(data.data.total_incidents || 0)
         setResolvedIncidents(data.data.resolved_incidents || 0)
         setAverageResponseTime(data.data.average_response_time || 0)
         setUserSatisfaction(data.data.user_satisfaction || 0)
-        
-
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("Failed to fetch public stats:", error)
-      })
+      }
+    }
+    fetchStats()
   }, [])
 
 
@@ -259,7 +272,7 @@ export default function LandingPage() {
         <Card>
           <CardContent className="p-0">
             <div className="h-[500px] rounded-md overflow-hidden">
-              <CampusMap incidents={mockIncidents.slice(0, 10)} />
+              <CampusMap incidents={incidents?.slice(0, 10)} />
             </div>
           </CardContent>
           <CardFooter className="flex justify-center p-6">

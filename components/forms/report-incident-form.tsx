@@ -106,18 +106,18 @@ const watchedCategories = form.watch('tags');
 const isStep2Disabled = watchedLocation.trim().length < 10 || watchedCoordinates.some(coord => coord === undefined) || watchedCategories.length === 0;
 // Fetch tags from the store when the component mounts
 
-  const fetchTags = useAuthStore ((state) => state.getAllIncidentTags)
-  useEffect (() => {
-    fetchTags()
-  .then ((data)=> {
-    console.log("Tags Data:🚀🚀", data.data)
-    setTagsData(data.data)
-  })
-  // Add dependency array to useEffect
-  .catch ((error) => {
-    console.error("Error fetching tags:", error)
-  }
-)
+  const fetchTags = useAuthStore((state) => state.getAllIncidentTags)
+  useEffect(() => {
+    const getTags = async () => {
+      try {
+        const data = await fetchTags()
+        console.log("Tags Data:🚀🚀", data.data)
+        setTagsData(data.data)
+      } catch (error) {
+        console.error("Error fetching tags:", error)
+      }
+    }
+    getTags()
   }, [])
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {

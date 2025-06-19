@@ -35,8 +35,9 @@ export function IncidentsList() {
     let mounted = true
     setLoading(true)
     setError(null)
-    fetchIncidents()
-      .then((res:any) => {
+    const fetchData = async () => {
+      try {
+        const res: any = await fetchIncidents()
         if (mounted) {
           if (res.success) {
             setIncidents(res.data)
@@ -45,13 +46,13 @@ export function IncidentsList() {
             setError(res.message || "Failed to fetch incidents")
           }
         }
-      })
-      .catch((err) => {
+      } catch (err) {
         if (mounted) setError("Failed to fetch incidents")
-      })
-      .finally(() => {
+      } finally {
         if (mounted) setLoading(false)
-      })
+      }
+    }
+    fetchData()
     return () => {
       mounted = false
     }
