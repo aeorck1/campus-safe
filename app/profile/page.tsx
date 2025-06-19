@@ -18,16 +18,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/components/ui/use-toast"
 import { useAuthStore } from "@/lib/auth"
 
-const profileFormSchema = z.object({
-  name: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
-  }),
-  email: z.string().email({
-    message: "Please enter a valid email address.",
-  }),
-  department: z.string().optional(),
-  bio: z.string().max(500).optional(),
-})
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -35,17 +25,46 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(false)
   const { user } = useAuthStore()
   const [isMounted, setIsMounted] = useState(false)
+  const updateUser = useAuthStore((state) => state.updateUserProfile)
+  const profileFormSchema = z.object({
+    first_name: z.string().min(2, {
+      message: "First name must be at least 2 characters.",
+    }),
+    last_name: z.string().min(2, {
+      message: "Last name must be at least 2 characters.",
+    }),
+    middle_name: z.string().min(1, {
+      message: "Middle name must be at least 1 character.",
+    }),
+    email: z.string().email({
+      message: "Please enter a valid email address.",
+    }),
+    department: z.string().min(4, {
+      message: "Department must be at least 4 characters.",
+    }),
+    bio: z.string().max(500, {
+      message: "Bio must be at most 500 characters.",
+    }).min(10, {
+      message: "Bio must be at least 10 characters.",
+    }),
+    profile_picture: z.string().optional(),
+  })
 
   const form = useForm<z.infer<typeof profileFormSchema>>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      name: user?.name || "",
+      first_name: user?.first_name || "",
+      last_name: user?.last_name || "",
+      middle_name: user?.middle_name || "",
       email: user?.email || "",
       department: user?.department || "",
-      bio: "",
+      bio: user?.bio || "",
+      profile_picture: user?.profile_picture || "",
     },
   })
 
+
+  // const []
   useEffect(() => {
     setIsMounted(true)
     if (!user) {
@@ -53,17 +72,24 @@ export default function ProfilePage() {
     }
   }, [user, router])
 
-  function onSubmit(values: z.infer<typeof profileFormSchema>) {
+  async function onSubmit(values: z.infer<typeof profileFormSchema>) {
     setIsLoading(true)
-
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      await updateUser(values)
       toast({
         title: "Profile updated",
         description: "Your profile has been updated successfully",
+        variant: "success",
       })
+    } catch (error: any) {
+      toast({
+        title: "Error updating profile",
+        description: error.message || "An error occurred",
+        variant: "destructive",
+      })
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
   }
 
   if (!isMounted) {
@@ -96,95 +122,147 @@ export default function ProfilePage() {
                 <CardTitle>Profile Information</CardTitle>
                 <CardDescription>Update your profile information and personal details</CardDescription>
               </CardHeader>
-              <CardContent>
+                <CardContent>
                 <div className="flex flex-col md:flex-row gap-8">
                   <div className="flex flex-col items-center space-y-4">
-                    <Avatar className="h-32 w-32">
-                      {/* <AvatarImage src={user.avatar || "/avatars/01.png"} alt={user.name} /> */}
-                      {/* <AvatarFallback className="text-4xl">{user.name.charAt(0)}</AvatarFallback> */}
-                    </Avatar>
-                    <Button variant="outline" size="sm">
-                      <Camera className="mr-2 h-4 w-4" />
-                      Change Photo
-                    </Button>
-                    <div className="text-center">
-                      <p className="font-medium">{user.name}</p>
-                      <p className="text-sm text-muted-foreground">{user.role}</p>
-                      <p className="text-xs text-muted-foreground">Joined {user.joinedAt}</p>
-                    </div>
+                  <Avatar className="h-32 w-32">
+                    <AvatarImage src={user.profile_picture || "/avatars/01.png"} alt={user.first_name} />
+                    <AvatarFallback className="text-4xl">
+                    {user.first_name?.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <Button variant="outline" size="sm">
+                    <Camera className="mr-2 h-4 w-4" />
+                    Change Photo
+                  </Button>
+                  <div className="text-center">
+                    <p className="font-medium">{user.first_name} {user.middle_name} {user.last_name}</p>
+                    {/* <p className="text-sm text-muted-foreground">{user.role}</p> */}
+                    {/* <p className="text-xs text-muted-foreground">Joined {user.joinedAt}</p> */}
+                  </div>
                   </div>
 
                   <Separator orientation="vertical" className="hidden md:block" />
                   <Separator className="md:hidden" />
 
                   <div className="flex-1">
-                    <Form {...form}>
-                      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                        <FormField
-                          control={form.control}
-                          name="name"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Full Name</FormLabel>
-                              <FormControl>
-                                <Input placeholder="John Doe" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <div className="flex gap-2">
+                      <FormField
+                        control={form.control}
+                        name="first_name"
+                        render={({ field }) => (
+                          <FormItem className="flex-1">
+                            <FormLabel>First Name</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="John"
+                                {...field}
+                                value={field.value}
+                                onChange={e => field.onChange(e.target.value)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="middle_name"
+                        render={({ field }) => (
+                          <FormItem className="flex-1">
+                            <FormLabel>Middle Name</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="M."
+                                {...field}
+                                value={field.value}
+                                onChange={e => field.onChange(e.target.value)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="last_name"
+                        render={({ field }) => (
+                          <FormItem className="flex-1">
+                            <FormLabel>Last Name</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Doe"
+                                {...field}
+                                value={field.value}
+                                onChange={e => field.onChange(e.target.value)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                        <Input placeholder="your.email@ui.edu.ng" {...field} disabled />
+                        </FormControl>
+                        <FormDescription>Your email address cannot be changed</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="department"
+                      render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Department</FormLabel>
+                        <FormControl>
+                        <Input
+                          placeholder="Computer Science"
+                          {...field}
+                          value={field.value}
+                          onChange={e => field.onChange(e.target.value)}
                         />
-                        <FormField
-                          control={form.control}
-                          name="email"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Email</FormLabel>
-                              <FormControl>
-                                <Input placeholder="your.email@ui.edu.ng" {...field} disabled />
-                              </FormControl>
-                              <FormDescription>Your email address cannot be changed</FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="bio"
+                      render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Bio</FormLabel>
+                        <FormControl>
+                        <textarea
+                          className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          placeholder="Tell us a bit about yourself"
+                          {...field}
+                          value={field.value}
+                          onChange={e => field.onChange(e.target.value)}
                         />
-                        <FormField
-                          control={form.control}
-                          name="department"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Department</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Computer Science" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="bio"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Bio</FormLabel>
-                              <FormControl>
-                                <textarea
-                                  className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                  placeholder="Tell us a bit about yourself"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <Button type="submit" disabled={isLoading}>
-                          {isLoading ? "Saving..." : "Save changes"}
-                        </Button>
-                      </form>
-                    </Form>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                      )}
+                    />
+                    <Button type="submit" disabled={isLoading}>
+                      {isLoading ? "Saving..." : "Save changes"}
+                    </Button>
+                    </form>
+                  </Form>
                   </div>
                 </div>
-              </CardContent>
+                </CardContent>
             </Card>
           </TabsContent>
 

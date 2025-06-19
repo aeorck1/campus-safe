@@ -12,12 +12,14 @@ export type User = {
   id: string
   first_name: string
   last_name: string
-  email?: string
-  role: "admin" | "security" | "student"
+  middle_name: string
+  email: string
   avatar?: string
   department?: string
   joinedAt: string
   username: string // Optional for API login
+  profile_picture: string
+  bio: string // Optional bio field
 }
 
 export type RefreshToken = {
@@ -607,13 +609,17 @@ getAllUsers: async () => {
   }
 },
 
-updateUserProfile: async (payload:any) => {
+updateUserProfile: async (payload: any) => {
   try {
-    const response = await axiosAuth.put(`users/profile/`, payload)
-    return { success: true, data: response.data }
+    const response = await axiosAuth.put(`users/profile/`, payload, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return { success: true, data: response.data };
   } catch (error: any) {
-    const message = error?.response?.data?.detail || error?.message || "Failed to update profile"
-    return { success: false, message }
+    const message = error?.response?.data?.detail || error?.message || "Failed to update profile";
+    return { success: false, message };
   }
 },
 
