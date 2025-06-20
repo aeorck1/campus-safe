@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import {
   AlertTriangle,
@@ -32,12 +32,88 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { mockIncidents, mockUsers } from "@/lib/mock-data"
 import { useToast } from "@/components/ui/use-toast"
+import { useAuthStore } from "@/lib/auth"
 
 export function AdminDashboard() {
   const { toast } = useToast()
   const [activeTab, setActiveTab] = useState("users")
   const [searchQuery, setSearchQuery] = useState("")
+  const [users, setUsers] = useState([])
 
+  const getUsers = useAuthStore((state) => state.getAllUsers)
+  // You can store users in state if you want to fetch on mount
+  // For now, just as an example:
+  
+
+  // Fetch users on mount
+  // If getUsers is async, handle accordingly
+  // If it's sync, you can call directly
+  // Here is an example with async:
+  /*
+  useEffect(() => {
+    async function fetchUsers() {
+      try {
+        const users = await getUsers()
+        setUsers(users)
+      } catch (error) {
+        console.error("Failed to fetch users:", error)
+        toast({
+          title: "Error",
+          description: "Failed to fetch users. Please try again later.",
+          variant: "destructive",
+        })
+      }
+    }
+    fetchUsers()
+  }, [getUsers, toast])
+  */
+
+  // If getUsers is synchronous, you can do:
+  
+  useEffect(() => {
+    async function fetchUsers() {
+      try {
+        const response = await getUsers()
+        if (response && response.success && Array.isArray(response.data)) {
+          setUsers(response.data)
+          console.log("Fetched users:", response.data)
+        } else {
+          setUsers([])
+          toast({
+            title: "Error",
+            description: response?.message || "Failed to fetch users. Please try again later.",
+            variant: "destructive",
+          })
+        }
+      } catch (error) {
+        console.error("Failed to fetch users:", error)
+        toast({
+          title: "Error",
+          description: "Failed to fetch users. Please try again later.",
+          variant: "destructive",
+        })
+      }
+    }
+    fetchUsers()
+  }, [getUsers, toast])
+  
+
+  // Remove the following block, as it's not valid code:
+  /*
+  const users={
+    try {
+      users: getUsers(),
+    } catch (error) {
+      console.error("Failed to fetch users:", error)
+      toast({
+        title: "Error",
+        description: "Failed to fetch users. Please try again later.",
+        variant: "destructive",
+      })
+      return []
+    }
+  }
+  */
   const handleDeleteUser = (userId: string) => {
     toast({
       title: "User deleted",
@@ -67,7 +143,7 @@ export function AdminDashboard() {
   }
 
   // Filter users based on search query
-  const filteredUsers = mockUsers.filter(
+  const filteredUsers = users.filter(
     (user) =>
       searchQuery === "" ||
       user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -130,8 +206,8 @@ export function AdminDashboard() {
                     <TableRow>
                       <TableHead>User</TableHead>
                       <TableHead>Role</TableHead>
-                      <TableHead>Reports</TableHead>
-                      <TableHead>Joined</TableHead>
+                      {/* <TableHead>Reports</TableHead>
+                      <TableHead>Joined</TableHead> */}
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -142,10 +218,10 @@ export function AdminDashboard() {
                           <div className="flex items-center gap-3">
                             <Avatar>
                               <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
-                              <AvatarFallback>{user.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                              <AvatarFallback>{user.first_name.substring(0, 2).toUpperCase()}</AvatarFallback>
                             </Avatar>
                             <div>
-                              <p className="font-medium">{user.name}</p>
+                              <p className="font-medium">{user.first_name}</p>
                               {/* <p className="font-medium">{user.first_name} {user.last_name}</p> */}
                               <p className="text-sm text-muted-foreground">{user.email}</p>
                             </div>
@@ -154,14 +230,14 @@ export function AdminDashboard() {
                         <TableCell>
                           <Badge
                             variant={
-                              user.role === "admin" ? "default" : user.role === "security" ? "secondary" : "outlineStudent"
+                              user.role.name === "Admin" ? "default" : user.role.name === "Student" ? "secondary" : "outlineStudent"
                             }
                           >
-                            {user.role}
+                            {user.role.name}
                           </Badge>
                         </TableCell>
-                        <TableCell>{user.reportsSubmitted}</TableCell>
-                        <TableCell>{user.joinedAt}</TableCell>
+                        {/* <TableCell>{user.reportsSubmitted}</TableCell> */}
+                        {/* <TableCell>{user.joinedAt}</TableCell> */}
                         <TableCell className="text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>

@@ -24,18 +24,34 @@ export function SiteHeader() {
   const pathname = usePathname()
   const { isAuthenticated } = useAuthStore()
 
+  const { user } = useAuthStore()
+
   const routes = [
     {
       href: "/",
       label: "Home",
       active: pathname === "/",
     },
-    {
-      href: "/dashboard",
-      label: "Dashboard",
-      active: pathname === "/dashboard",
-      protected: true,
-    },
+    user?.role?.name === "Admin" || user?.role?.name === "System Admin"
+      ? {
+          href: "/admin",
+          label: "Admin",
+          active: pathname === "/admin",
+          protected: true,
+        }
+      : user?.role?.name === "Security"
+      ? {
+          href: "/security",
+          label: "Security",
+          active: pathname === "/security",
+          protected: true,
+        }
+      : {
+          href: "/dashboard",
+          label: "Dashboard",
+          active: pathname === "/dashboard",
+          protected: true,
+        },
     {
       href: "/incidents",
       label: "Incidents",
@@ -46,7 +62,7 @@ export function SiteHeader() {
       label: "Campus Map",
       active: pathname === "/map",
     },
-  ]
+  ].filter(Boolean)
 
   // Filter routes based on authentication status
   const filteredRoutes = routes.filter((route) => !route.protected || isAuthenticated)

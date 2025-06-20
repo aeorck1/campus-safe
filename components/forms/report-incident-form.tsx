@@ -47,6 +47,15 @@ const formSchema = z.object({
   tags: z.array(z.string()).default([]),
   anonymous: z.boolean().default(false),
   contactInfo: z.string().email("Please enter a valid email address.").optional().or(z.literal("")),
+  images: z
+    .array(
+      z.object({
+        name: z.string(),
+        type: z.string().optional(),
+      })
+    )
+    .optional()
+    .default([]),
 })
 
 const reverseGeocode = async (lat: number, lon: number): Promise<string> => {
@@ -121,87 +130,92 @@ const isStep2Disabled = watchedLocation.trim().length < 10 || watchedCoordinates
   }, [])
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    setIsSubmitting(true)
-    try{
-      const result = await report({ 
-      ...values, 
-      tags: values.tags, // <-- send as array, not joined string
-      longitude: coordinates[1], // coordinates come from the map pin
-      latitude: coordinates[0], // coordinates come from the map pin
-      severity: values.severity, // values.severity comes directly from the radio button
-    })
-    if (result.success) {
+    setIsSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append("title", values.title);
+      formData.append("description", values.description);
+      formData.append("location", values.location);
+      formData.append("longitude", String(coordinates[1]));
+      formData.append("latitude", String(coordinates[0]));
+      formData.append("severity", values.severity);
+      values.tags.forEach((tag) => formData.append("tags[]", tag));
+      formData.append("anonymous", String(values.anonymous));
+      if (values.contactInfo) formData.append("contactInfo", values.contactInfo);
+      if (selectedFiles && selectedFiles.length > 0) {
+        selectedFiles.forEach((file) => {
+          formData.append("images", file);
+        });
+      }
+      const result = await report(formData);
+      if (result.success) {
+        toast({
+          title: "Incident reported successfully",
+          description: "Your report has been submitted and will be reviewed shortly.",
+          variant: "success",
+        });
+        router.push("/incidents");
+      } else {
+        toast({
+          title: "Error reporting incident",
+          description: result.message || "An unexpected error occurred. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error submitting report:", error);
       toast({
-        title: "Incident reported successfully",
-        description: "Your report has been submitted and will be reviewed shortly.",
-        variant: "success",
-      })
-      router.push("/incidents")
-    
-  }
-  
-  else{
-    toast({
-      title: "Error reporting incident",
-      description: result.message || "An unexpected error occurred. Please try again.",
-      variant: "destructive"
-    })
-  }
-  
+        title: "Error submitting report",
+        description: "An unexpected error occurred while submitting your report. Please try again later.",
+        variant: "destructive",
+      });
+    }
+    setIsSubmitting(false);
+  };
 
-    setIsSubmitting(false)
-  } 
-  catch (error) {
-  console.error("Error submitting report:", error)
-  toast({
-    title: "Error submitting report",
-    description: "An unexpected error occurred while submitting your report. Please try again later.",
-    variant: "destructive",
-  })
-  setIsSubmitting(false)
-}
-}
   const onSubmitAnonymous = async (values: z.infer<typeof formSchema>) => {
-    setIsSubmitting(true)
-    try{
-      const result = await anonymousReport({ 
-      ...values, 
-      tags: values.tags, // <-- send as array, not joined string
-      longitude: coordinates[1], // coordinates come from the map pin
-      latitude: coordinates[0], // coordinates come from the map pin
-      severity: values.severity, // values.severity comes directly from the radio button
-    })
-    if (result.success) {
+    setIsSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append("title", values.title);
+      formData.append("description", values.description);
+      formData.append("location", values.location);
+      formData.append("longitude", String(coordinates[1]));
+      formData.append("latitude", String(coordinates[0]));
+      formData.append("severity", values.severity);
+      values.tags.forEach((tag) => formData.append("tags[]", tag));
+      formData.append("anonymous", String(values.anonymous));
+      if (values.contactInfo) formData.append("contactInfo", values.contactInfo);
+      if (selectedFiles && selectedFiles.length > 0) {
+        selectedFiles.forEach((file) => {
+          formData.append("images", file);
+        });
+      }
+      const result = await anonymousReport(formData);
+      if (result.success) {
+        toast({
+          title: "Incident reported successfully",
+          description: "Your report has been submitted and will be reviewed shortly.",
+          variant: "success",
+        });
+        router.push("/incidents");
+      } else {
+        toast({
+          title: "Error reporting incident",
+          description: result.message || "An unexpected error occurred. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error submitting report:", error);
       toast({
-        title: "Incident reported successfully",
-        description: "Your report has been submitted and will be reviewed shortly.",
-        variant: "success",
-      })
-      router.push("/incidents")
-    
+        title: "Error submitting report",
+        description: "An unexpected error occurred while submitting your report. Please try again later.",
+        variant: "destructive",
+      });
+    }
+    setIsSubmitting(false);
   }
-  
-  else{
-    toast({
-      title: "Error reporting incident",
-      description: result.message || "An unexpected error occurred. Please try again.",
-      variant: "destructive",
-    })
-  }
-  
-
-    setIsSubmitting(false)
-  } 
-  catch (error) {
-  console.error("Error submitting report:", error)
-  toast({
-    title: "Error submitting report",
-    description: "An unexpected error occurred while submitting your report. Please try again later.",
-    variant: "destructive",
-  })
-  setIsSubmitting(false)
-}
-}
 
   // Handler to get user's current location
 const handleDetectLocation = () => {
@@ -237,6 +251,7 @@ toast({
 };
 
 
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit((values) => {
@@ -472,7 +487,64 @@ toast({
               )}
             />
 
-          
+            {/* Image Upload Section */}
+            <div className="space-y-2">
+              <FormLabel>Upload Images (optional, max 3)</FormLabel>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={e => {
+                  const files = Array.from(e.target.files || [])
+                  if (files.length > 3) {
+                    toast({
+                      title: "Too many images",
+                      description: "You can only upload up to 3 images.",
+                      variant: "destructive"
+                    })
+                    e.target.value = ""
+                    return
+                  }
+                  // Store files in form state for preview and submission
+                  form.setValue("images", files.map(file => ({
+                    url: URL.createObjectURL(file),
+                    name: file.name,
+                    type: file.type
+                  })))
+                  form.trigger("images")
+                  setSelectedFiles(files)
+                }}
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/80"
+                data-testid="incident-images-input"
+                disabled={selectedFiles?.length >= 3}
+              />
+              <FormDescription>Attach up to 3 images to help describe the incident.</FormDescription>
+              <div className="flex gap-2 mt-2">
+                {selectedFiles?.map((file, idx) => (
+                  <div key={idx} className="relative w-24 h-24 border rounded overflow-hidden">
+                    <img src={URL.createObjectURL(file)} alt={file.name} className="object-cover w-full h-full" />
+                    <button
+                      type="button"
+                      className="absolute top-1 right-1 bg-white bg-opacity-80 rounded-full p-1 text-xs"
+                      onClick={() => {
+                        const newFiles = selectedFiles.filter((_, i) => i !== idx)
+                        setSelectedFiles(newFiles)
+                        form.setValue("images", newFiles.map(f => ({
+                          url: URL.createObjectURL(f),
+                          name: f.name,
+                          type: f.type
+                        })))
+                        form.trigger("images")
+                      }}
+                      aria-label="Remove image"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <FormMessage />
+            </div>
 
              <div className="pt-4 flex justify-between">
 
@@ -598,6 +670,20 @@ toast({
                   <p className="text-sm text-muted-foreground">
                     {form.watch("anonymous") ? "Anonymous report" : "Non-anonymous report"}
                   </p>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium">Images</h4>
+                  <div className="flex gap-2 mt-1">
+                    {selectedFiles && selectedFiles.length > 0 ? (
+                      selectedFiles.map((file, idx) => (
+                        <div key={idx} className="relative w-24 h-24 border rounded overflow-hidden">
+                          <img src={URL.createObjectURL(file)} alt={file.name} className="object-cover w-full h-full" />
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No images uploaded</p>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

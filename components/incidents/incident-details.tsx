@@ -243,6 +243,31 @@ const handleCommentSubmit = async () => {
             </CardHeader>
             <CardContent>
               <p className="whitespace-pre-line mb-4">{incident.description}</p>
+
+              {/* Incident Images Section */}
+              {incident.images && incident.images.length > 0 && (
+                <div className="mb-6">
+                  <h4 className="text-sm font-medium mb-2">Images</h4>
+                  <div className="flex gap-2 flex-wrap">
+                    {incident.images.map((image: any, id: number) => (
+                      <a
+                        key={id}
+                        href={typeof image === 'string' ? image : image.image}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block w-28 h-28 border rounded overflow-hidden hover:shadow-lg"
+                      >
+                        <img
+                          src={typeof image === 'string' ? image : image.image}
+                          alt={`Incident image ${id + 1}`}
+                          className="object-cover w-full h-full"
+                        />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
               <div className="flex flex-wrap gap-2 mb-6">
                 {Array.isArray(incident.tags) &&
                   incident.tags.map((tag: { id: string; name: string }) => (

@@ -24,8 +24,8 @@ export function AuthStatus() {
 
   // Handle protected routes
   useEffect(() => {
-    // const protectedRoutes = ["/dashboard", "/admin", "/security", "/profile", "/settings"]
-    const protectedRoutes = ["/dashboard"]
+    const protectedRoutes = ["/dashboard", "/admin", "/security", "/profile", "/settings"]
+    // const protectedRoutes = ["/dashboard"]
     const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route))
 
     if (isProtectedRoute && !isAuthenticated) {
@@ -82,7 +82,15 @@ export function AuthStatus() {
         </DropdownMenuItem>
 
         {/* Show admin link for admin users */}
-        {user?.role === "admin" && (
+        {user?.role?.id === "SYSTEM_ADMIN" && (
+          <DropdownMenuItem asChild>
+            <Link href="/admin" className="cursor-pointer">
+              Admin Dashboard
+            </Link>
+          </DropdownMenuItem>
+        )}
+
+         {user?.role?.id === "ADMIN" && (
           <DropdownMenuItem asChild>
             <Link href="/admin" className="cursor-pointer">
               Admin Dashboard
@@ -91,7 +99,7 @@ export function AuthStatus() {
         )}
 
         {/* Show security link for security users */}
-        {user?.role === "security" && (
+        {user?.role?.id === "SECURITY" && (
           <DropdownMenuItem asChild>
             <Link href="/security" className="cursor-pointer">
               Security Dashboard

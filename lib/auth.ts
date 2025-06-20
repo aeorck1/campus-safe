@@ -20,6 +20,7 @@ export type User = {
   username: string // Optional for API login
   profile_picture: string
   bio: string // Optional bio field
+  role: any // Adjust based on your role type
 }
 
 export type RefreshToken = {
@@ -445,7 +446,11 @@ deleteAdminIncident: async (incidentId: string) => {
 // ---------- USER ----------
 reportIncident: async (data: object) => {
   try {
-    const response = await axiosAuth.post("/incidents/", data);
+    const response = await axiosAuth.post("/incidents/", data, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
     return { success: true, data: response.data };
   } catch (error: any) {
     const message = error?.response?.data?.detail || error?.message || "Error reporting incident.";
@@ -486,7 +491,11 @@ getMyReportedIncidents: async () => {
 // ---------- ANONYMOUS ----------
 reportIncidentAnonymous: async (data: object) => {
   try {
-    const response = await axiosInstance.post("/anonymous/incidents/", data);
+    const response = await axiosInstance.post("/anonymous/incidents/", data, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
     return { success: true, data: response.data };
   } catch (error: any) {
     const message = error?.response?.data?.detail || error?.message || "Error reporting anonymously.";
