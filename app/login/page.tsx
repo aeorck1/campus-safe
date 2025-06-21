@@ -54,7 +54,9 @@ console.log("Login result:", result)
         description: `Welcome back to Crowd Source, ${result.message.first_name} 😁`,
         variant: "success",
       })
-      router.push("/dashboard")
+      const searchParams = new URLSearchParams(window.location.search)
+      const redirectTo = searchParams.get("redirect") || "/dashboard"
+      router.push(redirectTo)
     } else {
       toast({
         title: "Login failed",

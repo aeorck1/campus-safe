@@ -34,10 +34,10 @@ export function SiteHeader() {
     },
     user?.role?.name === "Admin" || user?.role?.name === "System Admin"
       ? {
-          href: "/admin",
+          href: "/security",
           label: "Admin",
-          active: pathname === "/admin",
-          protected: true,
+          active: pathname === "/security",
+          protected: false,
         }
       : user?.role?.name === "Security"
       ? {

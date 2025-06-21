@@ -2,7 +2,7 @@ import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import axios from "axios"
 import axiosAuth from "./axiosAuth"
-import axiosInstance from "./axiosInstance"
+// import axiosAuth from "./axiosAuth"
 import { object } from "zod"
 // const API_BASE_URL = "https://campussecuritybackend.onrender.com/api/v1/"
 
@@ -134,12 +134,18 @@ setAccessToken: (refreshToken: RefreshToken) => Promise<{ success: boolean; data
   getAllUsers: () => Promise<{ success: boolean; data?: any; message?: string }>
   updateUserProfile: (payload:any) => Promise<{ success: boolean; data?: any; message?: string }>
   deleteUser: (id: string) => Promise<{ success: boolean; message?: string }>
+  adminGetAllUsers: () => Promise<{ success: boolean; data?: any; message?: string }>
+  postAdminChangeRole: (data: ChangeRole) => Promise<{ success: boolean; data?: any; message?: string }>
 }
 export  type Login ={
      username: string,
         password: string
 }
 
+export type ChangeRole = {
+  user_id: string,
+  role_id: string
+}
 export type UpdateComments = {
      id: string,
     comment: string
@@ -403,6 +409,17 @@ getAdminIncident: async (incidentId: string) => {
   }
 },
 
+postAdminChangeRole: async (data: ChangeRole) => {
+  try {
+    const response = await axiosAuth.post(`admin/users/op/change-role/`, data);
+    return { success: true, data: response.data };
+  } catch (error: any) {
+    const message = error?.response?.data?.detail || error?.message || "Error changing role.";
+    return { success: false, message };
+  }
+},
+
+
 updateAdminIncidentStatus: async (incidentId: string, status: string) => {
   try {
     const response = await axiosAuth.patch(`/admin/incidents/${incidentId}/status/`, { status });
@@ -491,7 +508,7 @@ getMyReportedIncidents: async () => {
 // ---------- ANONYMOUS ----------
 reportIncidentAnonymous: async (data: object) => {
   try {
-    const response = await axiosInstance.post("/anonymous/incidents/", data, {
+    const response = await axiosAuth.post("/anonymous/incidents/", data, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -506,7 +523,7 @@ reportIncidentAnonymous: async (data: object) => {
 // ---------- PUBLIC ----------
 getPublicIncidents: async () => {
   try {
-    const response = await axiosInstance.get("/public/incidents/");
+    const response = await axiosAuth.get("/public/incidents/");
     return { success: true, data: response.data };
   } catch (error: any) {
     const message = error?.response?.data?.detail || error?.message || "Error fetching public incidents.";
@@ -516,7 +533,7 @@ getPublicIncidents: async () => {
 
 getIncidentStatistics: async () => {
   try {
-    const response = await axiosInstance.get("/public/incident-statistics/");
+    const response = await axiosAuth.get("/public/incident-statistics/");
     return { success: true, data: response.data };
   } catch (error: any) {
     const message = error?.response?.data?.detail || error?.message || "Error fetching statistics.";
@@ -529,7 +546,7 @@ getIncidentStatistics: async () => {
 // ---------- PUBLIC ----------
 getAllIncidentTags: async () => {
   try {
-    const response = await axiosInstance.get("/incident-categories/");
+    const response = await axiosAuth.get("/incident-categories/");
     return { success: true, data: response.data };
   } catch (error: any) {
     const message = error?.response?.data?.detail || error?.message || "Error fetching incident tags.";
@@ -539,7 +556,7 @@ getAllIncidentTags: async () => {
 // Get Incidents by ID ⚠️I am not using this
 getIncidentTagById: async (incidentCatId: string) => {
   try {
-    const response = await axiosInstance.get(`/incident-categories/${incidentCatId}/`);
+    const response = await axiosAuth.get(`/incident-categories/${incidentCatId}/`);
     return { success: true, data: response.data };
   } catch (error: any) {
     const message = error?.response?.data?.detail || error?.message || "Error retrieving incident tag.";
@@ -614,6 +631,16 @@ getAllUsers: async () => {
     return { success: true, data: response.data }
   } catch (error: any) {
     const message = error?.response?.data?.detail || error?.message || "Failed to fetch users"
+    return { success: false, message }
+  }
+},
+
+adminGetAllUsers: async () => {
+  try {
+    const response = await axiosAuth.get(`admin/users/`)
+    return { success: true, data: response.data }
+  } catch (error: any) {
+    const message = error?.response?.data?.detail || error?.message || "Failed to fetch admin users"
     return { success: false, message }
   }
 },

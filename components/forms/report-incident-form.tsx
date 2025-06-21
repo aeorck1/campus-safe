@@ -495,31 +495,36 @@ toast({
                 accept="image/*"
                 multiple
                 onChange={e => {
-                  const files = Array.from(e.target.files || [])
-                  if (files.length > 3) {
+                  const files = Array.from(e.target.files || []);
+                  // Combine with already selected files, but max 3
+                  let newFiles = [...selectedFiles, ...files];
+                  if (newFiles.length > 3) {
                     toast({
                       title: "Too many images",
                       description: "You can only upload up to 3 images.",
                       variant: "destructive"
-                    })
-                    e.target.value = ""
-                    return
+                    });
+                    // Only keep the first 3 files
+                    newFiles = newFiles.slice(0, 3);
                   }
-                  // Store files in form state for preview and submission
-                  form.setValue("images", files.map(file => ({
-                    url: URL.createObjectURL(file),
-                    name: file.name,
-                    type: file.type
-                  })))
-                  form.trigger("images")
-                  setSelectedFiles(files)
+                  setSelectedFiles(newFiles);
+                  form.setValue(
+                    "images",
+                    newFiles.map(file => ({
+                      name: file.name,
+                      type: file.type
+                    }))
+                  );
+                  form.trigger("images");
+                  // Reset input value so same file can be selected again if removed
+                  e.target.value = "";
                 }}
                 className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/80"
                 data-testid="incident-images-input"
                 disabled={selectedFiles?.length >= 3}
               />
               <FormDescription>Attach up to 3 images to help describe the incident.</FormDescription>
-              <div className="flex gap-2 mt-2">
+              <div className="flex gap-2 mt-2 flex-wrap">
                 {selectedFiles?.map((file, idx) => (
                   <div key={idx} className="relative w-24 h-24 border rounded overflow-hidden">
                     <img src={URL.createObjectURL(file)} alt={file.name} className="object-cover w-full h-full" />
@@ -527,14 +532,16 @@ toast({
                       type="button"
                       className="absolute top-1 right-1 bg-white bg-opacity-80 rounded-full p-1 text-xs"
                       onClick={() => {
-                        const newFiles = selectedFiles.filter((_, i) => i !== idx)
-                        setSelectedFiles(newFiles)
-                        form.setValue("images", newFiles.map(f => ({
-                          url: URL.createObjectURL(f),
-                          name: f.name,
-                          type: f.type
-                        })))
-                        form.trigger("images")
+                        const newFiles = selectedFiles.filter((_, i) => i !== idx);
+                        setSelectedFiles(newFiles);
+                        form.setValue(
+                          "images",
+                          newFiles.map(f => ({
+                            name: f.name,
+                            type: f.type
+                          }))
+                        );
+                        form.trigger("images");
                       }}
                       aria-label="Remove image"
                     >
