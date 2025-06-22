@@ -33,16 +33,16 @@ export type Comments = {
   parent_comment: string
 }
 
-export type Coordinate =[number, number]
-export type ReportIncident ={
-  tags:string[],
+export type Coordinate = [number, number]
+export type ReportIncident = {
+  tags: string[],
   title: string,
   description: string,
   severity: "LOW" | "MEDIUM" | "HIGH",
   location: string,
   latitude: number,
   longitude: number
-  
+
 }
 
 export type VoteIncident = {
@@ -50,8 +50,8 @@ export type VoteIncident = {
   up_voted: boolean,
 }
 
-export type ReportAnonymous ={
-  tags:string[],
+export type ReportAnonymous = {
+  tags: string[],
   title: string,
   description: string,
   severity: "LOW" | "MEDIUM" | "HIGH",
@@ -60,17 +60,17 @@ export type ReportAnonymous ={
   longitude: number
 }
 
-export type CreateTags={
+export type CreateTags = {
   id: string,
   created_by_user: string,
   name: string
 }
 export type SignUp = {
-     first_name: string,
-    last_name: string,
-    email: string,
-    username: string,
-    password: string
+  first_name: string,
+  last_name: string,
+  email: string,
+  username: string,
+  password: string
 }
 
 export type Comment = {
@@ -84,17 +84,17 @@ export type AuthState = {
   isAuthenticated: boolean
   accessToken: string | null
   refreshToken: string | null
-  passwordResetInitiate: (email:string) => Promise<{ success: boolean; data?: any; message?: string }>
-  passwordCompletionReset: (token:string, new_password:string) => Promise<{ success: boolean; data?: any; message?: string }>
+  passwordResetInitiate: (email: string) => Promise<{ success: boolean; data?: any; message?: string }>
+  passwordCompletionReset: (token: string, new_password: string) => Promise<{ success: boolean; data?: any; message?: string }>
   incidentsListAdmin: () => Promise<{ success: boolean; data?: any; message?: string }>
   // Authentication methods
   signup: (
     credentials: SignUp
   ) => Promise<{ success: boolean; message: string }>
   loginWithApi: (
-  credentials: Login
+    credentials: Login
   ) => Promise<{ success: boolean; message: string }>
-setAccessToken: (refreshToken: RefreshToken) => Promise<{ success: boolean; data?: any; message?: string }>
+  setAccessToken: (refreshToken: RefreshToken) => Promise<{ success: boolean; data?: any; message?: string }>
   // Chat Endpoints
 
   logout: () => void
@@ -132,14 +132,15 @@ setAccessToken: (refreshToken: RefreshToken) => Promise<{ success: boolean; data
   patchIncidentTag: (id: string, data: object) => Promise<{ success: boolean; data?: any; message?: string }>
   deleteIncidentTag: (id: string) => Promise<{ success: boolean; message?: string }>
   getAllUsers: () => Promise<{ success: boolean; data?: any; message?: string }>
-  updateUserProfile: (payload:any) => Promise<{ success: boolean; data?: any; message?: string }>
+  updateUserProfile: (payload: any) => Promise<{ success: boolean; data?: any; message?: string }>
   deleteUser: (id: string) => Promise<{ success: boolean; message?: string }>
   adminGetAllUsers: () => Promise<{ success: boolean; data?: any; message?: string }>
   postAdminChangeRole: (data: ChangeRole) => Promise<{ success: boolean; data?: any; message?: string }>
+  updateIncident: (id: string, data: object) => Promise<{ success: boolean; data?: any; message?: string }>
 }
-export  type Login ={
-     username: string,
-        password: string
+export type Login = {
+  username: string,
+  password: string
 }
 
 export type ChangeRole = {
@@ -147,8 +148,8 @@ export type ChangeRole = {
   role_id: string
 }
 export type UpdateComments = {
-     id: string,
-    comment: string
+  id: string,
+  comment: string
 }
 // Create auth store with persistence
 export const useAuthStore = create<AuthState>()(
@@ -160,43 +161,43 @@ export const useAuthStore = create<AuthState>()(
       refreshToken: null,
 
       // Authentication
-signup: async (
-  credentials: SignUp
-): Promise<{ success: boolean; message: string }> => {
-  try {
-    const response = await axiosAuth.post(
-      `users/students/register/`,
-      credentials
-    )
+      signup: async (
+        credentials: SignUp
+      ): Promise<{ success: boolean; message: string }> => {
+        try {
+          const response = await axiosAuth.post(
+            `users/students/register/`,
+            credentials
+          )
 
-    return {
-      success: true,
-      message: "Account created successfully. Please login.",
-    }
-  } 
-  
-  catch (error: any) {
-    const responseData = error?.response?.data
+          return {
+            success: true,
+            message: "Account created successfully. Please login.",
+          }
+        }
 
-    let message = "Registration failed. Please try again."
+        catch (error: any) {
+          const responseData = error?.response?.data
 
-    if (responseData) {
-      // If error body is an object with "detail"
-      if (typeof responseData === "object" && responseData.detail) {
-        message = responseData.detail
-      }
+          let message = "Registration failed. Please try again."
 
-      // Or if it's a list of field errors (like Django REST Framework)
-      else if (typeof responseData === "object") {
-        const firstKey = Object.keys(responseData)[0]
-        const firstError = responseData[firstKey]?.[0]
-        message = firstError || message
-      }
-    }
+          if (responseData) {
+            // If error body is an object with "detail"
+            if (typeof responseData === "object" && responseData.detail) {
+              message = responseData.detail
+            }
 
-    return { success: false, message }
-  }
-},
+            // Or if it's a list of field errors (like Django REST Framework)
+            else if (typeof responseData === "object") {
+              const firstKey = Object.keys(responseData)[0]
+              const firstError = responseData[firstKey]?.[0]
+              message = firstError || message
+            }
+          }
+
+          return { success: false, message }
+        }
+      },
       loginWithApi: async (
         credentials: Login
       ): Promise<{ success: boolean; message: string }> => {
@@ -228,7 +229,7 @@ signup: async (
           return { success: false, message }
         }
       },
-      passwordResetInitiate: async (email:string) => {
+      passwordResetInitiate: async (email: string) => {
         try {
           const response = await axiosAuth.post(`auth/initiate-password-reset/`, { email })
           return { success: true, data: response.data }
@@ -253,7 +254,7 @@ signup: async (
           return { success: false, message }
         }
       },
-      passwordCompletionReset: async (token:string, new_password: string) => {
+      passwordCompletionReset: async (token: string, new_password: string) => {
         try {
           const response = await axiosAuth.post(`auth/complete-password-reset/`, { token, new_password })
           return { success: true, data: response.data }
@@ -270,7 +271,7 @@ signup: async (
         try {
           const response = await axiosAuth.get(`public/incident-statistics/`)
 
-          return { success: true, data: response.data}
+          return { success: true, data: response.data }
         } catch (error: any) {
           const message =
             error?.response?.data?.detail ||
@@ -280,7 +281,7 @@ signup: async (
         }
       },
 
-      
+
       incidents: async () => {
         try {
           const response = await axiosAuth.get(`public/incidents/`)
@@ -310,7 +311,7 @@ signup: async (
       },
 
       // Chat
-            // Chat Endpoints
+      // Chat Endpoints
       getCommentCount: async (object_type: string, object_id: string) => {
         try {
           const response = await axiosAuth.get(
@@ -358,7 +359,7 @@ signup: async (
       },
 
       updateUserComment: async (
-    credentials:UpdateComments
+        credentials: UpdateComments
       ) => {
         try {
           const response = await axiosAuth.patch(
@@ -386,290 +387,299 @@ signup: async (
         }
       },
 
-// INCIDENT ENDPOINTS
+      // INCIDENT ENDPOINTS
 
-// ---------- ADMIN ----------
-listAdminIncidents: async () => {
-  try {
-    const response = await axiosAuth.get("/admin/incidents/");
-    return { success: true, data: response.data };
-  } catch (error: any) {
-    const message = error?.response?.data?.detail || error?.message || "Error fetching admin incidents.";
-    return { success: false, message };
-  }
-},
-
-getAdminIncident: async (incidentId: string) => {
-  try {
-    const response = await axiosAuth.get(`/admin/incidents/${incidentId}/`);
-    return { success: true, data: response.data };
-  } catch (error: any) {
-    const message = error?.response?.data?.detail || error?.message || "Error retrieving incident.";
-    return { success: false, message };
-  }
-},
-
-postAdminChangeRole: async (data: ChangeRole) => {
-  try {
-    const response = await axiosAuth.post(`admin/users/op/change-role/`, data);
-    return { success: true, data: response.data };
-  } catch (error: any) {
-    const message = error?.response?.data?.detail || error?.message || "Error changing role.";
-    return { success: false, message };
-  }
-},
-
-
-updateAdminIncidentStatus: async (incidentId: string, status: string) => {
-  try {
-    const response = await axiosAuth.patch(`/admin/incidents/${incidentId}/status/`, { status });
-    return { success: true, data: response.data };
-  } catch (error: any) {
-    const message = error?.response?.data?.detail || error?.message || "Error updating status.";
-    return { success: false, message };
-  }
-},
-
-updateAdminIncident: async (incidentId: string, data: object) => {
-  try {
-    const response = await axiosAuth.put(`/admin/incidents/${incidentId}/`, data);
-    return { success: true, data: response.data };
-  } catch (error: any) {
-    const message = error?.response?.data?.detail || error?.message || "Error updating incident.";
-    return { success: false, message };
-  }
-},
-
-patchAdminIncident: async (incidentId: string, data: object) => {
-  try {
-    const response = await axiosAuth.patch(`/admin/incidents/${incidentId}/`, data);
-    return { success: true, data: response.data };
-  } catch (error: any) {
-    const message = error?.response?.data?.detail || error?.message || "Error patching incident.";
-    return { success: false, message };
-  }
-},
-
-deleteAdminIncident: async (incidentId: string) => {  
-  try {
-    await axiosAuth.delete(`/admin/incidents/${incidentId}/`);
-    return { success: true };
-  } catch (error: any) {
-    const message = error?.response?.data?.detail || error?.message || "Error deleting incident.";
-    return { success: false, message };
-  }
-},
-
-// ---------- USER ----------
-reportIncident: async (data: object) => {
-  try {
-    const response = await axiosAuth.post("/incidents/", data, {
-      headers: {
-        "Content-Type": "multipart/form-data",
+      // ---------- ADMIN ----------
+      listAdminIncidents: async () => {
+        try {
+          const response = await axiosAuth.get("/admin/incidents/");
+          return { success: true, data: response.data };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error fetching admin incidents.";
+          return { success: false, message };
+        }
       },
-    });
-    return { success: true, data: response.data };
-  } catch (error: any) {
-    const message = error?.response?.data?.detail || error?.message || "Error reporting incident.";
-    return { success: false, message };
-  }
-},
 
-voteIncident: async (data: { incident_id: string; up_voted: boolean }) => {
-  try {
-    const response = await axiosAuth.post("/incident-votes/", data);
-    return { success: true, data: response.data };
-  } catch (error: any) {
-    const message = error?.response?.data?.detail || error?.message || "Error voting on incident.";
-    return { success: false, message };
-  }
-},
-
-submitSatisfaction: async (incidentId: string, data: { satisfaction: number }) => {
-  try {
-    const response = await axiosAuth.patch(`/incidents/${incidentId}/satisfaction/`, data);
-    return { success: true, data: response.data };
-  } catch (error: any) {
-    const message = error?.response?.data?.detail || error?.message || "Error submitting satisfaction.";
-    return { success: false, message };
-  }
-},
-
-getMyReportedIncidents: async () => {
-  try {
-    const response = await axiosAuth.get("/incidents/my-reports/");
-    return { success: true, data: response.data };
-  } catch (error: any) {
-    const message = error?.response?.data?.detail || error?.message || "Error fetching your reports.";
-    return { success: false, message };
-  }
-},
-
-// ---------- ANONYMOUS ----------
-reportIncidentAnonymous: async (data: object) => {
-  try {
-    const response = await axiosAuth.post("/anonymous/incidents/", data, {
-      headers: {
-        "Content-Type": "multipart/form-data",
+      getAdminIncident: async (incidentId: string) => {
+        try {
+          const response = await axiosAuth.get(`/admin/incidents/${incidentId}/`);
+          return { success: true, data: response.data };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error retrieving incident.";
+          return { success: false, message };
+        }
       },
-    });
-    return { success: true, data: response.data };
-  } catch (error: any) {
-    const message = error?.response?.data?.detail || error?.message || "Error reporting anonymously.";
-    return { success: false, message };
-  }
-},
 
-// ---------- PUBLIC ----------
-getPublicIncidents: async () => {
-  try {
-    const response = await axiosAuth.get("/public/incidents/");
-    return { success: true, data: response.data };
-  } catch (error: any) {
-    const message = error?.response?.data?.detail || error?.message || "Error fetching public incidents.";
-    return { success: false, message };
-  }
-},
-
-getIncidentStatistics: async () => {
-  try {
-    const response = await axiosAuth.get("/public/incident-statistics/");
-    return { success: true, data: response.data };
-  } catch (error: any) {
-    const message = error?.response?.data?.detail || error?.message || "Error fetching statistics.";
-    return { success: false, message };
-  }
-},
-
-// INCIDENT TAG ENDPOINTS
-
-// ---------- PUBLIC ----------
-getAllIncidentTags: async () => {
-  try {
-    const response = await axiosAuth.get("/incident-categories/");
-    return { success: true, data: response.data };
-  } catch (error: any) {
-    const message = error?.response?.data?.detail || error?.message || "Error fetching incident tags.";
-    return { success: false, message };
-  }
-},
-// Get Incidents by ID ⚠️I am not using this
-getIncidentTagById: async (incidentCatId: string) => {
-  try {
-    const response = await axiosAuth.get(`/incident-categories/${incidentCatId}/`);
-    return { success: true, data: response.data };
-  } catch (error: any) {
-    const message = error?.response?.data?.detail || error?.message || "Error retrieving incident tag.";
-    return { success: false, message };
-  }
-},
-
-
-// ---------- ADMIN ----------
-getAdminIncidentTags: async () => {
-  try {
-    const response = await axiosAuth.get("/incident-categories/admin/");
-    return { success: true, data: response.data };
-  } catch (error: any) {
-    const message = error?.response?.data?.detail || error?.message || "Error fetching admin tags.";
-    return { success: false, message };
-  }
-},
-
-createIncidentTag: async (data: object) => {
-  try {
-    const response = await axiosAuth.post("/incident-categories/admin/", data);
-    return { success: true, data: response.data };
-  } catch (error: any) {
-    const message = error?.response?.data?.detail || error?.message || "Error creating tag.";
-    return { success: false, message };
-  }
-},
-
-getAdminIncidentTagById: async (id: string) => {
-  try {
-    const response = await axiosAuth.get(`/incident-categories/admin/${id}/`);
-    return { success: true, data: response.data };
-  } catch (error: any) {
-    const message = error?.response?.data?.detail || error?.message || "Error retrieving tag.";
-    return { success: false, message };
-  }
-},
-
-updateIncidentTag: async (id: string, data: object) => {
-  try {
-    const response = await axiosAuth.put(`/incident-categories/admin/${id}/`, data);
-    return { success: true, data: response.data };
-  } catch (error: any) {
-    const message = error?.response?.data?.detail || error?.message || "Error updating tag.";
-    return { success: false, message };
-  }
-},
-
-patchIncidentTag: async (id: string, data: object) => {
-  try {
-    const response = await axiosAuth.patch(`/incident-categories/admin/${id}/`, data);
-    return { success: true, data: response.data };
-  } catch (error: any) {
-    const message = error?.response?.data?.detail || error?.message || "Error patching tag.";
-    return { success: false, message };
-  }
-},
-
-deleteIncidentTag: async (id: string) => {
-  try {
-    await axiosAuth.delete(`/incident-categories/admin/${id}/`);
-    return { success: true };
-  } catch (error: any) {
-    const message = error?.response?.data?.detail || error?.message || "Error deleting tag.";
-    return { success: false, message };
-  }
-},
-getAllUsers: async () => {
-  try {
-    const response = await axiosAuth.get(`users/`)
-    return { success: true, data: response.data }
-  } catch (error: any) {
-    const message = error?.response?.data?.detail || error?.message || "Failed to fetch users"
-    return { success: false, message }
-  }
-},
-
-adminGetAllUsers: async () => {
-  try {
-    const response = await axiosAuth.get(`admin/users/`)
-    return { success: true, data: response.data }
-  } catch (error: any) {
-    const message = error?.response?.data?.detail || error?.message || "Failed to fetch admin users"
-    return { success: false, message }
-  }
-},
-
-updateUserProfile: async (payload: any) => {
-  try {
-    const response = await axiosAuth.put(`users/profile/`, payload, {
-      headers: {
-        "Content-Type": "multipart/form-data",
+      postAdminChangeRole: async (data: ChangeRole) => {
+        try {
+          const response = await axiosAuth.post(`admin/users/op/change-role/`, data);
+          return { success: true, data: response.data };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error changing role.";
+          return { success: false, message };
+        }
       },
-    });
-    return { success: true, data: response.data };
-  } catch (error: any) {
-    const message = error?.response?.data?.detail || error?.message || "Failed to update profile";
-    return { success: false, message };
-  }
-},
-
-deleteUser: async (id: string) => {
-  try {
-    await axiosAuth.delete(`users/${id}/`);
-    return { success: true };
-  } catch (error: any) {
-    const message = error?.response?.data?.detail || error?.message || "Failed to delete user";
-    return { success: false, message };
-  }
-},
 
 
+      updateAdminIncidentStatus: async (incidentId: string, status: string) => {
+        try {
+          const response = await axiosAuth.patch(`/admin/incidents/${incidentId}/status/`, { status });
+          return { success: true, data: response.data };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error updating status.";
+          return { success: false, message };
+        }
+      },
+
+      updateAdminIncident: async (incidentId: string, data: object) => {
+        try {
+          const response = await axiosAuth.put(`/admin/incidents/${incidentId}/`, data);
+          return { success: true, data: response.data };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error updating incident.";
+          return { success: false, message };
+        }
+      },
+
+      patchAdminIncident: async (incidentId: string, data: object) => {
+        try {
+          const response = await axiosAuth.patch(`/admin/incidents/${incidentId}/`, data);
+          return { success: true, data: response.data };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error patching incident.";
+          return { success: false, message };
+        }
+      },
+
+      deleteAdminIncident: async (incidentId: string) => {
+        try {
+          await axiosAuth.delete(`/admin/incidents/${incidentId}/`);
+          return { success: true };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error deleting incident.";
+          return { success: false, message };
+        }
+      },
+
+      // ---------- USER ----------
+      reportIncident: async (data: object) => {
+        try {
+          const response = await axiosAuth.post("/incidents/", data, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          });
+          return { success: true, data: response.data };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error reporting incident.";
+          return { success: false, message };
+        }
+      },
+
+      voteIncident: async (data: { incident_id: string; up_voted: boolean }) => {
+        try {
+          const response = await axiosAuth.post("/incident-votes/", data);
+          return { success: true, data: response.data };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error voting on incident.";
+          return { success: false, message };
+        }
+      },
+
+      submitSatisfaction: async (incidentId: string, data: { satisfaction: number }) => {
+        try {
+          const response = await axiosAuth.patch(`/incidents/${incidentId}/satisfaction/`, data);
+          return { success: true, data: response.data };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error submitting satisfaction.";
+          return { success: false, message };
+        }
+      },
+
+      getMyReportedIncidents: async () => {
+        try {
+          const response = await axiosAuth.get("/incidents/my-reports/");
+          return { success: true, data: response.data };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error fetching your reports.";
+          return { success: false, message };
+        }
+      },
+
+      // ---------- ANONYMOUS ----------
+      reportIncidentAnonymous: async (data: object) => {
+        try {
+          const response = await axiosAuth.post("/anonymous/incidents/", data, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          });
+          return { success: true, data: response.data };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error reporting anonymously.";
+          return { success: false, message };
+        }
+      },
+
+      // ---------- PUBLIC ----------
+      getPublicIncidents: async () => {
+        try {
+          const response = await axiosAuth.get("/public/incidents/");
+          return { success: true, data: response.data };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error fetching public incidents.";
+          return { success: false, message };
+        }
+      },
+
+      getIncidentStatistics: async () => {
+        try {
+          const response = await axiosAuth.get("/public/incident-statistics/");
+          return { success: true, data: response.data };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error fetching statistics.";
+          return { success: false, message };
+        }
+      },
+
+      // INCIDENT TAG ENDPOINTS
+
+      // ---------- PUBLIC ----------
+      getAllIncidentTags: async () => {
+        try {
+          const response = await axiosAuth.get("/incident-categories/");
+          return { success: true, data: response.data };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error fetching incident tags.";
+          return { success: false, message };
+        }
+      },
+      // Get Incidents by ID ⚠️I am not using this
+      getIncidentTagById: async (incidentCatId: string) => {
+        try {
+          const response = await axiosAuth.get(`/incident-categories/${incidentCatId}/`);
+          return { success: true, data: response.data };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error retrieving incident tag.";
+          return { success: false, message };
+        }
+      },
+
+
+      // ---------- ADMIN ----------
+      getAdminIncidentTags: async () => {
+        try {
+          const response = await axiosAuth.get("/incident-categories/admin/");
+          return { success: true, data: response.data };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error fetching admin tags.";
+          return { success: false, message };
+        }
+      },
+
+      createIncidentTag: async (data: object) => {
+        try {
+          const response = await axiosAuth.post("/incident-categories/admin/", data);
+          return { success: true, data: response.data };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error creating tag.";
+          return { success: false, message };
+        }
+      },
+
+      getAdminIncidentTagById: async (id: string) => {
+        try {
+          const response = await axiosAuth.get(`/incident-categories/admin/${id}/`);
+          return { success: true, data: response.data };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error retrieving tag.";
+          return { success: false, message };
+        }
+      },
+
+      updateIncidentTag: async (id: string, data: object) => {
+        try {
+          const response = await axiosAuth.put(`/incident-categories/admin/${id}/`, data);
+          return { success: true, data: response.data };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error updating tag.";
+          return { success: false, message };
+        }
+      },
+
+      patchIncidentTag: async (id: string, data: object) => {
+        try {
+          const response = await axiosAuth.patch(`/incident-categories/admin/${id}/`, data);
+          return { success: true, data: response.data };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error patching tag.";
+          return { success: false, message };
+        }
+      },
+
+      deleteIncidentTag: async (id: string) => {
+        try {
+          await axiosAuth.delete(`/incident-categories/admin/${id}/`);
+          return { success: true };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error deleting tag.";
+          return { success: false, message };
+        }
+      },
+      getAllUsers: async () => {
+        try {
+          const response = await axiosAuth.get(`users/`)
+          return { success: true, data: response.data }
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Failed to fetch users"
+          return { success: false, message }
+        }
+      },
+
+      adminGetAllUsers: async () => {
+        try {
+          const response = await axiosAuth.get(`admin/users/`)
+          return { success: true, data: response.data }
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Failed to fetch admin users"
+          return { success: false, message }
+        }
+      },
+
+      updateUserProfile: async (payload: any) => {
+        try {
+          const response = await axiosAuth.put(`users/profile/`, payload, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          });
+          return { success: true, data: response.data };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Failed to update profile";
+          return { success: false, message };
+        }
+      },
+
+      deleteUser: async (id: string) => {
+        try {
+          await axiosAuth.delete(`users/${id}/`);
+          return { success: true };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Failed to delete user";
+          return { success: false, message };
+        }
+      },
+
+updateIncident: async (id: string, data: object) => {
+        try {
+          const response = await axiosAuth.patch(`/admin/incidents/${id}/status/`, data);
+          return { success: true, data: response.data };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error updating incident status.";
+          return { success: false, message };
+        }
+      },
+      
 
       logout: () => {
         set({ user: null, isAuthenticated: false, accessToken: null })

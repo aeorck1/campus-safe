@@ -73,7 +73,8 @@ export function AdminDashboard() {
   const getUsers = useAuthStore((state) => state.adminGetAllUsers)
   const updateRole = useAuthStore((state) => state.postAdminChangeRole)
   const incidents = useAuthStore((state) => state.incidents)
-  
+  const updateIncident = useAuthStore((state)=> state.updateIncident)
+
   useEffect(() => {
     async function fetchUsers() {
       try {
@@ -166,10 +167,13 @@ export function AdminDashboard() {
   }
 
   const handleResolveIncident = (incidentId: string) => {
+    updateIncident(incidentId, { status: "RESOLVED" })
     toast({
       title: "Incident resolved",
       description: `Incident ID: ${incidentId} has been marked as resolved.`,
+      variant: "success",
     })
+     incidents() // Refresh incidents after resolving
   }
 
   // Handler for opening the edit modal
