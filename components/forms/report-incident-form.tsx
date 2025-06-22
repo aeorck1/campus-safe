@@ -104,6 +104,7 @@ const form = useForm<z.infer<typeof formSchema>>({
     tags: [],
     anonymous: !isAuthenticated, // Default to true if not authenticated
     contactInfo: "",
+    
   },
 })
 
@@ -468,7 +469,14 @@ useEffect(() => {
                     latitude: coordinates[0],
                     status: "Reporting",
                     severity: form.watch("severity")?.toLowerCase() || "low",
-                    reportedAt: new Date().toLocaleString(), // formatted date and time
+                    date_created: new Date().toLocaleString("en-GB", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false,
+                    }),
                     tags: form.watch("tags") || [],
                     upvotes: 0,
                   }]} 

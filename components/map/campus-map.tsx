@@ -33,12 +33,12 @@ interface Incident {
   title: string
   description: string
   location: string
-  // coordinates: [number, number]
   latitude: number
   longitude: number
   status: string
   severity: string
-  reportedAt: string
+  date_created: string
+  // reportedAt: string
   tags: string[]
   upvotes: number
 }
@@ -52,7 +52,7 @@ interface CampusMapProps {
 export function CampusMap({
   incidents,
   center = [7.4429, 3.8967], // Default to University of Ibadan coordinates
-  zoom = 16,
+  zoom = 10,
 }: CampusMapProps) {
   const [isMounted, setIsMounted] = useState(false)
   const [leaflet, setLeaflet] = useState<typeof import("leaflet") | null>(null)

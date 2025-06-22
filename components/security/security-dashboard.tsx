@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import dynamic from "next/dynamic"
 import { AlertTriangle, ArrowUpDown, Check, Clock, MoreHorizontal, Search, Shield } from "lucide-react"
@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { mockIncidents } from "@/lib/mock-data"
 import { useToast } from "@/components/ui/use-toast"
+import { useAuthStore } from "@/lib/auth"
 
 // Dynamically import the CampusMap component with no SSR
 const CampusMap = dynamic(() => import("@/components/map/campus-map").then((mod) => mod.CampusMap), {
@@ -40,6 +41,36 @@ export function SecurityDashboard() {
   const [statusFilter, setStatusFilter] = useState("all")
   const [severityFilter, setSeverityFilter] = useState("all")
   const [sortBy, setSortBy] = useState("newest")
+  // const [incidentsList, setIncidents]= use
+
+
+  const incidents = useAuthStore((state) => state.incidents)
+
+  useEffect(() => {
+    const fetchIncidents = async () => {
+      try {
+        const response = await incidents()
+        if (response && response.success === true) {
+          // Assuming the response data is an array of incidents
+          console.log("Incidents fetched successfully:", response.data)
+          toast({
+            title: "Incidents loaded",
+            description: "All incidents have been successfully loaded.",
+            variant: "success",
+          })
+        }
+
+      } catch (error) {
+        console.error("Error fetching incidents:", error)
+        toast({
+          title: "Error fetching incidents",
+          description: "Unable to load incidents at this time.",
+          variant: "destructive",
+        })
+      }
+    }
+    fetchIncidents()
+  }, [incidents])
 
   // Filter and sort incidents
   const filteredIncidents = mockIncidents
@@ -62,11 +93,11 @@ export function SecurityDashboard() {
     .sort((a, b) => {
       // Sort by date, upvotes, or severity
       if (sortBy === "newest") {
-        return new Date(b.reportedAt).getTime() - new Date(a.reportedAt).getTime()
+        return new Date(b.date_created).getTime() - new Date(a.date_created).getTime()
       } else if (sortBy === "oldest") {
-        return new Date(a.reportedAt).getTime() - new Date(b.reportedAt).getTime()
+        return new Date(a.date_created).getTime() - new Date(b.date_created).getTime()
       } else if (sortBy === "severity") {
-        const severityOrder = { high: 3, medium: 2, low: 1 }
+        const severityOrder = { HIGH: 3, MEDIUM: 2, LOW: 1 }
         return (
           severityOrder[b.severity as keyof typeof severityOrder] -
           severityOrder[a.severity as keyof typeof severityOrder]
@@ -230,28 +261,26 @@ export function SecurityDashboard() {
                 </TableHeader>
                 <TableBody>
                   {filteredIncidents
-                    .filter((incident) => incident.status !== "resolved")
+                    .filter((incident) => incident.status !== "RESOLVED")
                     .map((incident) => (
                       <TableRow key={incident.id}>
                         <TableCell>
                           <div className="flex items-center gap-3">
                             <div
-                              className={`p-1.5 rounded-full ${
-                                incident.severity === "high"
+                              className={`p-1.5 rounded-full ${incident.severity === "HIGH"
                                   ? "bg-red-100 dark:bg-red-900 pulse-animation"
-                                  : incident.severity === "medium"
+                                  : incident.severity === "MEDIUM"
                                     ? "bg-yellow-100 dark:bg-yellow-900"
                                     : "bg-blue-100 dark:bg-blue-900"
-                              }`}
+                                }`}
                             >
                               <AlertTriangle
-                                className={`h-4 w-4 ${
-                                  incident.severity === "high"
+                                className={`h-4 w-4 ${incident.severity === "HIGH"
                                     ? "text-red-600 dark:text-red-400"
-                                    : incident.severity === "medium"
+                                    : incident.severity === "MEDIUM"
                                       ? "text-yellow-600 dark:text-yellow-400"
                                       : "text-blue-600 dark:text-blue-400"
-                                }`}
+                                  }`}
                               />
                             </div>
                             <div>
@@ -264,10 +293,10 @@ export function SecurityDashboard() {
                         <TableCell>
                           <Badge
                             variant={
-                              incident.status === "resolved"
-                                ? "outline"
-                                : incident.status === "investigating"
-                                  ? "secondary"
+                              incident.status === "RESOLVED"
+                                ? "secpndary"
+                                : incident.status === "INVESTIGATING"
+                                  ? "outline"
                                   : "destructive"
                             }
                           >
@@ -277,7 +306,13 @@ export function SecurityDashboard() {
                         <TableCell>
                           <div className="flex items-center">
                             <Clock className="mr-1 h-3 w-3 text-muted-foreground" />
-                            <span className="text-sm">{incident.reportedAt}</span>
+                            <span className="text-sm">{incident.date_created?
+                          new Date(incident.date_created).toLocaleDateString("en-GB", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          }) : "N/A" 
+                          }</span>
                           </div>
                         </TableCell>
                         <TableCell className="text-right">
@@ -350,22 +385,20 @@ export function SecurityDashboard() {
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <div
-                            className={`p-1.5 rounded-full ${
-                              incident.severity === "high"
+                            className={`p-1.5 rounded-full ${incident.severity === "high"
                                 ? "bg-red-100 dark:bg-red-900"
                                 : incident.severity === "medium"
                                   ? "bg-yellow-100 dark:bg-yellow-900"
                                   : "bg-blue-100 dark:bg-blue-900"
-                            }`}
+                              }`}
                           >
                             <AlertTriangle
-                              className={`h-4 w-4 ${
-                                incident.severity === "high"
+                              className={`h-4 w-4 ${incident.severity === "high"
                                   ? "text-red-600 dark:text-red-400"
                                   : incident.severity === "medium"
                                     ? "text-yellow-600 dark:text-yellow-400"
                                     : "text-blue-600 dark:text-blue-400"
-                              }`}
+                                }`}
                             />
                           </div>
                           <div>
@@ -391,7 +424,11 @@ export function SecurityDashboard() {
                       <TableCell>
                         <div className="flex items-center">
                           <Clock className="mr-1 h-3 w-3 text-muted-foreground" />
-                          <span className="text-sm">{incident.reportedAt}</span>
+                          <span className="text-sm">{incident.date_created? new Date(incident.date_created).toLocaleDateString("en-GB", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          }) : " "}</span>
                         </div>
                       </TableCell>
                       <TableCell className="text-right">

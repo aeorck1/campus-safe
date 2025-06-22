@@ -408,18 +408,18 @@ export function AdminDashboard() {
                             <div className="flex items-center gap-3">
                               <div
                                 className={`p-1.5 rounded-full ${
-                                  incident.severity === "high"
+                                  incident.severity === "HIGH"
                                     ? "bg-red-100 dark:bg-red-900"
-                                    : incident.severity === "medium"
+                                    : incident.severity === "MEDIUM"
                                       ? "bg-yellow-100 dark:bg-yellow-900"
                                       : "bg-blue-100 dark:bg-blue-900"
                                 }`}
                               >
                                 <AlertTriangle
                                   className={`h-4 w-4 ${
-                                    incident.severity === "high"
+                                    incident.severity === "HIGH"
                                       ? "text-red-600 dark:text-red-400"
-                                      : incident.severity === "medium"
+                                      : incident.severity === "MEDIUM"
                                         ? "text-yellow-600 dark:text-yellow-400"
                                         : "text-blue-600 dark:text-blue-400"
                                   }`}
@@ -435,9 +435,9 @@ export function AdminDashboard() {
                           <TableCell>
                             <Badge
                               variant={
-                                incident.status === "resolved"
+                                incident.status === "RESOLVED"
                                   ? "secondary"
-                                  : incident.status === "investigating"
+                                  : incident.status === "INVESTIGATING"
                                     ? "outline"
                                     : "destructive"
                               }

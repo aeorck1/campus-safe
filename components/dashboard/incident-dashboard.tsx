@@ -33,8 +33,8 @@ type Incident = {
   location: string;
   status: string;
   severity: string;
-  date_created?: string;
-  reportedAt?: string;
+  date_created: any;
+  reportedAt: string;
   tags: any[];
   upvotes?: number;
 };
@@ -257,7 +257,14 @@ export function IncidentDashboard() {
                         <span className="truncate">{incident.location}</span>
                         <Separator orientation="vertical" className="mx-2 h-3" />
                         <Clock className="h-3 w-3 mr-1" />
-                        {incident.reportedAt}
+                        {incident.date_created? new Date(incident.date_created).toLocaleString("en-GB", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: false,
+                        }) :" "}
                       </div>
                       <div className="mt-2 flex flex-wrap gap-1">
                         {incident.tags.map((tag: { id: string; name: string }) => (
