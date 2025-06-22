@@ -250,10 +250,10 @@ const allTags = Array.from(tagMap.values());
                         <h4 className="font-medium truncate">{incident.title}</h4>
                         <Badge
                           variant={
-                            incident.status === "resolved"
-                              ? "outline"
-                              : incident.status === "investigating"
-                                ? "secondary"
+                            incident.status === "RESOLVED"
+                              ? "secondary"
+                              : incident.status === "INVESTIGATING"
+                                ? "outline"
                                 : "destructive"
                           }
                           className="ml-2 shrink-0"

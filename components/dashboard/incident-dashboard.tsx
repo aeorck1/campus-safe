@@ -26,8 +26,21 @@ const CampusMap = dynamic(() => import("@/components/map/campus-map").then((mod)
   ),
 })
 
+type Incident = {
+  id: string;
+  title: string;
+  description: string;
+  location: string;
+  status: string;
+  severity: string;
+  date_created?: string;
+  reportedAt?: string;
+  tags: any[];
+  upvotes?: number;
+};
+
 export function IncidentDashboard() {
-  const [incidents, setIncidents]= useState([])
+  const [incidents, setIncidents]= useState<Incident[]>([])
   const fetchIncidents = useAuthStore ((state) => state.incidents)
   useEffect (() => {
     fetchIncidents()
@@ -118,17 +131,17 @@ export function IncidentDashboard() {
           <div>
             <h3 className="text-lg font-medium mb-4">Recent Incidents</h3>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {incidents.slice(0, 3).map((incident:any) => (
+                {incidents.slice(-3).reverse().map((incident: any) => (
                 <Card key={incident.id}>
                   <CardHeader className="pb-2">
                     <div className="flex justify-between items-start">
                       <CardTitle className="text-base">{incident.title}</CardTitle>
                       <Badge
                         variant={
-                          incident.status === "resolved"
-                            ? "outline"
-                            : incident.status === "investigating"
-                              ? "secondary"
+                          incident.status === "RESOLVED"
+                            ? "secondary"
+                            : incident.status === "INVESTIGATING"
+                              ? "outline"
                               : "destructive"
                         }
                       >
@@ -154,7 +167,14 @@ export function IncidentDashboard() {
                   <CardFooter className="flex justify-between pt-2">
                     <div className="flex items-center text-xs text-muted-foreground">
                       <Clock className="h-3 w-3 mr-1" />
-                      {incident.date_created}
+                        {new Date(incident.date_created).toLocaleString("en-GB", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: false,
+                        })}
                     </div>
                     <div className="flex items-center gap-4">
                       <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -180,7 +200,7 @@ export function IncidentDashboard() {
             </CardHeader>
             <CardContent>
               <div className="h-[600px] rounded-md border">
-                <CampusMap incidents={mockIncidents as any} />
+                <CampusMap incidents={incidents as any} />
               </div>
             </CardContent>
           </Card>
@@ -194,13 +214,13 @@ export function IncidentDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {mockIncidents.map((incident) => (
+                {incidents.map((incident: any) => (
                   <div key={incident.id} className="flex items-start space-x-4 p-4 rounded-lg border">
                     <div
                       className={`p-2 rounded-full ${
-                        incident.severity === "high"
+                        incident.severity === "HIGH"
                           ? "bg-red-100 dark:bg-red-900"
-                          : incident.severity === "medium"
+                          : incident.severity === "MEDIUM"
                             ? "bg-yellow-100 dark:bg-yellow-900"
                             : "bg-blue-100 dark:bg-blue-900"
                       }`}
@@ -240,9 +260,9 @@ export function IncidentDashboard() {
                         {incident.reportedAt}
                       </div>
                       <div className="mt-2 flex flex-wrap gap-1">
-                        {incident.tags.map((tag) => (
-                          <Badge key={tag} variant="secondary" className="text-xs">
-                            {tag}
+                        {incident.tags.map((tag: { id: string; name: string }) => (
+                          <Badge key={tag.id} variant="secondary" className="text-xs">
+                          {tag.name}
                           </Badge>
                         ))}
                       </div>

@@ -119,10 +119,10 @@ export function CampusMap({
                   <h3 className="font-medium text-sm">{incident.title.substring(0, 5)}...</h3>
                   <Badge
                     variant={
-                      incident.status === "resolved"
-                        ? "outline"
-                        : incident.status === "investigating"
-                          ? "secondary"
+                      incident.status === "RESOLVED"
+                        ? "secondary"
+                        : incident.status === "INVESTIGATING"
+                          ? "outline"
                           : "destructive"
                     }
                     className="text-xs"

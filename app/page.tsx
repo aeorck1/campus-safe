@@ -43,7 +43,7 @@ export default function LandingPage() {
   const [resolvedIncidents, setResolvedIncidents] = useState(stateCount)
   const [averageResponseTime, setAverageResponseTime] = useState(stateCount)
   const [userSatisfaction, setUserSatisfaction] = useState(stateCount)
-  const [incidents, setIncidents] = useState<any[]>([])
+  const [incidents, setIncidents] = useState<[]>([])
 
   const publicStats = useAuthStore((state) => state.getPublicStats)
   const incidentsMap = useAuthStore((state)=>state.incidents)
@@ -66,10 +66,10 @@ export default function LandingPage() {
       try {
         const data = await publicStats()
         console.log("Public stats data:", data.data)
-        setTotalIncidents(data.data.total_incidents || 0)
-        setResolvedIncidents(data.data.resolved_incidents || 0)
-        setAverageResponseTime(data.data.average_response_time || 0)
-        setUserSatisfaction(data.data.user_satisfaction || 0)
+        setTotalIncidents(data.data?.total_incidents || 0)
+        setResolvedIncidents(data.data?.resolved_incidents || 0)
+        setAverageResponseTime(data.data?.average_response_time)
+        setUserSatisfaction(data.data?.user_satisfaction || 0)
       } catch (error) {
         console.error("Failed to fetch public stats:", error)
       }
@@ -244,7 +244,7 @@ export default function LandingPage() {
           <Card className="feature-card border-campus-warning/20">
             <CardHeader className="pb-2">
               <CardTitle className="text-2xl font-bold text-campus-warning flex">
-                <AnimatedCounter n={averageResponseTime} delay={400} />m
+                {averageResponseTime}
               </CardTitle>
               <CardDescription>Average Response Time</CardDescription>
             </CardHeader>
@@ -252,7 +252,7 @@ export default function LandingPage() {
           <Card className="feature-card border-campus-accent/20">
             <CardHeader className="pb-2">
               <CardTitle className="text-2xl font-bold text-campus-accent flex">
-                <AnimatedCounter n={userSatisfaction} delay={600} />%
+                {userSatisfaction}
               </CardTitle>
               <CardDescription>User Satisfaction</CardDescription>
             </CardHeader>

@@ -18,6 +18,7 @@ import { CampusMap } from "@/components/map/campus-map"
 import { useToast } from "@/hooks/use-toast"
 import { useAuthStore } from "@/lib/auth"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Alert } from "@/components/ui/alert"
 
 
 
@@ -67,11 +68,7 @@ const reverseGeocode = async (lat: number, lon: number): Promise<string> => {
     // Show toast if available in this scope
     if (typeof window !== "undefined") {
       // Dynamically import useToast to avoid hook usage outside component
-      toast({
-        title: "Location Error",
-        description: "Failed to fetch address from coordinates.",
-        variant: "destructive",
-      });
+  
     }
     return "Unknown location";
   }
@@ -87,9 +84,13 @@ export function ReportIncidentForm() {
   const [isLocating, setIsLocating] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [tags,setTagsData] = useState<{ id: string; label: string, name: string }[]>([])
+  const [incidentTitles, setIncidentTitles] = useState<string[]>([])
   const report = useAuthStore((state)=> state.reportIncident)
   const anonymousReport = useAuthStore((state)=> state.reportIncidentAnonymous)
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+  const incidents = useAuthStore((state)=> state.incidents)
+
+
 
 const form = useForm<z.infer<typeof formSchema>>({
   resolver: zodResolver(formSchema),
@@ -128,6 +129,20 @@ const isStep2Disabled = watchedLocation.trim().length < 10 || watchedCoordinates
     }
     getTags()
   }, [])
+
+  useEffect(() => {
+    const fetchIncidentTitles = async () => {
+      if (typeof incidents === "function") {
+        const result = await incidents()
+        if (result && result.success && Array.isArray(result.data)) {
+          const titles = result.data.map((inc: any) => inc.title)
+          setIncidentTitles(titles)
+          console.log("Incident Titles: ", titles)
+        }
+      }
+    }
+    fetchIncidentTitles()
+  }, [incidents])
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
@@ -252,6 +267,18 @@ toast({
 
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  // Duplicate detection state
+const [isDuplicate, setIsDuplicate] = useState(false)
+
+// Watch the title field and check for duplicates
+useEffect(() => {
+  const currentTitle = form.watch("title").trim().toLowerCase()
+  if (currentTitle && incidentTitles.some(t => t.trim().toLowerCase() === currentTitle)) {
+    setIsDuplicate(true)
+  } else {
+    setIsDuplicate(false)
+  }
+}, [form.watch("title"), incidentTitles])
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit((values) => {
@@ -280,6 +307,11 @@ toast({
                     <Input placeholder="Brief title describing the incident" {...field} />
                   </FormControl>
                   <FormDescription>Provide a clear, concise title for the incident</FormDescription>
+                  {isDuplicate && (
+        <Alert variant="destructive" className="mt-2">
+          <span className="font-semibold">Duplicate Report:</span> A report with this title already exists. Please check before submitting a new report.
+        </Alert>
+      )}
                   <FormMessage />
                 </FormItem>
               )}
@@ -356,7 +388,7 @@ toast({
           <Button
             type="button"
             onClick={() => setStep(2)}
-            disabled={isButtonDisabled}
+            disabled={isButtonDisabled || isDuplicate}
           >
             Next Step
           </Button>
@@ -699,7 +731,7 @@ toast({
               <Button type="button" onClick={() => setStep(2)}>
                 Previous Step
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button type="submit" disabled={isSubmitting || isDuplicate}>
                 {isSubmitting ? "Submitting..." : "Submit Report"}
               </Button>
             </div>

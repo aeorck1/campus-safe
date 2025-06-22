@@ -232,7 +232,7 @@ export function AdminDashboard() {
   )
 
   // Filter incidents based on search query
-  const filteredIncidents = mockIncidents.filter(
+  const filteredIncidents = incidentsData.filter(
     (incident) =>
       searchQuery === "" ||
       incident.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -448,7 +448,17 @@ export function AdminDashboard() {
                           <TableCell>
                             <div className="flex items-center">
                               <Clock className="mr-1 h-3 w-3 text-muted-foreground" />
-                              <span className="text-sm">{incident.reportedAt}</span>
+                                <span className="text-sm">
+                                {incident.date_created
+                                  ? new Date(incident.date_created).toLocaleString({
+                                    day: "2-digit",
+                                    month: "2-digit",
+                                    year: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  },"en-GB")
+                                  : ""}
+                                </span>
                             </div>
                           </TableCell>
                           <TableCell className="text-right">

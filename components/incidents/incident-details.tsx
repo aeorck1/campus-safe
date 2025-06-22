@@ -230,9 +230,9 @@ const handleCommentSubmit = async () => {
                 <Badge
                   variant={
                     incident.status === "RESOLVED"
-                      ? "outline"
+                      ? "secondary"
                       : incident.status === "INVESTIGATING"
-                        ? "secondary"
+                        ? "outline"
                         : "destructive"
                   }
                   className="ml-2"
