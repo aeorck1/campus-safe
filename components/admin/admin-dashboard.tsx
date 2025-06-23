@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, use } from "react"
 import Link from "next/link"
 import {
   AlertTriangle,
@@ -69,11 +69,15 @@ export function AdminDashboard() {
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [incidentsData, setIncidents] = useState<any[]>([])
 
+  // Add state for delete confirmation dialog
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [incidentToDelete, setIncidentToDelete] = useState<any>(null)
+
   const getUsers = useAuthStore((state) => state.adminGetAllUsers)
   const updateRole = useAuthStore((state) => state.postAdminChangeRole)
   const incidents = useAuthStore((state) => state.incidents)
   const updateIncident = useAuthStore((state)=> state.updateIncident)
-
+  const deleteIncident = useAuthStore((state) => state.deleteAdminIncident)
   useEffect(() => {
     async function fetchUsers() {
       try {
@@ -134,22 +138,7 @@ export function AdminDashboard() {
     return () => clearInterval(intervalId)
   }, [incidents, toast])
 
-  // Remove the following block, as it's not valid code:
-  /*
-  const users={
-    try {
-      users: getUsers(),
-    } catch (error) {
-      console.error("Failed to fetch users:", error)
-      toast({
-        title: "Error",
-        description: "Failed to fetch users. Please try again later.",
-        variant: "destructive",
-      })
-      return []
-    }
-  }
-  */
+
   const handleDeleteUser = (userId: string) => {
     toast({
       title: "User deleted",
@@ -165,10 +154,21 @@ export function AdminDashboard() {
   }
 
   const handleDeleteIncident = (incidentId: string) => {
+    const foundIncident = incidentsData.find((incident) => incident.id === incidentId)
+    setIncidentToDelete(foundIncident)
+    setDeleteDialogOpen(true)
+  }
+
+  const confirmDeleteIncident = async () => {
+    if (!incidentToDelete) return
+    await deleteIncident(incidentToDelete.id)
     toast({
       title: "Incident deleted",
-      description: `Incident ID: ${incidentId} has been deleted.`,
+      description: `Incident "${incidentToDelete.title || incidentToDelete.id}" has been deleted.`,
+      variant: "destructive"
     })
+    setDeleteDialogOpen(false)
+    setIncidentToDelete(null)
   }
 
   const handleResolveIncident = async (incidentId: string) => {
@@ -419,76 +419,76 @@ export function AdminDashboard() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredIncidents.map((incident) => (
-                        <TableRow key={incident.id}>
-                          <TableCell>
-                            <div className="flex items-center gap-3">
-                              <div
-                                className={`p-1.5 rounded-full ${
-                                  incident.severity === "HIGH"
-                                    ? "bg-red-100 dark:bg-red-900"
-                                    : incident.severity === "MEDIUM"
-                                      ? "bg-yellow-100 dark:bg-yellow-900"
-                                      : "bg-blue-100 dark:bg-blue-900"
-                                }`}
-                              >
-                                <AlertTriangle
-                                  className={`h-4 w-4 ${
+                      {[...filteredIncidents]
+                        .sort((a, b) => new Date(b.date_created).getTime() - new Date(a.date_created).getTime())
+                        .map((incident) => (
+                          <TableRow key={incident.id}>
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className={`p-1.5 rounded-full ${
                                     incident.severity === "HIGH"
-                                      ? "text-red-600 dark:text-red-400"
+                                      ? "bg-red-100 dark:bg-red-900"
                                       : incident.severity === "MEDIUM"
-                                        ? "text-yellow-600 dark:text-yellow-400"
-                                        : "text-blue-600 dark:text-blue-400"
+                                        ? "bg-yellow-100 dark:bg-yellow-900"
+                                        : "bg-blue-100 dark:bg-blue-900"
                                   }`}
-                                />
+                                >
+                                  <AlertTriangle
+                                    className={`h-4 w-4 ${
+                                      incident.severity === "HIGH"
+                                        ? "text-red-600 dark:text-red-400"
+                                        : incident.severity === "MEDIUM"
+                                          ? "text-yellow-600 dark:text-yellow-400"
+                                          : "text-blue-600 dark:text-blue-400"
+                                    }`}
+                                  />
+                                </div>
+                                <div>
+                                  <p className="font-medium">{incident.title}</p>
+                                  <p className="text-xs text-muted-foreground line-clamp-1">{incident.description}</p>
+                                </div>
                               </div>
-                              <div>
-                                <p className="font-medium">{incident.title}</p>
-                                <p className="text-xs text-muted-foreground line-clamp-1">{incident.description}</p>
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>{incident.location}</TableCell>
-                          <TableCell>
-                            <Badge
-                              variant={
-                                incident.status === "RESOLVED"
-                                  ? "secondary"
-                                  : incident.status === "INVESTIGATING"
-                                    ? "outline"
-                                    : "destructive"
-                              }
-                            >
-                              {incident.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center">
-                              <Clock className="mr-1 h-3 w-3 text-muted-foreground" />
+                            </TableCell>
+                            <TableCell>{incident.location}</TableCell>
+                            <TableCell>
+                              <Badge
+                                variant={
+                                  incident.status === "RESOLVED"
+                                    ? "secondary"
+                                    : incident.status === "INVESTIGATING"
+                                      ? "outline"
+                                      : "destructive"
+                                }
+                              >
+                                {incident.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center">
+                                <Clock className="mr-1 h-3 w-3 text-muted-foreground" />
                                 <span className="text-sm">
-                                {incident.date_created
-                                  ? new Date(incident.date_created).toLocaleString({
-                                    day: "2-digit",
-                                    month: "2-digit",
-                                    year: "numeric",
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  },"en-GB")
-                                  : ""}
+                                  {incident.date_created
+                                    ? new Date(incident.date_created).toLocaleString("en-GB", {
+                                        day: "2-digit",
+                                        month: "2-digit",
+                                        year: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })
+                                    : ""}
                                 </span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                  <span className="sr-only">Actions</span>
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                    <span className="sr-only">Actions</span>
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
                                 <DropdownMenuItem asChild>
                                   <Link href={`/incidents/${incident.id}`}>
                                     <AlertTriangle className="mr-2 h-4 w-4" />
@@ -765,6 +765,30 @@ export function AdminDashboard() {
               </DialogClose>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Delete Incident
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this incident?
+              <br />
+              <span className="block mt-2 text-lg font-bold text-destructive underline underline-offset-4">{incidentToDelete?.title}</span>
+              <br />
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="destructive" onClick={confirmDeleteIncident}>Delete</Button>
+            <DialogClose asChild>
+              <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            </DialogClose>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
