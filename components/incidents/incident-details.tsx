@@ -401,18 +401,27 @@ const handleCommentSubmit = async () => {
                     </div>
                   ))}
 
-                {incident.status === "resolved" && (
+                {incident.status && (
                   <div className="flex gap-3">
                     <div className="flex flex-col items-center">
-                      <div className="h-2 w-2 rounded-full bg-green-500" />
+                      <div
+                        className={`h-2 w-2 rounded-full ${
+                          incident.status === "RESOLVED"
+                            ? "bg-green-500"
+                            : incident.status === "INVESTIGATING"
+                            ? "bg-yellow-500"
+                            : "bg-red-500"
+                        }`}
+                      />
                     </div>
                     <div>
-                      <p className="text-sm font-medium">Resolved</p>
+                      <p className="text-sm font-medium">
+                        {incident.status.charAt(0) + incident.status.slice(1).toLowerCase()}
+                      </p>
                       <p className="text-xs text-muted-foreground">
-                        {/* This would be the actual resolution date in a real app */}
-                        {incident.comments && incident.comments.length > 0
-                          ? incident.comments[incident.comments.length - 1].timestamp
-                          : incident.reportedAt}
+                        {incident.date_last_modified
+                          ? `${new Date(incident.date_last_modified).toLocaleDateString("en-GB")} at ${new Date(incident.date_last_modified).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`
+                          : ""}
                       </p>
                     </div>
                   </div>

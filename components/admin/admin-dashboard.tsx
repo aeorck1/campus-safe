@@ -30,8 +30,7 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { mockIncidents, mockUsers } from "@/lib/mock-data"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
 import { useAuthStore } from "@/lib/auth"
 import {
   Dialog,
@@ -101,8 +100,10 @@ export function AdminDashboard() {
     }
     fetchUsers()
   }, [getUsers, toast])
-  
-  useEffect(()=>{
+
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout
+
     async function fetchIncidents() {
       try {
         const response = await incidents()
@@ -126,8 +127,12 @@ export function AdminDashboard() {
         })
       }
     }
+
     fetchIncidents()
-  },[incidents])
+    intervalId = setInterval(fetchIncidents, 3000) // refresh every 3 seconds
+
+    return () => clearInterval(intervalId)
+  }, [incidents, toast])
 
   // Remove the following block, as it's not valid code:
   /*
@@ -166,14 +171,22 @@ export function AdminDashboard() {
     })
   }
 
-  const handleResolveIncident = (incidentId: string) => {
-    updateIncident(incidentId, { status: "RESOLVED" })
-    toast({
-      title: "Incident resolved",
-      description: `Incident ID: ${incidentId} has been marked as resolved.`,
-      variant: "success",
-    })
-     incidents() // Refresh incidents after resolving
+  const handleResolveIncident = async (incidentId: string) => {
+   const result= await updateIncident(incidentId, { status: "RESOLVED" })
+   if (result && result.success) {
+      const resolvedIncident = incidentsData.find((incident) => incident.id === incidentId)
+      toast({
+        title: "Incident resolved",
+        description: `Incident "${resolvedIncident?.title || incidentId}" has been marked as resolved.`,
+        variant: "success",
+      })
+    }
+    // Refresh incidents after resolving
+    const response = await incidents()
+    if (response && response.success && Array.isArray(response.data)) {
+      setIncidents(response.data)
+
+    }
   }
 
   // Handler for opening the edit modal
