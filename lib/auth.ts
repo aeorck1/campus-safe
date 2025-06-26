@@ -137,6 +137,7 @@ export type AuthState = {
   adminGetAllUsers: () => Promise<{ success: boolean; data?: any; message?: string }>
   postAdminChangeRole: (data: ChangeRole) => Promise<{ success: boolean; data?: any; message?: string }>
   updateIncident: (id: string, data: object) => Promise<{ success: boolean; data?: any; message?: string }>
+  getRecentActivity: () => Promise<{ success: boolean; data?: any; message?: string }>
 }
 export type Login = {
   username: string,
@@ -388,6 +389,17 @@ export const useAuthStore = create<AuthState>()(
       },
 
       // INCIDENT ENDPOINTS
+
+getRecentActivity: async () =>{
+  try {
+    const response = await axiosAuth.get("/activity-logs/recent/");
+    return { success: true, data: response.data };
+  } catch (error: any) {
+    const message =
+      error?.response?.data?.detail || error?.message || "Error fetching recent activity.";
+    return { success: false, message };
+  }
+},
 
       // ---------- ADMIN ----------
       listAdminIncidents: async () => {

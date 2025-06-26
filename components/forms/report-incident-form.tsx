@@ -155,7 +155,7 @@ const isStep2Disabled = watchedLocation.trim().length < 10 || watchedCoordinates
       formData.append("longitude", String(coordinates[1]));
       formData.append("latitude", String(coordinates[0]));
       formData.append("severity", values.severity);
-      values.tags.forEach((tag) => formData.append("tags[]", tag));
+      values.tags.forEach((tag) => formData.append("tags", tag));
       formData.append("anonymous", String(values.anonymous));
       if (values.contactInfo) formData.append("contactInfo", values.contactInfo);
       if (selectedFiles && selectedFiles.length > 0) {
@@ -199,7 +199,7 @@ const isStep2Disabled = watchedLocation.trim().length < 10 || watchedCoordinates
       formData.append("longitude", String(coordinates[1]));
       formData.append("latitude", String(coordinates[0]));
       formData.append("severity", values.severity);
-      values.tags.forEach((tag) => formData.append("tags[]", tag));
+      values.tags.forEach((tag) => formData.append("tags", tag));
       formData.append("anonymous", String(values.anonymous));
       if (values.contactInfo) formData.append("contactInfo", values.contactInfo);
       if (selectedFiles && selectedFiles.length > 0) {

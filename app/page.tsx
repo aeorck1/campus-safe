@@ -272,7 +272,7 @@ export default function LandingPage() {
         <Card>
           <CardContent className="p-0">
             <div className="h-[500px] rounded-md overflow-hidden">
-              <CampusMap incidents={incidents?.slice(0, 10)} />
+              {/* <CampusMap incidents={incidents?.slice(0, 10)} /> */}
             </div>
           </CardContent>
           <CardFooter className="flex justify-center p-6">
