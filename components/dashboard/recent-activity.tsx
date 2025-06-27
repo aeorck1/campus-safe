@@ -7,16 +7,17 @@ export function RecentActivity() {
   const [activities, setActivities] = useState([]) 
 
     const getRecentActivity = useAuthStore ((state) => state.getRecentActivity)
-    useEffect (() => {
-      getRecentActivity()
-    .then ((data)=> {
-      setActivities(data.data)
-      console.log("Activities Data:🚀🚀", data.data)
-    })
-    // Add dependency array to useEffect
-    .catch ((error) => {
-      console.error("Error fetching activities:", error)
-    })
+    useEffect(() => {
+      const fetchActivities = async () => {
+        try {
+          const data = await getRecentActivity()
+          setActivities(data.data)
+          console.log("Activities Data:🚀🚀", data.data)
+        } catch (error) {
+          console.error("Error fetching activities:", error)
+        }
+      }
+      fetchActivities()
     }, [])
 
 

@@ -115,7 +115,7 @@ export function IncidentDashboard() {
                 <CardDescription>Latest incidents and updates</CardDescription>
               </CardHeader>
               <CardContent>
-                <RecentActivity />
+                {/* <RecentActivity /> */}
               </CardContent>
               <CardFooter>
                 <Button variant="outline" asChild className="w-full">
