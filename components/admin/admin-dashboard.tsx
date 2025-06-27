@@ -74,6 +74,7 @@ export function AdminDashboard() {
   const [incidentToDelete, setIncidentToDelete] = useState<any>(null)
 
   const getUsers = useAuthStore((state) => state.adminGetAllUsers)
+  const deleteUser = useAuthStore((state) => state.deleteUser)
   const updateRole = useAuthStore((state) => state.postAdminChangeRole)
   const incidents = useAuthStore((state) => state.incidents)
   const updateIncident = useAuthStore((state)=> state.updateIncident)
@@ -140,9 +141,11 @@ export function AdminDashboard() {
 
 
   const handleDeleteUser = (userId: string) => {
+    deleteUser(userId)
     toast({
       title: "User deleted",
       description: `User ID: ${userId} has been deleted.`,
+      variant: "destructive"
     })
   }
 
@@ -363,21 +366,48 @@ export function AdminDashboard() {
                                 {user.role === "ADMIN" ? (
                                   <DropdownMenuItem
                                     className="text-destructive focus:text-destructive"
-                                    onClick={() => handleDeleteUser(user.id)}
                                     disabled={true}
                                   >
                                     <Trash className="mr-2 h-4 w-4" />
                                     Delete User
                                   </DropdownMenuItem>
                                 ) : (
-                                  <DropdownMenuItem
-                                    className="text-destructive focus:text-destructive"
-                                    onClick={() => handleDeleteUser(user.id)}
-                                    
-                                  >
-                                    <Trash className="mr-2 h-4 w-4" />
-                                    Delete User
-                                  </DropdownMenuItem>
+                                  <Dialog>
+                                    <DialogTrigger asChild>
+                                      <DropdownMenuItem
+                                        className="text-destructive focus:text-destructive"
+                                        onSelect={e => e.preventDefault()}
+                                      >
+                                        <Trash className="mr-2 h-4 w-4" />
+                                        Delete User
+                                      </DropdownMenuItem>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                      <DialogHeader>
+                                        <DialogTitle className="flex items-center gap-2 text-destructive">
+                                          <AlertTriangle className="h-5 w-5 text-destructive" />
+                                          Delete User
+                                        </DialogTitle>
+                                        <DialogDescription>
+                                          Are you sure you want to delete user <span className="font-bold">{user.first_name}</span>?<br />
+                                          This action cannot be undone.
+                                        </DialogDescription>
+                                      </DialogHeader>
+                                      <DialogFooter>
+                                        <Button
+                                          variant="destructive"
+                                          onClick={() => {
+                                            handleDeleteUser(user.id)
+                                          }}
+                                        >
+                                          Delete
+                                        </Button>
+                                        <DialogClose asChild>
+                                          <Button variant="outline">Cancel</Button>
+                                        </DialogClose>
+                                      </DialogFooter>
+                                    </DialogContent>
+                                  </Dialog>
                                 )}
                               </DropdownMenuContent>
                             </DropdownMenu>

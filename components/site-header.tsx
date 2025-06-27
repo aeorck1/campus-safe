@@ -143,9 +143,9 @@ export function SiteHeader() {
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="icon" className="relative">
                       <Bell className="h-5 w-5" />
-                      <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center bg-campus-primary">
+                      {/* <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center bg-campus-primary">
                         3
-                      </Badge>
+                      </Badge> */}
                       <span className="sr-only">Notifications</span>
                     </Button>
                   </DropdownMenuTrigger>

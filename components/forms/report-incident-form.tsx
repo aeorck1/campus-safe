@@ -481,7 +481,7 @@ useEffect(() => {
                     upvotes: 0,
                   }]} 
                   center={coordinates} 
-                  zoom={16} 
+                  zoom={16}
                   />
                 </div>
               </CardContent>

@@ -52,7 +52,7 @@ interface CampusMapProps {
 export function CampusMap({
   incidents,
   center = [7.4429, 3.8967], // Default to University of Ibadan coordinates
-  zoom = 15,
+  zoom = 15.5,
 }: CampusMapProps) {
   const [isMounted, setIsMounted] = useState(false)
   const [leaflet, setLeaflet] = useState<typeof import("leaflet") | null>(null)

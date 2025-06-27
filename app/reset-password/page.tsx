@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { useToast } from "@/hooks/use-toast"
 import Link from "next/link"
+import {useAuthStore} from "@/lib/auth"
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
@@ -20,6 +21,7 @@ export default function ResetPasswordPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
+  const passwordreset = useAuthStore((state) => state.passwordResetInitiate)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -32,10 +34,12 @@ export default function ResetPasswordPage() {
     setIsLoading(true)
     try {
       // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1200))
+      await passwordreset(values.email)
+
       toast({
         title: "Reset link sent",
         description: "If an account with that email exists, a reset link has been sent.",
+        variant: "success",
       })
       router.push("/login")
     } catch (error) {

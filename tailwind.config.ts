@@ -62,6 +62,12 @@ const config = {
           danger: "#EF4444", // Red
           info: "#3B82F6", // Blue
         },
+        role: {
+          admin: "#fef2e2",
+          "admin-dark": "#7f1d1d",
+          security: "#dbeafe",
+          "security-dark": "#1e3a8a",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

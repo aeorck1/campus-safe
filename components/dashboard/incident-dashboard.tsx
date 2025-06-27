@@ -94,7 +94,6 @@ export function IncidentDashboard() {
               </CardHeader>
               <CardContent className="p-0">
                 <div className="h-[400px] rounded-md border">
-                  {/* <CampusMap incidents={mockIncidents as any} /> */}
 
                   <CampusMap incidents={incidents as any} />
                 </div>
@@ -214,7 +213,7 @@ export function IncidentDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {incidents.map((incident: any) => (
+                {[...incidents].reverse().map((incident: any) => (
                   <div key={incident.id} className="flex items-start space-x-4 p-4 rounded-lg border">
                     <div
                       className={`p-2 rounded-full ${
@@ -227,9 +226,9 @@ export function IncidentDashboard() {
                     >
                       <AlertTriangle
                         className={`h-5 w-5 ${
-                          incident.severity === "high"
+                          incident.severity === "HIGH"
                             ? "text-red-600 dark:text-red-400"
-                            : incident.severity === "medium"
+                            : incident.severity === "MEDIUM"
                               ? "text-yellow-600 dark:text-yellow-400"
                               : "text-blue-600 dark:text-blue-400"
                         }`}
@@ -240,10 +239,10 @@ export function IncidentDashboard() {
                         <h4 className="font-medium truncate">{incident.title}</h4>
                         <Badge
                           variant={
-                            incident.status === "resolved"
-                              ? "outline"
-                              : incident.status === "investigating"
-                                ? "secondary"
+                            incident.status === "RESOLVED"
+                              ? "secondary"
+                              : incident.status === "INVESTIGATING"
+                                ? "outline"
                                 : "destructive"
                           }
                           className="ml-2 shrink-0"

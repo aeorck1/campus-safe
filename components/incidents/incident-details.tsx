@@ -33,11 +33,13 @@ export function IncidentDetails({ id }: { id: string }) {
   const [comment, setComment] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [upvoted, setUpvoted] = useState(false)
+  const [downvoted, setDownvoted] = useState (false)
 
 // Find the incident by ID
 // Find the incident by ID
 const incidents = useAuthStore((state) => state.incidents);
 const upvote = useAuthStore((state) => state.voteIncident)
+
 const postComment = useAuthStore((state) => state.postComment)
 const [incident, setIncident] = useState<any>(null);
 const loggedIn= useAuthStore((state) => state.user) !== null;
@@ -98,6 +100,35 @@ if (!incident) {
       toast({
         title: "Error",
         description: "Failed to update upvote. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
+    const handleDownvote = async () => {
+    const user = useAuthStore.getState().user
+    if (!user) {
+      toast({
+        title: "You are not a logged in User",
+        description: "Please log in to downvote incidents.",
+        variant: "destructive",
+      })
+      return
+    }
+    try {
+      setDownvoted(!downvoted)
+      await upvote({ incident_id: incident.id, up_voted: downvoted })
+      toast({
+        title: downvoted ? "Downvote removed" : "Incident downvoted",
+        description: downvoted
+          ? "You have removed your downvote from this incident"
+          : "Thank you for confirming this incident",
+        variant: downvoted ? "destructive" : "success",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update downvote. Please try again.",
         variant: "destructive",
       })
     }
@@ -277,10 +308,26 @@ const handleCommentSubmit = async () => {
                   ))}
               </div>
               <div className="flex items-center gap-4">
-                <Button variant={upvoted ? "default" : "outline"} size="sm" onClick={handleUpvote} className="hover: opacity-80">
+                <Button
+                  variant={upvoted ? "default" : "outline"}
+                  size="sm"
+                  onClick={handleUpvote}
+                  className="hover:opacity-80"
+                >
                   <ThumbsUp className="mr-2 h-4 w-4" />
                   Upvote {upvoted ? incident.up_votes + 1 : incident.up_votes}
                 </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={
+                  handleDownvote}
+                  className="hover:opacity-80"
+                >
+                  <ThumbsUp className="mr-2 h-4 w-4 rotate-180" />
+                  Downvote {downvoted ? incident.down_votes + 1 : incident.down_votes}
+                </Button>
+
                 <Button variant="outline" size="sm" onClick={handleShare}>
                   <Share2 className="mr-2 h-4 w-4" />
                   Share
@@ -342,7 +389,7 @@ const handleCommentSubmit = async () => {
               </div>
               {!useAuthStore.getState().user && (
                 <p className="text-xs text-muted-foreground mt-2">
-                  Please sign in to add a comment.
+                  Please <Link href="/login" className="underline text-primary">sign in</Link> to add a comment.
                 </p>
               )}
             </div>

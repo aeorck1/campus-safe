@@ -48,6 +48,7 @@ export type ReportIncident = {
 export type VoteIncident = {
   incident_id: string,
   up_voted: boolean,
+  // down_voted: boolean
 }
 
 export type ReportAnonymous = {
@@ -498,6 +499,7 @@ getRecentActivity: async () =>{
         }
       },
 
+     
       submitSatisfaction: async (incidentId: string, data: { satisfaction: number }) => {
         try {
           const response = await axiosAuth.patch(`/incidents/${incidentId}/satisfaction/`, data);
@@ -674,7 +676,7 @@ getRecentActivity: async () =>{
 
       deleteUser: async (id: string) => {
         try {
-          await axiosAuth.delete(`users/${id}/`);
+          await axiosAuth.delete(`admin/users/${id}/`);
           return { success: true };
         } catch (error: any) {
           const message = error?.response?.data?.detail || error?.message || "Failed to delete user";
