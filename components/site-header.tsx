@@ -34,10 +34,10 @@ export function SiteHeader() {
     },
     user?.role?.name === "Admin" || user?.role?.name === "System Admin"
       ? {
-          href: "/security",
+          href: "/admin",
           label: "Admin",
-          active: pathname === "/security",
-          protected: false,
+          active: pathname === "/admin",
+          protected: true,
         }
       : user?.role?.name === "Security"
       ? {
@@ -112,18 +112,18 @@ export function SiteHeader() {
                     href={route.href}
                     className={cn(
                       "text-foreground/70 transition-colors hover:text-foreground",
-                      route.active && "text-campus-primary font-medium",
+                      route.active && "text-campus-secondary font-medium",
                     )}
                   >
                     {route.label}
                   </Link>
                 ))}
-                {isAuthenticated && (
+                
                   <Link href="/report" className="flex items-center text-campus-primary font-medium">
                     <Plus className="mr-2 h-4 w-4" />
                     Report Incident
                   </Link>
-                )}
+                
               </nav>
             </SheetContent>
           </Sheet>
@@ -131,14 +131,25 @@ export function SiteHeader() {
         <div className="flex flex-1 items-center justify-end space-x-4">
           <div className="flex-1 sm:grow-0"></div>
           <nav className="flex items-center space-x-2">
-            {isAuthenticated && (
+            
               <>
-                <Button asChild variant="default" size="sm" className="bg-campus-primary hover:bg-campus-primary/90">
+                <Button asChild variant="default" size="sm" className="bg-campus-primary hover:bg-campus-primary/90 hidden">
                   <Link href="/report">
                     <Plus className="mr-2 h-4 w-4" />
                     Report Incident
                   </Link>
                 </Button>
+</>
+                {isAuthenticated && (
+                  <>
+
+                    <Button asChild variant="default" size="sm" className="bg-campus-primary hover:bg-campus-primary/90">
+                  <Link href="/report">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Report Incident
+                  </Link>
+                </Button>
+
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="icon" className="relative">
