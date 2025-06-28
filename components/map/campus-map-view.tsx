@@ -78,22 +78,9 @@ useEffect(() => {
           </SelectContent>
         </Select>
 
-        <Select value={mapLayer} onValueChange={setMapLayer}>
-          <SelectTrigger className="w-[130px]">
-            <Layers className="mr-2 h-4 w-4" />
-            <SelectValue placeholder="Map Layer" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="default">Default</SelectItem>
-            <SelectItem value="satellite">Satellite</SelectItem>
-            <SelectItem value="dark">Dark</SelectItem>
-          </SelectContent>
-        </Select>
+       
 
-        <Button variant="outline">
-          <Filter className="mr-2 h-4 w-4" />
-          More Filters
-        </Button>
+     
       </div>
 
       <Card>

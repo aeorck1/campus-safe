@@ -36,6 +36,13 @@ function AnimatedCounter({ n, delay = 0 }: { n: number; delay?: number }) {
   </animated.div>
 }
 
+// Add these images to your public folder or use URLs
+const heroImages = [
+  "/images/hero1.jpg",
+  "/images/hero2.jpg",
+  "/images/hero3.jpg",
+]
+
 export default function LandingPage() {
   // For the hero section
   const stateCount = 0
@@ -77,6 +84,14 @@ export default function LandingPage() {
     fetchStats()
   }, [])
 
+  // Hero image slider state
+  const [currentHeroImage, setCurrentHeroImage] = useState(0)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentHeroImage((prev) => (prev + 1) % heroImages.length)
+    }, 4000)
+    return () => clearInterval(interval)
+  }, [])
 
   const heroAnimation = useSpring({
     from: { opacity: 0, y: 50 },
@@ -178,15 +193,43 @@ export default function LandingPage() {
   return (
     <div className="flex-1 space-y-16 py-6">
       {/* Hero Section */}
-      <section className="relative py-20 overflow-hidden">
+      <section className="relative overflow-hidden min-h-[80vh] flex items-center py-20">
+        {/* Image Slider */}
+        <div className="absolute inset-0 z-0 h-full w-full">
+          {heroImages.map((img, idx) => (
+            <img
+              key={img}
+              src={img}
+              alt={`Campus scene ${idx + 1}`}
+              className={`object-cover w-full h-full absolute inset-0 transition-opacity duration-1000 ${idx === currentHeroImage ? "opacity-100" : "opacity-0"}`}
+              style={{ zIndex: idx === currentHeroImage ? 1 : 0 }}
+            />
+          ))}
+          {/* Solid black overlay for readability */}
+          <div
+            className="absolute inset-0 bg-black pointer-events-none"
+            style={{ opacity: 0.7, zIndex: 2 }}
+          />
+          {/* Optional: Slider dots */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+            {heroImages.map((_, idx) => (
+              <button
+                key={idx}
+                className={`w-3 h-3 rounded-full ${idx === currentHeroImage ? "bg-campus-primary" : "bg-white/60"}`}
+                onClick={() => setCurrentHeroImage(idx)}
+                aria-label={`Go to slide ${idx + 1}`}
+              />
+            ))}
+          </div>
+        </div>
         <animated.div
           style={gradientAnimation}
           className="absolute inset-0 bg-gradient-to-r from-campus-primary/10 via-campus-secondary/10 to-campus-accent/10 dark:from-campus-primary/5 dark:via-campus-secondary/5 dark:to-campus-accent/5 bg-[length:400%_100%]"
         />
-        <div className="container relative z-10 mx-auto px-4 text-center">
+        <div className="container relative z-10 mx-auto px-4 text-center flex flex-col items-center justify-center h-full">
           <animated.h1
             style={heroAnimation}
-            className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-campus-primary to-campus-secondary"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold mb-4 sm:mb-6 text-white drop-shadow-lg"
           >
             Campus Incident Reporting Platform
           </animated.h1>
@@ -197,7 +240,7 @@ export default function LandingPage() {
               delay: 300,
               config: config.gentle,
             })}
-            className="text-xl md:text-2xl max-w-3xl mx-auto mb-10 text-muted-foreground"
+            className="text-base sm:text-lg md:text-2xl max-w-full sm:max-w-3xl mx-auto mb-6 sm:mb-10 text-white/90 drop-shadow"
           >
             Report, track, and resolve campus incidents in real-time. Help keep our campus safe and secure for everyone.
           </animated.p>
@@ -208,15 +251,24 @@ export default function LandingPage() {
               delay: 600,
               config: config.gentle,
             })}
-            className="flex flex-col sm:flex-row gap-4 justify-center"
+            className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full max-w-xs sm:max-w-none mx-auto"
           >
-            <Button size="lg" asChild className="text-white">
+            <Button
+              size="lg"
+              asChild
+              className="text-white w-full sm:w-auto"
+            >
               <Link href="/report">
                 Report an Incident
                 <ArrowRight className="ml-2 h-5 w-5 filter-invert-1" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" asChild className="hover:bg-blue-400 hover:text-white">
+            <Button
+              size="lg"
+              variant="outline"
+              asChild
+              className="w-full sm:w-auto hover:bg-blue-400 hover:text-white"
+            >
               <Link href="/incidents">View Incidents</Link>
             </Button>
           </animated.div>
@@ -227,7 +279,7 @@ export default function LandingPage() {
   {/* Features Section */}
       <section ref={featuresRef} className="container mx-auto px-4">
         <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold mb-4">Platform Features</h2>
+          <h2 className="text-3xl font-bold mb-4">Platform Highlights</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
             Our comprehensive platform provides all the tools needed to report, track, and resolve campus incidents
             efficiently.
@@ -349,18 +401,28 @@ export default function LandingPage() {
             Join our community effort to create a safer environment for everyone. Report incidents, stay informed, and
             be part of the solution.
           </p>
-          <animated.div
-            style={useSpring({
+            {(() => {
+            const buttonSpring = useSpring({
               from: { scale: 1 },
               to: { scale: 1.05 },
               config: { duration: 2000 },
               loop: { reverse: true },
-            })}
-          >
-            <Button size="lg" variant="secondary" asChild className="bg-white text-campus-primary hover:bg-white/90">
-              <Link href="/report">Report an Incident Now</Link>
-            </Button>
-          </animated.div>
+            });
+            return (
+              <animated.div style={buttonSpring} className="flex justify-center">
+              <Button
+                size="lg"
+                variant="secondary"
+                asChild
+                className="bg-white text-campus-primary hover:bg-white/90 w-full max-w-xs sm:max-w-md md:max-w-lg"
+              >
+                <Link href="/report" className="block w-full text-center">
+                Report an Incident Now
+                </Link>
+              </Button>
+              </animated.div>
+            );
+            })()}
         </div>
       </section>
     </div>
