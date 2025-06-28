@@ -117,10 +117,10 @@ export default function LandingPage() {
   const featureCards = [
     {
       icon: <Bell className="h-6 w-6 text-campus-primary" />,
-      title: "Incident Reporting",
-      description: "Easily report incidents with detailed information, location data, and optional anonymity.",
+      title: "Anonymous Reporting",
+      description: "Report incidents anonymously with detailed information and location data to ensure privacy and safety.",
       link: "/report",
-      linkText: "Report an Incident",
+      linkText: "Report Anonymously",
       color: "bg-campus-primary/10",
     },
     {
@@ -146,7 +146,8 @@ export default function LandingPage() {
       link: "/incidents",
       linkText: "Join Discussion",
       color: "bg-campus-warning/10",
-    },
+    }
+
   ]
   const featureTrail = useTrail(featureCards.length, {
     opacity: featuresInView ? 1 : 0,
@@ -222,9 +223,49 @@ export default function LandingPage() {
         </div>
       </section>
 
+
+  {/* Features Section */}
+      <section ref={featuresRef} className="container mx-auto px-4">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl font-bold mb-4">Platform Features</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Our comprehensive platform provides all the tools needed to report, track, and resolve campus incidents
+            efficiently.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-4 gap-8 justify">
+          {featureTrail.map((style, index) => (
+            <animated.div key={index} style={style}>
+              <Card className="feature-card h-full transition-transform duration-300 hover:scale-105 hover:shadow-lg">
+                <CardHeader>
+                  <div
+                    className={`w-12 h-12 rounded-full ${featureCards[index].color} flex items-center justify-center mb-4`}
+                  >
+                    {featureCards[index].icon}
+                  </div>
+                  <CardTitle>{featureCards[index].title}</CardTitle>
+                  <CardDescription>{featureCards[index].description}</CardDescription>
+                </CardHeader>
+                <CardFooter>
+                  <Button variant="ghost" asChild className="w-full hover:bg-campus-primary/10">
+                    <Link href={featureCards[index].link} className="text-campus-primary hover:text-campus-secondary">{featureCards[index].linkText}</Link>
+                  </Button>
+                </CardFooter>
+              </Card>
+            </animated.div>
+          ))}
+        </div>
+      </section>
+
       {/* Stats Section */}
       <animated.section ref={statsRef} style={statsAnimation} className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl font-bold mb-4">Incident Statistics</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Stay informed with real-time statistics on reported incidents, resolutions, and campus safety trends.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">     
           <Card className="feature-card border-campus-primary/20">
             <CardHeader className="pb-2">
               <CardTitle className="text-2xl font-bold text-campus-primary">
@@ -286,38 +327,7 @@ export default function LandingPage() {
         </Card>
       </animated.section>
 
-      {/* Features Section */}
-      <section ref={featuresRef} className="container mx-auto px-4">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold mb-4">Platform Features</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Our comprehensive platform provides all the tools needed to report, track, and resolve campus incidents
-            efficiently.
-          </p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify">
-          {featureTrail.map((style, index) => (
-            <animated.div key={index} style={style}>
-              <Card className="feature-card h-full transition-transform duration-300 hover:scale-105 hover:shadow-lg">
-                <CardHeader>
-                  <div
-                    className={`w-12 h-12 rounded-full ${featureCards[index].color} flex items-center justify-center mb-4`}
-                  >
-                    {featureCards[index].icon}
-                  </div>
-                  <CardTitle>{featureCards[index].title}</CardTitle>
-                  <CardDescription>{featureCards[index].description}</CardDescription>
-                </CardHeader>
-                <CardFooter>
-                  <Button variant="ghost" asChild className="w-full hover:bg-campus-primary/10">
-                    <Link href={featureCards[index].link} className="text-campus-primary hover:text-campus-secondary">{featureCards[index].linkText}</Link>
-                  </Button>
-                </CardFooter>
-              </Card>
-            </animated.div>
-          ))}
-        </div>
-      </section>
+    
 
       {/* CTA Section */}
       <section
