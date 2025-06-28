@@ -298,6 +298,58 @@ useEffect(() => {
               <h2 className="text-xl font-semibold">Incident Details</h2>
             </div>
 
+            {/* Show anonymous info if not authenticated */}
+            {(!isAuthenticated || form.watch("anonymous")) && (
+              <div className="mb-4 p-3 rounded-md bg-yellow-50 border border-yellow-300 text-yellow-800 flex items-center gap-2 border-l-4">
+                <AlertTriangle className="h-5 w-5 text-yellow-500" />
+                <span>
+                  You are reporting as <span className="font-semibold">Anonymous</span>. Your identity will not be associated with this report.
+                </span>
+              </div>
+            )}
+
+  
+
+            {/* Move anonymous checkbox here */}
+            <FormField
+              control={form.control}
+              name="anonymous"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox checked={field.value} onCheckedChange={field.onChange} disabled={!isAuthenticated} />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>Submit this report anonymously</FormLabel>
+                    <FormDescription>
+                      Your identity will not be associated with this report. Note that this may limit our ability to
+                      follow up for additional information.
+                    </FormDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
+
+ {form.watch("anonymous") && (
+              <FormField
+                control={form.control}
+                name="contactInfo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Contact Email (Optional)</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="your.email@university.edu" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      Provide your email if you'd like to receive updates about this report
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+
             <FormField
               control={form.control}
               name="title"
@@ -639,9 +691,9 @@ useEffect(() => {
               name="anonymous"
               render={({ field }) => (
                 <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                  <FormControl>
+                  {/* <FormControl>
                     <Checkbox checked={field.value} onCheckedChange={field.onChange} disabled={!isAuthenticated} />
-                  </FormControl>
+                  </FormControl> */}
                   <div className="space-y-1 leading-none">
                     <FormLabel>Submit this report anonymously</FormLabel>
                     <FormDescription>
@@ -653,24 +705,7 @@ useEffect(() => {
               )}
             />
 
-            {!form.watch("anonymous") && (
-              <FormField
-                control={form.control}
-                name="contactInfo"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Contact Email (Optional)</FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder="your.email@university.edu" {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      Provide your email if you'd like to receive updates about this report
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+         
 
             <div className="rounded-lg border bg-card p-6 mt-6">
               <h3 className="font-medium flex items-center mb-4">
