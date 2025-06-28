@@ -195,7 +195,7 @@ const handleCommentSubmit = async () => {
   }
 
   return (
-    <div>
+    <div className="md:w-[100%] mx-auto px-4 py-6 w-[95%]" >
       <div className="flex items-center mb-6 md:w-[100%] m-auto w-[95%]">
         <Button variant="outline" size="sm" asChild className="mr-4">
           <Link href="/incidents">
@@ -206,337 +206,338 @@ const handleCommentSubmit = async () => {
         <h1 className="text-2xl font-bold">{incident.title}</h1>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
-        <div className="space-y-6 md:col-span-2">
-          <Card>
-            <CardHeader className="pb-3">
-              <div className="flex justify-between items-start">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`p-1.5 rounded-full ${
-                        incident.severity === "HIGH"
-                          ? "bg-red-100 dark:bg-red-900"
-                          : incident.severity === "MEDIUM"
-                            ? "bg-yellow-100 dark:bg-yellow-900"
-                            : "bg-blue-100 dark:bg-blue-900"
-                      }`}
-                    >
-                      <AlertTriangle
-                        className={`h-4 w-4 ${
-                          incident.severity === "HIGH"
-                            ? "text-red-600 dark:text-red-400"
-                            : incident.severity === "MEDIUM"
-                              ? "text-yellow-600 dark:text-yellow-400"
-                              : "text-blue-600 dark:text-blue-400"
-                        }`}
-                      />
-                    </div>
-                    <CardTitle>{incident.title}</CardTitle>
-                  </div>
-                  <div className="flex items-center mt-2 text-sm text-muted-foreground">
-                    <MapPin className="h-3.5 w-3.5 mr-1" />
-                    {incident.location || "Unknown Location"}
-                    <Separator orientation="vertical" className="mx-2 h-3" />
-                    <Clock className="h-3.5 w-3.5 mr-1" />
-                    {/* {incident.reportedAt} */}
-                    {incident.date_created
-                      ? new Date(incident.date_created).toLocaleDateString("en-GB")
-                      : ""}
-                    {/* {incident.reportedBy !== "anonymous" && (
-                     */}
-                     {incident.created_by_user !== "anonymous" && (
-                        <>
-                        <Separator orientation="vertical" className="mx-2 h-3" />
-                        <User className="h-3.5 w-3.5 mr-1 font-[800] text-3xl" />
-                        <span className="font-semibold text-secondary">
-                          {incident.reported_by?.first_name
-                          ? `${incident.reported_by.first_name} ${incident.reported_by.last_name}`
-                          : incident.reported_by?.username || "Anonymous"}
-                        </span>
-                        </>
-                    )}
-                  </div>
-                </div>
-                <Badge
-                  variant={
-                    incident.status === "RESOLVED"
-                      ? "secondary"
-                      : incident.status === "INVESTIGATING"
-                        ? "outline"
-                        : "destructive"
-                  }
-                  className="ml-2"
-                >
-                  {incident.status}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="whitespace-pre-line mb-4">{incident.description}</p>
+      <div className="grid gap-6 md:grid-cols-3 grid-cols-1">
+        {/* Main Content (Incident Details & Comments) */}
+        <div className="space-y-6 md:col-span-2 col-span-full w-full">
+          {/* Incident Details Card */}
+          <Card className="w-full">
+        <CardHeader className="pb-3">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <div className="w-full">
+          <div className="flex items-center gap-2 flex-wrap">
+            <div
+              className={`p-1.5 rounded-full ${
+            incident.severity === "HIGH"
+              ? "bg-red-100 dark:bg-red-900"
+              : incident.severity === "MEDIUM"
+                ? "bg-yellow-100 dark:bg-yellow-900"
+                : "bg-blue-100 dark:bg-blue-900"
+              }`}
+            >
+              <AlertTriangle
+            className={`h-4 w-4 ${
+              incident.severity === "HIGH"
+                ? "text-red-600 dark:text-red-400"
+                : incident.severity === "MEDIUM"
+              ? "text-yellow-600 dark:text-yellow-400"
+              : "text-blue-600 dark:text-blue-400"
+            }`}
+              />
+            </div>
+            <CardTitle className="text-base sm:text-lg">{incident.title}</CardTitle>
+          </div>
+          <div className="flex flex-wrap items-center mt-2 text-sm text-muted-foreground gap-x-2 gap-y-1">
+            <MapPin className="h-3.5 w-3.5 mr-1" />
+            {incident.location || "Unknown Location"}
+            <Separator orientation="vertical" className="mx-2 h-3 hidden sm:inline-block" />
+            <Clock className="h-3.5 w-3.5 mr-1" />
+            {incident.date_created
+              ? new Date(incident.date_created).toLocaleDateString("en-GB")
+              : ""}
+            {incident.created_by_user !== "anonymous" && (
+              <>
+            <Separator orientation="vertical" className="mx-2 h-3 hidden sm:inline-block" />
+            <User className="h-3.5 w-3.5 mr-1 font-[800] text-3xl" />
+            <span className="font-semibold text-secondary">
+              {incident.reported_by?.first_name
+                ? `${incident.reported_by.first_name} ${incident.reported_by.last_name}`
+                : incident.reported_by?.username || "Anonymous"}
+            </span>
+              </>
+            )}
+          </div>
+            </div>
+            <Badge
+          variant={
+            incident.status === "RESOLVED"
+              ? "secondary"
+              : incident.status === "INVESTIGATING"
+            ? "outline"
+            : "destructive"
+          }
+          className="ml-2 mt-2 sm:mt-0"
+            >
+          {incident.status}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="whitespace-pre-line mb-4">{incident.description}</p>
 
-              {/* Incident Images Section */}
-              {incident.images && incident.images.length > 0 && (
-                <div className="mb-6">
-                  <h4 className="text-sm font-medium mb-2">Images</h4>
-                  <div className="flex gap-2 flex-wrap">
-                    {incident.images.map((image: any, id: number) => (
-                      <a
-                        key={id}
-                        href={typeof image === 'string' ? image : image.image}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block w-28 h-28 border rounded overflow-hidden hover:shadow-lg"
-                      >
-                        <img
-                          src={typeof image === 'string' ? image : image.image}
-                          alt={`Incident image ${id + 1}`}
-                          className="object-cover w-full h-full"
-                        />
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
-              
-              <div className="flex flex-wrap gap-2 mb-6">
-                {Array.isArray(incident.tags) &&
-                  incident.tags.map((tag: { id: string; name: string }) => (
-                    <Badge key={tag.id} variant="secondary">
-                      {tag.name}
-                    </Badge>
-                  ))}
-              </div>
-              <div className="flex items-center gap-4">
-                <Button
-                  variant={upvoted ? "default" : "outline"}
-                  size="sm"
-                  onClick={handleUpvote}
-                  className="hover:opacity-80"
-                >
-                  <ThumbsUp className="mr-2 h-4 w-4" />
-                  Upvote {upvoted ? incident.up_votes + 1 : incident.up_votes}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={
-                  handleDownvote}
-                  className="hover:opacity-80"
-                >
-                  <ThumbsUp className="mr-2 h-4 w-4 rotate-180" />
-                  Downvote {downvoted ? incident.down_votes + 1 : incident.down_votes}
-                </Button>
+          {/* Incident Images Section */}
+          {incident.images && incident.images.length > 0 && (
+            <div className="mb-6">
+          <h4 className="text-sm font-medium mb-2">Images</h4>
+          <div className="flex gap-2 flex-wrap">
+            {incident.images.map((image: any, id: number) => (
+              <a
+            key={id}
+            href={typeof image === 'string' ? image : image.image}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block w-24 h-24 sm:w-28 sm:h-28 border rounded overflow-hidden hover:shadow-lg"
+              >
+            <img
+              src={typeof image === 'string' ? image : image.image}
+              alt={`Incident image ${id + 1}`}
+              className="object-cover w-full h-full"
+            />
+              </a>
+            ))}
+          </div>
+            </div>
+          )}
 
-                <Button variant="outline" size="sm" onClick={handleShare}>
-                  <Share2 className="mr-2 h-4 w-4" />
-                  Share
-                </Button>
-              </div>
-            </CardContent>
+          <div className="flex flex-wrap gap-2 mb-6">
+            {Array.isArray(incident.tags) &&
+          incident.tags.map((tag: { id: string; name: string }) => (
+            <Badge key={tag.id} variant="secondary">
+              {tag.name}
+            </Badge>
+          ))}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button
+          variant={upvoted ? "default" : "outline"}
+          size="sm"
+          onClick={handleUpvote}
+          className="hover:opacity-80"
+            >
+          <ThumbsUp className="mr-2 h-4 w-4" />
+          Upvote {upvoted ? incident.up_votes + 1 : incident.up_votes}
+            </Button>
+            <Button
+          variant="outline"
+          size="sm"
+          onClick={handleDownvote}
+          className="hover:opacity-80"
+            >
+          <ThumbsUp className="mr-2 h-4 w-4 rotate-180" />
+          Downvote {downvoted ? incident.down_votes + 1 : incident.down_votes}
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleShare}>
+          <Share2 className="mr-2 h-4 w-4" />
+          Share
+            </Button>
+          </div>
+        </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center">
-                <MessageSquare className="mr-2 h-5 w-5" />
-                Comments and Updates
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4 mb-6">
-                {incident.comments && incident.comments.length > 0 ? (
-                  incident.comments.map((comment:any) => (
-                    <div key={comment.id} className="flex gap-4">
-                      <Avatar>
-                        <AvatarFallback>{comment.comment_by.first_name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 space-y-1">
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium">{comment.comment_by.first_name}</p>
-                          <span className="text-xs text-muted-foreground">{comment.date_created
-                            ? `${new Date(comment.date_created).toLocaleDateString("en-GB")} at ${new Date(comment.date_created).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`
-                            : ""}</span>
-                        </div>
-                        <p className="text-sm">{comment.comment}</p>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground">No comments yet</p>
-                )}
-              </div>
-
-            <div className="space-y-4">
-              <Textarea
-                placeholder="Add a comment or update..."
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                className="min-h-[100px]"
-                maxLength={500}
-                disabled={!loggedIn}
-              />
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-muted-foreground">
-                  {comment.length}/500 characters
-                </span>
-                <Button 
-                  onClick={handleCommentSubmit} 
-                  disabled={!comment.trim() || isSubmitting || !useAuthStore.getState().user}
-                >
-                  {isSubmitting ? "Submitting..." : "Submit Comment"}
-                </Button>
-              </div>
-              {!useAuthStore.getState().user && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  Please <Link href="/login" className="underline text-primary">sign in</Link> to add a comment.
-                </p>
-              )}
+          {/* Comments Card */}
+          <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center">
+            <MessageSquare className="mr-2 h-5 w-5" />
+            Comments and Updates
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4 mb-6">
+            {incident.comments && incident.comments.length > 0 ? (
+          incident.comments.map((comment: any) => (
+            <div key={comment.id} className="flex gap-4 items-start">
+              <Avatar>
+            <AvatarFallback>{comment.comment_by.first_name.substring(0, 2).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <div className="flex-1 space-y-1">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+              <p className="text-sm font-medium">{comment.comment_by.first_name}</p>
+              <span className="text-xs text-muted-foreground">{comment.date_created
+                ? `${new Date(comment.date_created).toLocaleDateString("en-GB")} at ${new Date(comment.date_created).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`
+                : ""}</span>
             </div>
+            <p className="text-sm">{comment.comment}</p>
+              </div>
+            </div>
+          ))
+            ) : (
+          <p className="text-sm text-muted-foreground">No comments yet</p>
+            )}
+          </div>
 
-            </CardContent>
+          <div className="space-y-4">
+            <Textarea
+          placeholder="Add a comment or update..."
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          className="min-h-[100px]"
+          maxLength={500}
+          disabled={!loggedIn}
+            />
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <span className="text-xs text-muted-foreground">
+            {comment.length}/500 characters
+          </span>
+          <Button
+            onClick={handleCommentSubmit}
+            disabled={!comment.trim() || isSubmitting || !useAuthStore.getState().user}
+          >
+            {isSubmitting ? "Submitting..." : "Submit Comment"}
+          </Button>
+            </div>
+            {!useAuthStore.getState().user && (
+          <p className="text-xs text-muted-foreground mt-2">
+            Please <Link href="/login" className="underline text-primary">sign in</Link> to add a comment.
+          </p>
+            )}
+          </div>
+        </CardContent>
           </Card>
         </div>
 
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Location</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[300px] rounded-md border mb-4">
-                <CampusMap incidents={[incident]} center={[incident.latitude, incident.longitude]} zoom={17} />
-              </div>
-              <p className="text-sm text-muted-foreground">{incident.location}</p>
-            </CardContent>
+        {/* Sidebar (Location, Timeline, Similar Incidents) */}
+        <div className="space-y-6 w-full">
+          {/* Location Card */}
+          <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="text-lg">Location</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[200px] sm:h-[300px] rounded-md border mb-4 overflow-hidden">
+            <CampusMap incidents={[incident]} center={[incident.latitude, incident.longitude]} zoom={17} />
+          </div>
+          <p className="text-sm text-muted-foreground">{incident.location}</p>
+        </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Status Timeline</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex gap-3">
-                  <div className="flex flex-col items-center">
-                    <div className="h-2 w-2 rounded-full bg-primary" />
-                    <div className="h-full w-px bg-border" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Reported</p>
-                    <p className="text-xs text-muted-foreground">{incident.date_created
-                            ? `${new Date(incident.date_created).toLocaleDateString("en-GB")} at ${new Date(incident.date_created).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`
-                            : ""}</p>
-                  </div>
-                </div>
+          {/* Status Timeline Card */}
+          <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="text-lg">Status Timeline</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex gap-3">
+          <div className="flex flex-col items-center">
+            <div className="h-2 w-2 rounded-full bg-primary" />
+            <div className="h-full w-px bg-border" />
+          </div>
+          <div>
+            <p className="text-sm font-medium">Reported</p>
+            <p className="text-xs text-muted-foreground">{incident.date_created
+              ? `${new Date(incident.date_created).toLocaleDateString("en-GB")} at ${new Date(incident.date_created).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`
+              : ""}</p>
+          </div>
+            </div>
 
-                {incident.comments &&
-                  incident.comments.map((comment:any, index:any) => (
-                    <div key={index} className="flex gap-3">
-                      <div className="flex flex-col items-center">
-                        <div className="h-2 w-2 rounded-full bg-primary" />
-                        {index < incident.comments.length - 1 && <div className="h-full w-px bg-border" />}
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">Update from {comment.comment_by.first_name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {comment.date_created
-                            ? `${new Date(comment.date_created).toLocaleDateString("en-GB")} at ${new Date(comment.date_created).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`
-                            : ""}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-
-                {incident.status && (
-                  <div className="flex gap-3">
-                    <div className="flex flex-col items-center">
-                      <div
-                        className={`h-2 w-2 rounded-full ${
-                          incident.status === "RESOLVED"
-                            ? "bg-green-500"
-                            : incident.status === "INVESTIGATING"
-                            ? "bg-yellow-500"
-                            : "bg-red-500"
-                        }`}
-                      />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">
-                        {incident.status.charAt(0) + incident.status.slice(1).toLowerCase()}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {incident.date_last_modified
-                          ? `${new Date(incident.date_last_modified).toLocaleDateString("en-GB")} at ${new Date(incident.date_last_modified).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`
-                          : ""}
-                      </p>
-                    </div>
-                  </div>
-                )}
+            {incident.comments &&
+          incident.comments.map((comment: any, index: any) => (
+            <div key={index} className="flex gap-3">
+              <div className="flex flex-col items-center">
+            <div className="h-2 w-2 rounded-full bg-primary" />
+            {index < incident.comments.length - 1 && <div className="h-full w-px bg-border" />}
               </div>
-            </CardContent>
+              <div>
+            <p className="text-sm font-medium">Update from {comment.comment_by.first_name}</p>
+            <p className="text-xs text-muted-foreground">
+              {comment.date_created
+                ? `${new Date(comment.date_created).toLocaleDateString("en-GB")} at ${new Date(comment.date_created).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`
+                : ""}
+            </p>
+              </div>
+            </div>
+          ))}
+
+            {incident.status && (
+          <div className="flex gap-3">
+            <div className="flex flex-col items-center">
+              <div
+            className={`h-2 w-2 rounded-full ${
+              incident.status === "RESOLVED"
+                ? "bg-green-500"
+                : incident.status === "INVESTIGATING"
+                ? "bg-yellow-500"
+                : "bg-red-500"
+            }`}
+              />
+            </div>
+            <div>
+              <p className="text-sm font-medium">
+            {incident.status.charAt(0) + incident.status.slice(1).toLowerCase()}
+              </p>
+              <p className="text-xs text-muted-foreground">
+            {incident.date_last_modified
+              ? `${new Date(incident.date_last_modified).toLocaleDateString("en-GB")} at ${new Date(incident.date_last_modified).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`
+              : ""}
+              </p>
+            </div>
+          </div>
+            )}
+          </div>
+        </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Similar Incidents</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {Array.isArray(incidents) &&
-                  incidents
-                    .filter(
-                      (inc: any) =>
-                        inc.id !== incident.id &&
-                        Array.isArray(inc.tags) &&
-                        Array.isArray(incident.tags) &&
-                        (inc.tags.some((tag: string) => incident.tags.includes(tag)) ||
-                          inc.location === incident.location)
-                    )
-                    .slice(0, 3)
-                    .map((inc: any) => (
-                      <div key={inc.id} className="flex items-start gap-3">
-                        <div
-                          className={`p-1.5 rounded-full ${
-                            inc.severity === "high"
-                              ? "bg-red-100 dark:bg-red-900"
-                              : inc.severity === "medium"
-                              ? "bg-yellow-100 dark:bg-yellow-900"
-                              : "bg-blue-100 dark:bg-blue-900"
-                          }`}
-                        >
-                          <AlertTriangle
-                            className={`h-3.5 w-3.5 ${
-                              inc.severity === "high"
-                                ? "text-red-600 dark:text-red-400"
-                                : inc.severity === "medium"
-                                ? "text-yellow-600 dark:text-yellow-400"
-                                : "text-blue-600 dark:text-blue-400"
-                            }`}
-                          />
-                        </div>
-                        <div>
-                          <Link href={`/incidents/${inc.id}`} className="text-sm font-medium hover:underline">
-                            {inc.title}
-                          </Link>
-                          <p className="text-xs text-muted-foreground mt-1">{inc.location}</p>
-                        </div>
-                      </div>
-                    ))}
-
-                {Array.isArray(incidents) &&
-                  incidents.filter(
-                    (inc: any) =>
-                      inc.id !== incident.id &&
-                      Array.isArray(inc.tags) &&
-                      Array.isArray(incident.tags) &&
-                      (inc.tags.some((tag: string) => incident.tags.includes(tag)) ||
-                        inc.location === incident.location)
-                  ).length === 0 && (
-                    <p className="text-sm text-muted-foreground">No similar incidents found</p>
-                  )}
+          {/* Similar Incidents Card */}
+          <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="text-lg">Similar Incidents</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {Array.isArray(incidents) &&
+          incidents
+            .filter(
+              (inc: any) =>
+            inc.id !== incident.id &&
+            Array.isArray(inc.tags) &&
+            Array.isArray(incident.tags) &&
+            (inc.tags.some((tag: string) => incident.tags.includes(tag)) ||
+              inc.location === incident.location)
+            )
+            .slice(0, 3)
+            .map((inc: any) => (
+              <div key={inc.id} className="flex items-start gap-3">
+            <div
+              className={`p-1.5 rounded-full ${
+                inc.severity === "high"
+              ? "bg-red-100 dark:bg-red-900"
+              : inc.severity === "medium"
+              ? "bg-yellow-100 dark:bg-yellow-900"
+              : "bg-blue-100 dark:bg-blue-900"
+              }`}
+            >
+              <AlertTriangle
+                className={`h-3.5 w-3.5 ${
+              inc.severity === "high"
+                ? "text-red-600 dark:text-red-400"
+                : inc.severity === "medium"
+                ? "text-yellow-600 dark:text-yellow-400"
+                : "text-blue-600 dark:text-blue-400"
+                }`}
+              />
+            </div>
+            <div>
+              <Link href={`/incidents/${inc.id}`} className="text-sm font-medium hover:underline">
+                {inc.title}
+              </Link>
+              <p className="text-xs text-muted-foreground mt-1">{inc.location}</p>
+            </div>
               </div>
-            </CardContent>
+            ))}
+
+            {Array.isArray(incidents) &&
+          incidents.filter(
+            (inc: any) =>
+              inc.id !== incident.id &&
+              Array.isArray(inc.tags) &&
+              Array.isArray(incident.tags) &&
+              (inc.tags.some((tag: string) => incident.tags.includes(tag)) ||
+            inc.location === incident.location)
+          ).length === 0 && (
+            <p className="text-sm text-muted-foreground">No similar incidents found</p>
+          )}
+          </div>
+        </CardContent>
           </Card>
         </div>
       </div>
