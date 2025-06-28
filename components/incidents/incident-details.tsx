@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import dynamic from "next/dynamic"
-import { AlertTriangle, ArrowLeft, Clock, MapPin, MessageSquare, Share2, ThumbsUp, User } from "lucide-react"
+import { AlertTriangle, ArrowLeft, Clock, MapPin, MessageSquare, Share2, ThumbsUp, ThumbsDown, User } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -76,6 +76,17 @@ if (!incident) {
   )
 }
 
+  // Add a refetch function for the incident
+  const refetchIncident = async () => {
+    if (typeof incidents === "function") {
+      const result = await incidents();
+      if (result && result.success && Array.isArray(result.data)) {
+        const found = result.data.find((inc: any) => inc.id === id);
+        setIncident(found);
+      }
+    }
+  };
+
   const handleUpvote = async () => {
     const user = useAuthStore.getState().user
     if (!user) {
@@ -87,14 +98,13 @@ if (!incident) {
       return
     }
     try {
-      setUpvoted(!upvoted)
-      await upvote({ incident_id: incident.id, up_voted: !upvoted })
+      setUpvoted(true)
+      await upvote({ incident_id: incident.id, up_voted: true })
+      await refetchIncident()
       toast({
-        title: upvoted ? "Upvote removed" : "Incident upvoted",
-        description: upvoted
-          ? "You have removed your upvote from this incident"
-          : "Thank you for confirming this incident",
-        variant: upvoted ? "destructive" : "success",
+        title: "Incident upvoted",
+        description: "Thank you for confirming this incident",
+        variant: "success",
       })
     } catch (error) {
       toast({
@@ -105,7 +115,7 @@ if (!incident) {
     }
   }
 
-    const handleDownvote = async () => {
+  const handleDownvote = async () => {
     const user = useAuthStore.getState().user
     if (!user) {
       toast({
@@ -116,14 +126,13 @@ if (!incident) {
       return
     }
     try {
-      setDownvoted(!downvoted)
-      await upvote({ incident_id: incident.id, up_voted: downvoted })
+      setDownvoted(true)
+      await upvote({ incident_id: incident.id, up_voted: false })
+      await refetchIncident()
       toast({
-        title: downvoted ? "Downvote removed" : "Incident downvoted",
-        description: downvoted
-          ? "You have removed your downvote from this incident"
-          : "Thank you for confirming this incident",
-        variant: downvoted ? "destructive" : "success",
+        title: "Incident downvoted",
+        description: "Thank you for your feedback on this incident",
+        variant: "success",
       })
     } catch (error) {
       toast({
@@ -306,24 +315,26 @@ const handleCommentSubmit = async () => {
             </Badge>
           ))}
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-row gap-2">
             <Button
-          variant={upvoted ? "default" : "outline"}
+          variant="ghost"
           size="sm"
           onClick={handleUpvote}
+          aria-label="Upvote"
           className="hover:opacity-80"
             >
-          <ThumbsUp className="mr-2 h-4 w-4" />
-          Upvote {upvoted ? incident.up_votes + 1 : incident.up_votes}
+          <ThumbsUp className="mr-2 h-4 w-4"/>
+ Upvotes {incident.up_votes}
             </Button>
             <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
           onClick={handleDownvote}
+          aria-label="Downvote"
           className="hover:opacity-80"
             >
-          <ThumbsUp className="mr-2 h-4 w-4 rotate-180" />
-          Downvote {downvoted ? incident.down_votes + 1 : incident.down_votes}
+          <ThumbsDown className="mr-2 h-4 w-4" />
+          Downvotes {incident.down_votes}
             </Button>
             <Button variant="outline" size="sm" onClick={handleShare}>
           <Share2 className="mr-2 h-4 w-4" />

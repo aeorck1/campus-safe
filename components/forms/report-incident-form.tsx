@@ -320,7 +320,7 @@ useEffect(() => {
                     <Checkbox checked={field.value} onCheckedChange={field.onChange} disabled={!isAuthenticated} />
                   </FormControl>
                   <div className="space-y-1 leading-none">
-                    <FormLabel>Submit this report anonymously</FormLabel>
+                    <FormLabel>You are submitting this report anonymously</FormLabel>
                     <FormDescription>
                       Your identity will not be associated with this report. Note that this may limit our ability to
                       follow up for additional information.

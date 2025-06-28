@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { AlertTriangle, ArrowUpDown, Clock, Filter, MapPin, Search, ThumbsUp } from "lucide-react"
+import { AlertTriangle, ArrowUpDown, Clock, Filter, MapPin, Search, ThumbsUp, ThumbsDown } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,8 +19,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useAuthStore } from "@/lib/auth"
+import {useToast} from "@/hooks/use-toast"
+
 
 export function IncidentsList() {
+  const {toast }= useToast();
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [severityFilter, setSeverityFilter] = useState("all")
@@ -28,8 +32,13 @@ export function IncidentsList() {
   const [incidents, setIncidents] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null) 
+    const [upvoted, setUpvoted] = useState(false)
+    const [downvoted, setDownvoted] = useState (false)
 
   const fetchIncidents = useAuthStore((state) => state.incidents)
+  const upvote = useAuthStore((state)=> state.voteIncident)
+  const downvote = useAuthStore((state) => state.downvoteIncident) // Make sure this exists in your store
+  const router = useRouter();
 
   useEffect(() => {
     let mounted = true
@@ -108,6 +117,50 @@ const allTags = Array.from(tagMap.values());
       }
       return 0
     })
+
+  const fetchAndSetIncidents = async () => {
+    try {
+      const res: any = await fetchIncidents()
+      if (res.success) {
+        setIncidents(res.data)
+      } else {
+        setError(res.message || "Failed to fetch incidents")
+      }
+    } catch {
+      setError("Failed to fetch incidents")
+    }
+  }
+
+  const handleVote = async (incidentId: string, up_voted: boolean) => {
+    const user = useAuthStore.getState().user
+    if (!user) {
+      toast({
+        title: "You are not a logged in User",
+        description: "Please log in to vote on incidents.",
+        variant: "destructive",
+      })
+      return
+    }
+    try {
+      if (up_voted) setUpvoted(true)
+      else setDownvoted(true)
+      await upvote({ incident_id: incidentId, up_voted })
+      await fetchAndSetIncidents()
+      toast({
+        title: up_voted ? "Incident upvoted" : "Incident downvoted",
+        description: up_voted
+          ? "Thank you for confirming this incident"
+          : "Thank you for your feedback on this incident",
+        variant: "success",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update vote. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -224,91 +277,108 @@ const allTags = Array.from(tagMap.values());
               </div>
             ) : (
                 <div className="divide-y">
-                {filteredIncidents.map((incident) => (
-                  <Link
-                  key={incident.id}
-                  href={`/incidents/${incident.id}`}
-                  className="flex items-start p-4 py-6 bg-white hover:bg-gray-100 transition-colors group my-3"
-                  style={{ textDecoration: "none" }}
-                  >
-                  <div
-                    className={`p-2 rounded-full mr-4 ${
-                    incident.severity === "HIGH"
-                      ? "bg-red-100 dark:bg-red-900"
-                      : incident.severity === "MEDIUM"
-                      ? "bg-yellow-100 dark:bg-yellow-900"
-                      : "bg-blue-100 dark:bg-blue-900"
-                    }`}
-                  >
-                    <AlertTriangle
-                    className={`h-5 w-5 ${
-                      incident.severity === "HIGH"
-                      ? "text-red-600 dark:text-red-400"
-                      : incident.severity === "MEDIUM"
-                        ? "text-yellow-600 dark:text-yellow-400"
-                        : "text-blue-600 dark:text-blue-400"
-                    }`}
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                    <h4 className="font-medium truncate">{incident.title}</h4>
-                    <Badge
-                      variant={
-                      incident.status === "RESOLVED"
-                        ? "secondary"
-                        : incident.status === "INVESTIGATING"
-                        ? "outline"
-                        : "destructive"
-                      }
-                      className="ml-2 shrink-0"
+                  {filteredIncidents.map((incident) => (
+                    <div
+                      key={incident.id}
+                      className="flex items-start p-4 py-6 bg-white hover:bg-gray-100 transition-colors group my-3 cursor-pointer"
+                      style={{ textDecoration: "none" }}
+                      onClick={() => router.push(`/incidents/${incident.id}`)}
                     >
-                      {incident.status}
-                    </Badge>
+                      <div
+                        className={`p-2 rounded-full mr-4 ${
+                        incident.severity === "HIGH"
+                          ? "bg-red-100 dark:bg-red-900"
+                          : incident.severity === "MEDIUM"
+                          ? "bg-yellow-100 dark:bg-yellow-900"
+                          : "bg-blue-100 dark:bg-blue-900"
+                        }`}
+                      >
+                        <AlertTriangle
+                        className={`h-5 w-5 ${
+                          incident.severity === "HIGH"
+                          ? "text-red-600 dark:text-red-400"
+                          : incident.severity === "MEDIUM"
+                            ? "text-yellow-600 dark:text-yellow-400"
+                            : "text-blue-600 dark:text-blue-400"
+                        }`}
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                        <h4 className="font-medium truncate">{incident.title}</h4>
+                        <Badge
+                          variant={
+                          incident.status === "RESOLVED"
+                            ? "secondary"
+                            : incident.status === "INVESTIGATING"
+                            ? "outline"
+                            : "destructive"
+                          }
+                          className="ml-2 shrink-0"
+                        >
+                          {incident.status}
+                        </Badge>
+                        </div>
+                        <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{incident.description}</p>
+                        <div className="mt-2 flex items-center text-xs text-muted-foreground">
+                        <MapPin className="h-3 w-3 mr-1" />
+                        <span className="truncate">{incident.location}</span>
+                        <Separator orientation="vertical" className="mx-2 h-3" />
+                        <Clock className="h-3 w-3 mr-1" />
+                        {incident.date_created
+                          ? new Date(incident.date_created).toLocaleDateString("en-GB", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          })
+                          : ""}
+                        </div>
+                        <div className="mt-2 flex flex-wrap gap-1">
+                        {Array.isArray(incident.tags) &&
+                          incident.tags.map((tag: { id: string; name: string }) => (
+                          <Badge key={tag.id} variant="outline" className="text-xs text-orange-600 bg-orange-100">
+                            {tag.name}
+                          </Badge>
+                          ))}
+                        </div>
+                      </div>
+                      <div
+                        className="ml-4 flex flex-row items-center gap-2"
+                        onClick={e => e.stopPropagation()}
+                      >
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          tabIndex={-1}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleVote(incident.id, true);
+                          }}
+                          aria-label="Upvote"
+                        >
+                          <ThumbsUp className="h-4 w-4" />
+                        </Button>
+                        <span className="text-xs">{incident.up_votes}</span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          tabIndex={-1}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleVote(incident.id, false);
+                          }}
+                          aria-label="Downvote"
+                        >
+                          <ThumbsDown className="h-4 w-4" />
+                        </Button>
+                        <span className="text-xs">{incident.down_votes}</span>
+                      </div>
                     </div>
-                    <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{incident.description}</p>
-                    <div className="mt-2 flex items-center text-xs text-muted-foreground">
-                    <MapPin className="h-3 w-3 mr-1" />
-                    <span className="truncate">{incident.location}</span>
-                    <Separator orientation="vertical" className="mx-2 h-3" />
-                    <Clock className="h-3 w-3 mr-1" />
-                    {incident.date_created
-                      ? new Date(incident.date_created).toLocaleDateString("en-GB", {
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      })
-                      : ""}
-                    </div>
-                    <div className="mt-2 flex flex-wrap gap-1">
-                    {Array.isArray(incident.tags) &&
-                      incident.tags.map((tag: { id: string; name: string }) => (
-                      <Badge key={tag.id} variant="outline" className="text-xs text-orange-600 bg-orange-100">
-                        {tag.name}
-                      </Badge>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="ml-4 flex flex-col items-center">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" tabIndex={-1}>
-                    <ThumbsUp className="h-4 w-4" />
-                    </Button>
-                    <span className="text-xs">{incident.up_votes}</span>
-                    <Button
-                    variant="outline"
-                    size="sm"
-                    asChild
-                    className="mt-2"
-                    tabIndex={-1}
-                    onClick={e => e.stopPropagation()}
-                    >
-                  
-                    </Button>
-                  </div>
-                  </Link>
-                ))}
+                  ))}
                 </div>
             )}
           </div>
