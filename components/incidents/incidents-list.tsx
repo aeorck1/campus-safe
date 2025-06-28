@@ -37,7 +37,6 @@ export function IncidentsList() {
 
   const fetchIncidents = useAuthStore((state) => state.incidents)
   const upvote = useAuthStore((state)=> state.voteIncident)
-  const downvote = useAuthStore((state) => state.downvoteIncident) // Make sure this exists in your store
   const router = useRouter();
 
   useEffect(() => {

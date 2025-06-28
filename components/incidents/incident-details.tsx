@@ -204,8 +204,8 @@ const handleCommentSubmit = async () => {
   }
 
   return (
-    <div className="md:w-[100%] mx-auto px-4 py-6 w-[95%]" >
-      <div className="flex items-center mb-6 md:w-[100%] m-auto w-[95%]">
+    <div className="md:w-[100%] mx-auto px-4 py-6 w-[100%]" >
+      <div className="flex items-center mb-6 md:w-[100%] m-auto w-[100%]">
         <Button variant="outline" size="sm" asChild className="mr-4">
           <Link href="/incidents">
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -324,17 +324,27 @@ const handleCommentSubmit = async () => {
           className="hover:opacity-80"
             >
           <ThumbsUp className="mr-2 h-4 w-4"/>
- Upvotes {incident.up_votes}
+   <span className="hidden sm:inline">
+                Upvotes {incident.up_votes}
+              </span>
+              <span className="sm:hidden">
+                {incident.up_votes}
+              </span>
             </Button>
             <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleDownvote}
-          aria-label="Downvote"
-          className="hover:opacity-80"
+              variant="ghost"
+              size="sm"
+              onClick={handleDownvote}
+              aria-label="Downvote"
+              className="hover:opacity-80"
             >
-          <ThumbsDown className="mr-2 h-4 w-4" />
-          Downvotes {incident.down_votes}
+              <ThumbsDown className="mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">
+                Downvotes {incident.down_votes}
+              </span>
+               <span className="sm:hidden">
+                {incident.down_votes}
+              </span>
             </Button>
             <Button variant="outline" size="sm" onClick={handleShare}>
           <Share2 className="mr-2 h-4 w-4" />
