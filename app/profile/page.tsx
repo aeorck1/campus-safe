@@ -62,7 +62,7 @@ export default function ProfilePage() {
       profile_picture: user?.profile_picture || "",
     },
   })
-
+console.log("Thus is the user", user)
 
   // const []
   useEffect(() => {
@@ -125,20 +125,72 @@ export default function ProfilePage() {
                 <CardContent>
                 <div className="flex flex-col md:flex-row gap-8">
                   <div className="flex flex-col items-center space-y-4">
-                  <Avatar className="h-32 w-32">
+                  {/* <Avatar className="h-32 w-32">
                     <AvatarImage src={user.profile_picture || "/avatars/01.png"} alt={user.first_name} />
                     <AvatarFallback className="text-4xl">
                     {user.first_name?.charAt(0)}
                     </AvatarFallback>
-                  </Avatar>
-                  <Button variant="outline" size="sm">
-                    <Camera className="mr-2 h-4 w-4" />
-                    Change Photo
-                  </Button>
+                  </Avatar> */}
+                   
+
+
+                    <Label htmlFor="profile-picture-upload" className="flex flex-col items-center space-y-2 cursor-pointer">
+                      <div className="relative">
+                        <div className="h-32 w-32 rounded-full overflow-hidden bg-muted flex items-center justify-center">
+                          {form.watch("profile_picture") || user.profile_picture ? (
+                            <img
+                              src={form.watch("profile_picture") || user.profile_picture}
+                              alt={user.first_name}
+                              className="object-cover h-full w-full"
+                            />
+                          ) : (
+                            <span className="text-4xl">{user.first_name?.charAt(0)}</span>
+                          )}
+                        </div>
+                        <div className="absolute bottom-2 right-2 bg-white rounded-full p-1 shadow">
+                          <Camera className="h-5 w-5 text-gray-600" />
+                        </div>
+                      </div>
+                      <Button variant="outline" size="sm" asChild>
+                        <span>Change Photo</span>
+                      </Button>
+                      <Input
+                        id="profile-picture-upload"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0]
+                          if (!file) return
+                          const reader = new FileReader()
+                          reader.onloadend = () => {
+                            const base64 = reader.result as string
+                            form.setValue("profile_picture", base64)
+                          }
+                          reader.readAsDataURL(file)
+                        }}
+                      />
+                    </Label>
                   <div className="text-center">
                     <p className="font-medium">{user.first_name} {user.middle_name} {user.last_name}</p>
-                    {/* <p className="text-sm text-muted-foreground">{user.role}</p> */}
-                    {/* <p className="text-xs text-muted-foreground">Joined {user.joinedAt}</p> */}
+                     <div
+                      className={`rounded px-3 py-1 text-sm font-semibold text-white text-muted-foreground ${
+                        user.role?.name === "Student"
+                          ? "bg-green-600"
+                          : user.role?.name === "Security"
+                          ? "bg-orange-500"
+                          : user.role?.name === "Admin"
+                          ? "bg-orange-500"
+                          : "bg-secondary"
+                      }`}
+                    >
+                      {user.role?.name === "Admin" && "Administrator"}
+                      {user.role?.name === "Student" && "Student"}
+                      {user.role?.name === "Security" && "Security Personnel"}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Joined {user.date_joined ? new Date(user.date_joined).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) : ""}
+                    </p>
                   </div>
                   </div>
 

@@ -16,7 +16,7 @@ export type User = {
   email: string
   avatar?: string
   department?: string
-  joinedAt: string
+  date_joined: string
   username: string // Optional for API login
   profile_picture: string
   bio: string // Optional bio field

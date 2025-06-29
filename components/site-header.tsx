@@ -16,11 +16,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { useState, useCallback, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { AuthStatus } from "@/components/auth-status"
 import { useAuthStore } from "@/lib/auth"
 
 export function SiteHeader() {
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const router = useRouter()
   const pathname = usePathname()
   const { isAuthenticated } = useAuthStore()
 
@@ -67,6 +71,35 @@ export function SiteHeader() {
   // Filter routes based on authentication status
   const filteredRoutes = routes.filter((route) => !route.protected || isAuthenticated)
 
+  // Close sidebar on route change (mobile navigation)
+  useEffect(() => {
+    const handleRouteChange = () => setSidebarOpen(false)
+    // Next.js router events for navigation
+    // router.events is not available in app router, so use workaround:
+    // Listen for "routeChangeStart" on window (Next.js app router triggers navigation events)
+    window.addEventListener("next-route-change", handleRouteChange)
+    return () => {
+      window.removeEventListener("next-route-change", handleRouteChange)
+    }
+  }, [])
+
+  // Fallback: close sidebar on any link click
+  const handleSidebarLinkClick = useCallback(() => {
+    setSidebarOpen(false)
+  }, [])
+
+  // Patch for Next.js app router: fire custom event on navigation
+  useEffect(() => {
+    const origPush = router.push
+    router.push = (...args) => {
+      window.dispatchEvent(new Event("next-route-change"))
+      return origPush(...args)
+    }
+    return () => {
+      router.push = origPush
+    }
+  }, [router])
+
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background">
       <div className="container flex h-16 items-center px-4 sm:justify-between sm:space-x-0">
@@ -74,7 +107,7 @@ export function SiteHeader() {
           <Link href="/" className="hidden items-center space-x-2 md:flex">
             <Shield className="h-6 w-6 text-campus-primary" />
             <span className="hidden font-bold sm:inline-block bg-clip-text text-transparent bg-gradient-to-r from-campus-primary to-campus-secondary">
-              UI Crowd Source
+              Secure UI
             </span>
           </Link>
           <nav className="hidden gap-6 md:flex">
@@ -91,7 +124,7 @@ export function SiteHeader() {
               </Link>
             ))}
           </nav>
-          <Sheet>
+          <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" className="flex md:hidden">
                 <Menu className="h-5 w-5" />
@@ -99,10 +132,10 @@ export function SiteHeader() {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="pr-0">
-              <Link href="/" className="flex items-center space-x-2">
+              <Link href="/" className="flex items-center space-x-2" onClick={handleSidebarLinkClick}>
                 <Shield className="h-6 w-6 text-campus-primary" />
                 <span className="font-bold bg-clip-text text-transparent bg-gradient-to-r from-campus-primary to-campus-secondary">
-                  UI Crowd Source
+                  Secure UI
                 </span>
               </Link>
               <nav className="mt-8 flex flex-col gap-4">
@@ -114,16 +147,15 @@ export function SiteHeader() {
                       "text-foreground/70 transition-colors hover:text-foreground",
                       route.active && "text-campus-secondary font-medium",
                     )}
+                    onClick={handleSidebarLinkClick}
                   >
                     {route.label}
                   </Link>
                 ))}
-                
-                  <Link href="/report" className="flex items-center text-campus-primary font-medium">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Report Incident
-                  </Link>
-                
+                <Link href="/report" className="flex items-center text-campus-primary font-medium" onClick={handleSidebarLinkClick}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Report Incident
+                </Link>
               </nav>
             </SheetContent>
           </Sheet>
