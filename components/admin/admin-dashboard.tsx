@@ -43,6 +43,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
+import { get } from "http"
 
 type User = {
   id: string
@@ -51,15 +52,70 @@ type User = {
   avatar?: string
   first_name: string
   last_name?: string
-  // role: {
-  //   name: string
-  //   [key: string]: any
-  // }
   [key: string]: any
   role: string
 }
 
 export function AdminDashboard() {
+  // Handler for Add User form submission
+  const handleAddUserSubmit = async (e: React.FormEvent) => {
+    try {
+      e.preventDefault()
+      setAddUserLoading(true)
+      setAddUserError(null)
+      // Prepare a SignUp object instead of FormData
+      const signUpData = {
+        ...addUserForm,
+        profile_picture: typeof addUserForm.profile_picture === 'string'
+          ? addUserForm.profile_picture
+          : '', // or handle file upload logic here
+      }
+      const result = await addUser('', signUpData)
+      if (result && result.success) {
+        toast({
+          title: "User added!",
+          description: `${addUserForm.first_name} ${addUserForm.last_name} has been registered.`,
+          variant: "success",
+        })
+        setIsAddUserOpen(false)
+        setAddUserForm({
+          password: "",
+          is_superuser: false,
+          email: "",
+          username: "",
+          is_active: true,
+          is_staff: false,
+          first_name: "",
+          last_name: "",
+          middle_name: "",
+          department: "",
+          bio: "",
+          profile_picture: "",
+          role: "STUDENT",
+        })
+        // Refresh users after successful addition
+        const response = await getUsers()
+        if (response && response.success && Array.isArray(response.data)) {
+          setUsers(response.data)
+        }
+      }
+    } catch (err: any) {
+      console.error(err)
+      // Prefer backend error message if available
+      if (err?.response?.data?.detail) {
+        setAddUserError(err.response.data.detail)
+      } else if (err?.response?.data) {
+        // If backend returns a dict of field errors, show the first
+        const firstKey = Object.keys(err.response.data)[0]
+        const firstError = err.response.data[firstKey]?.[0] || err.response.data[firstKey]
+        setAddUserError(firstError || err.message)
+      } else {
+        setAddUserError(err.message)
+      }
+    } finally {
+      setAddUserLoading(false)
+    }
+  }
   const { toast } = useToast()
   const [activeTab, setActiveTab] = useState("users")
   const [searchQuery, setSearchQuery] = useState("")
@@ -67,6 +123,39 @@ export function AdminDashboard() {
   const [editUser, setEditUser] = useState<User | null>(null)
   const [editRole, setEditRole] = useState<string>("")
   const [isEditOpen, setIsEditOpen] = useState(false)
+  // Add User modal state
+  const [isAddUserOpen, setIsAddUserOpen] = useState(false)
+  const [addUserLoading, setAddUserLoading] = useState(false)
+  const [addUserForm, setAddUserForm] = useState<{
+    password: string
+    is_superuser: boolean
+    email: string
+    username: string
+    is_active: boolean
+    is_staff: boolean
+    first_name: string
+    last_name: string
+    middle_name: string
+    department: string
+    bio: string
+    profile_picture: string | File
+    role: string
+  }>({
+    password: "",
+    is_superuser: false,
+    email: "",
+    username: "",
+    is_active: true,
+    is_staff: false,
+    first_name: "",
+    last_name: "",
+    middle_name: "",
+    department: "",
+    bio: "",
+    profile_picture: "",
+    role: "STUDENT",
+  })
+  const [addUserError, setAddUserError] = useState<string | null>(null)
   const [incidentsData, setIncidents] = useState<any[]>([])
 
   // Add state for delete confirmation dialog
@@ -75,7 +164,9 @@ export function AdminDashboard() {
 
   const getUsers = useAuthStore((state) => state.adminGetAllUsers)
   const deleteUser = useAuthStore((state) => state.deleteUser)
+  const addUser = useAuthStore((state)=> state.addUser)
   const updateRole = useAuthStore((state) => state.postAdminChangeRole)
+  const getRoles = useAuthStore((state)=> state.getRoles)
   const incidents = useAuthStore((state) => state.incidents)
   const updateIncident = useAuthStore((state)=> state.updateIncident)
   const deleteIncident = useAuthStore((state) => state.deleteAdminIncident)
@@ -139,6 +230,31 @@ export function AdminDashboard() {
     return () => clearInterval(intervalId)
   }, [incidents, toast])
 
+  // Fetch roles on mount
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const response = await getRoles('', {})
+        if (response && response.success) {
+          console.log("Fetched roles:", response.data)
+        } else {
+          toast({
+            title: "Error",
+            description: response?.message || "Failed to fetch roles. Please try again later.",
+            variant: "destructive",
+          })
+        }
+      } catch (error) {
+        console.error("Failed to fetch roles:", error)
+        toast({
+          title: "Error",
+          description: "Failed to fetch roles. Please try again later.",
+          variant: "destructive",
+        })
+      }
+    }
+    fetchRoles()
+  }, [getRoles, toast])
 
   const handleDeleteUser = (userId: string) => {
     deleteUser(userId)
@@ -206,7 +322,7 @@ export function AdminDashboard() {
     const roleMap: Record<string, string> = {
       Student: "STUDENT",
       Admin: "ADMIN",
-      Security: "SECURITY",
+      Security: "SECURITY_PERSONNEL",
     }
     const payload = {
       user_id: editUser.id,
@@ -292,7 +408,116 @@ export function AdminDashboard() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              {activeTab === "users" && <Button className="ml-4">Add User</Button>}
+              {activeTab === "users" && (
+                <Button className="ml-4" onClick={() => setIsAddUserOpen(true)}>
+                  Add User
+                </Button>
+              )}
+      {/* Add User Modal */}
+      <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New User</DialogTitle>
+            <DialogDescription>Fill in the details to register a new user.</DialogDescription>
+          </DialogHeader>
+  <form
+    className="space-y-3 bg-orange-50 border border-orange-200 rounded-lg p-6 shadow-md"
+    onSubmit={handleAddUserSubmit}
+  >
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+              <Label htmlFor="first_name" className="text-orange-700">First Name</Label>
+              <Input id="first_name" value={addUserForm.first_name} onChange={e => setAddUserForm(f => ({ ...f, first_name: e.target.value }))} required className="bg-orange-100 border-orange-300 text-orange-900 placeholder:text-orange-400 focus:ring-orange-400 focus:border-orange-400" />
+              </div>
+              <div>
+              <Label htmlFor="last_name" className="text-orange-700">Last Name</Label>
+              <Input id="last_name" value={addUserForm.last_name} onChange={e => setAddUserForm(f => ({ ...f, last_name: e.target.value }))} className="bg-orange-100 border-orange-300 text-orange-900 placeholder:text-orange-400 focus:ring-orange-400 focus:border-orange-400" />
+              </div>
+              <div>
+              <Label htmlFor="middle_name" className="text-orange-700">Middle Name</Label>
+              <Input id="middle_name" value={addUserForm.middle_name} onChange={e => setAddUserForm(f => ({ ...f, middle_name: e.target.value }))} className="bg-orange-100 border-orange-300 text-orange-900 placeholder:text-orange-400 focus:ring-orange-400 focus:border-orange-400" />
+              </div>
+              <div>
+              <Label htmlFor="department" className="text-orange-700">Department</Label>
+              <Input id="department" value={addUserForm.department} onChange={e => setAddUserForm(f => ({ ...f, department: e.target.value }))} className="bg-orange-100 border-orange-300 text-orange-900 placeholder:text-orange-400 focus:ring-orange-400 focus:border-orange-400" />
+              </div>
+              <div>
+              <Label htmlFor="email" className="text-orange-700">Email</Label>
+              <Input id="email" type="email" value={addUserForm.email} onChange={e => setAddUserForm(f => ({ ...f, email: e.target.value }))} required className="bg-orange-100 border-orange-300 text-orange-900 placeholder:text-orange-400 focus:ring-orange-400 focus:border-orange-400" />
+              </div>
+              <div>
+              <Label htmlFor="username" className="text-orange-700">Username</Label>
+              <Input id="username" value={addUserForm.username} onChange={e => setAddUserForm(f => ({ ...f, username: e.target.value }))} required className="bg-orange-100 border-orange-300 text-orange-900 placeholder:text-orange-400 focus:ring-orange-400 focus:border-orange-400" />
+              </div>
+              <div>
+              <Label htmlFor="password" className="text-orange-700">Password</Label>
+              <Input id="password" type="password" value={addUserForm.password} onChange={e => setAddUserForm(f => ({ ...f, password: e.target.value }))} required className="bg-orange-100 border-orange-300 text-orange-900 placeholder:text-orange-400 focus:ring-orange-400 focus:border-orange-400" />
+              </div>
+              <div>
+              <Label htmlFor="role" className="text-orange-700">Role</Label>
+              <select
+                id="role"
+                className="w-full border rounded px-3 py-2 bg-orange-100 border-orange-300 text-orange-900 focus:ring-orange-400 focus:border-orange-400"
+                value={addUserForm.role}
+                onChange={e => setAddUserForm(f => ({ ...f, role: e.target.value }))}
+                required
+              >
+                <option value="STUDENT">Student</option>
+                <option value="ADMIN">Admin</option>
+                <option value="SECURITY_PERSONNEL">Security</option>
+              </select>
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="bio" className="text-orange-700">Bio</Label>
+              <Input id="bio" value={addUserForm.bio} onChange={e => setAddUserForm(f => ({ ...f, bio: e.target.value }))} className="bg-orange-100 border-orange-300 text-orange-900 placeholder:text-orange-400 focus:ring-orange-400 focus:border-orange-400" />
+            </div>
+            <div>
+              <Label htmlFor="profile_picture" className="text-orange-700">Profile Picture</Label>
+              <input
+                id="profile_picture"
+                type="file"
+                accept="image/*"
+                className="block w-full text-orange-700 bg-orange-50 border border-orange-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 file:bg-orange-100 file:text-orange-700 file:border-0 file:rounded file:px-3 file:py-1"
+                onChange={e => {
+                  const file = e.target.files?.[0]
+                  if (file) {
+                    setAddUserForm(f => ({ ...f, profile_picture: file }))
+                  }
+                }}
+              />
+              {addUserForm.profile_picture && typeof addUserForm.profile_picture !== 'string' && (
+                <img
+                  src={URL.createObjectURL(addUserForm.profile_picture)}
+                  alt="Preview"
+                  className="mt-2 w-20 h-20 object-cover rounded border border-orange-300 bg-orange-100"
+                />
+              )}
+            </div>
+            <div className="flex gap-4 mt-2">
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={addUserForm.is_superuser} onChange={e => setAddUserForm(f => ({ ...f, is_superuser: e.target.checked }))} />
+                Superuser
+              </label>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={addUserForm.is_staff} onChange={e => setAddUserForm(f => ({ ...f, is_staff: e.target.checked }))} />
+                Staff
+              </label>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={addUserForm.is_active} onChange={e => setAddUserForm(f => ({ ...f, is_active: e.target.checked }))} />
+                Active
+              </label>
+            </div>
+            {addUserError && <div className="text-destructive text-sm">{addUserError}</div>}
+            <DialogFooter>
+              <Button type="submit" disabled={addUserLoading}>{addUserLoading ? "Adding..." : "Add User"}</Button>
+              <DialogClose asChild>
+                <Button type="button" variant="outline" onClick={() => setIsAddUserOpen(false)}>Cancel</Button>
+              </DialogClose>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
             </div>
 
             <TabsContent value="users" className="mt-6">
@@ -318,7 +543,7 @@ export function AdminDashboard() {
                           <TableCell>
                             <div className="flex items-center gap-3">
                               <Avatar>
-                                <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
+                                <AvatarImage src={user.profile_picture || "/placeholder.svg"} alt={user.first_name} />
                                 <AvatarFallback>{user.first_name.substring(0, 2).toUpperCase()}</AvatarFallback>
                               </Avatar>
                               <div>
@@ -785,7 +1010,7 @@ export function AdminDashboard() {
               >
                 <option value="Student">Student</option>
                 <option value="Admin">Admin</option>
-                <option value="Security">Security</option>
+                <option value="SECURITY_PERSONNEL">Security</option>
               </select>
             </div>
             <DialogFooter>

@@ -74,6 +74,14 @@ export type SignUp = {
   password: string
 }
 
+export interface AddUser {
+  first_name: string,
+  last_name: string,
+  email: string,
+  username: string,
+  password: string
+}
+
 export type Comment = {
   object_id: string,
   comment: string,
@@ -139,6 +147,9 @@ export type AuthState = {
   postAdminChangeRole: (data: ChangeRole) => Promise<{ success: boolean; data?: any; message?: string }>
   updateIncident: (id: string, data: object) => Promise<{ success: boolean; data?: any; message?: string }>
   getRecentActivity: () => Promise<{ success: boolean; data?: any; message?: string }>
+  addUser: (id: string, data: SignUp) => Promise<{ success: boolean; data?: any; message?: string }>
+
+  getRoles: (id: string, data: object) => Promise<{ success: boolean; data?: any; message?: string }>
 }
 export type Login = {
   username: string,
@@ -667,6 +678,11 @@ getRecentActivity: async () =>{
               "Content-Type": "multipart/form-data",
             },
           });
+          // Update the user in the store with the latest profile data
+          set((state) => ({
+            ...state,
+            user: response.data || state.user,
+          }))
           return { success: true, data: response.data };
         } catch (error: any) {
           const message = error?.response?.data?.detail || error?.message || "Failed to update profile";
@@ -694,6 +710,31 @@ updateIncident: async (id: string, data: object) => {
         }
       },
       
+      addUser: async (id: string, data:object)=>{
+        try{
+          const response= await axiosAuth.post (`admin/users/`, data,
+            {headers: {
+              "Content-Type": "multipart/form-data",
+            }
+          }
+          )
+          return { success: true, data: response.data }
+        } catch (error: any) {
+            const message = error?.response?.data?.detail || error?.message || "Error adding user.";
+            return { success: false, message };
+          
+        }
+      },
+
+      getRoles: async (id:string, data:object) => {
+        try {
+          const response = await axiosAuth.get(`/admin/roles/`, data);
+          return { success: true, data: response.data };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error fetching roles.";
+          return { success: false, message };
+        }
+      },
 
       logout: () => {
         set({ user: null, isAuthenticated: false, accessToken: null })

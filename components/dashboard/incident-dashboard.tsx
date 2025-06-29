@@ -34,7 +34,7 @@ type Incident = {
   status: string;
   severity: string;
   date_created: any;
-  reportedAt: string;
+  reported_at: string;
   tags: any[];
   upvotes?: number;
 };
@@ -131,62 +131,64 @@ export function IncidentDashboard() {
             <h3 className="text-lg font-medium mb-4">Recent Incidents</h3>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {incidents.slice(-3).reverse().map((incident: any) => (
-                <Card key={incident.id}>
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between items-start">
-                      <CardTitle className="text-base">{incident.title}</CardTitle>
-                      <Badge
-                        variant={
-                          incident.status === "RESOLVED"
-                            ? "secondary"
-                            : incident.status === "INVESTIGATING"
-                              ? "outline"
-                              : "destructive"
-                        }
-                      >
-                        {incident.status}
-                      </Badge>
-                    </div>
-                    <CardDescription className="flex items-center mt-1">
-                      <MapPin className="h-3 w-3 mr-1" />
-                      {incident.location}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground line-clamp-2">{incident.description}</p>
-                    <div className="flex gap-2 mt-3 flex-wrap">
-                      {Array.isArray(incident.tags) &&
-                        incident.tags.map((tag: { id: string; name: string }) => (
-                          <Badge key={tag.id} variant="secondary" className="text-xs">
-                            {tag.name}
+                  <Link
+                    key={incident.id}
+                    href={`/incidents/${incident.id}`}
+                    className="block group"
+                    style={{ textDecoration: 'none' }}
+                  >
+                    <Card className="transition-shadow group-hover:shadow-lg cursor-pointer">
+                      <CardHeader className="pb-2">
+                        <div className="flex justify-between items-start">
+                          <CardTitle className="text-base">{incident.title}</CardTitle>
+                          <Badge
+                            variant={
+                              incident.status === "RESOLVED"
+                                ? "secondary"
+                                : incident.status === "INVESTIGATING"
+                                  ? "outline"
+                                  : "destructive"
+                            }
+                          >
+                            {incident.status}
                           </Badge>
-                        ))}
-                    </div>
-                  </CardContent>
-                  <CardFooter className="flex justify-between pt-2">
-                    <div className="flex items-center text-xs text-muted-foreground">
-                      <Clock className="h-3 w-3 mr-1" />
-                        {new Date(incident.date_created).toLocaleString("en-GB", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: false,
-                        })}
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <ThumbsUp className="h-4 w-4" />
-                        <span className="sr-only">Upvote</span>
-                      </Button>
-                      <Button variant="outline" size="sm" asChild>
-                        <Link href={`/incidents/${incident.id}`}>Details</Link>
-                      </Button>
-                    </div>
-                  </CardFooter>
-                </Card>
-              ))}
+                        </div>
+                        <CardDescription className="flex items-center mt-1">
+                          <MapPin className="h-3 w-3 mr-1" />
+                          {incident.location}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground line-clamp-2">{incident.description}</p>
+                        <div className="flex gap-2 mt-3 flex-wrap">
+                          {Array.isArray(incident.tags) &&
+                            incident.tags.map((tag: { id: string; name: string }) => (
+                              <Badge key={tag.id} variant="secondary" className="text-xs">
+                                {tag.name}
+                              </Badge>
+                            ))}
+                        </div>
+                      </CardContent>
+                      <CardFooter className="flex justify-between pt-2">
+                        <div className="flex items-center text-xs text-muted-foreground">
+                          <Clock className="h-3 w-3 mr-1" />
+                          {new Date(incident.date_created).toLocaleString("en-GB", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: false,
+                          })}
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="text-green-400 text-[12px]"> Upvotes  {incident.up_votes}</div>
+                          <div className="text-red-400 text-[12px]"> Downvotes  {incident.down_votes}</div>
+                        </div>
+                      </CardFooter>
+                    </Card>
+                  </Link>
+                ))}
             </div>
           </div>
         </TabsContent>

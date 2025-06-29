@@ -75,20 +75,46 @@ console.log("Thus is the user", user)
   async function onSubmit(values: z.infer<typeof profileFormSchema>) {
     setIsLoading(true)
     try {
-      await updateUser(values)
+      // Prepare FormData for multipart/form-data
+      const formData = new FormData();
+      formData.append("first_name", values.first_name);
+      formData.append("last_name", values.last_name);
+      formData.append("middle_name", values.middle_name);
+      formData.append("email", values.email);
+      formData.append("department", values.department);
+      formData.append("bio", values.bio);
+      // If profile_picture is a base64 string, convert to Blob
+      if (values.profile_picture && values.profile_picture.startsWith("data:image")) {
+        // Convert base64 to Blob
+        const arr = values.profile_picture.split(",");
+        const mimeMatch = arr[0].match(/:(.*?);/);
+        const mime = mimeMatch ? mimeMatch[1] : "";
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+          u8arr[n] = bstr.charCodeAt(n);
+        }
+        const file = new File([u8arr], "profile-picture.png", { type: mime });
+        formData.append("profile_picture", file);
+      } else if (values.profile_picture) {
+        // If it's a URL or already a file, just append as string
+        formData.append("profile_picture", values.profile_picture);
+      }
+      await updateUser(formData);
       toast({
         title: "Profile updated",
         description: "Your profile has been updated successfully",
         variant: "success",
-      })
+      });
     } catch (error: any) {
       toast({
         title: "Error updating profile",
         description: error.message || "An error occurred",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
@@ -179,17 +205,18 @@ console.log("Thus is the user", user)
                           ? "bg-green-600"
                           : user.role?.name === "Security"
                           ? "bg-orange-500"
-                          : user.role?.name === "Admin"
+                          : user.role?.name === "Admin" || "System Admin"
                           ? "bg-orange-500"
                           : "bg-secondary"
                       }`}
                     >
                       {user.role?.name === "Admin" && "Administrator"}
+                      {user.role?.name === "System Admin" && "System Admin"}
                       {user.role?.name === "Student" && "Student"}
                       {user.role?.name === "Security" && "Security Personnel"}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Joined {user.date_joined ? new Date(user.date_joined).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) : ""}
+                      Joined: {user.date_joined ? new Date(user.date_joined).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) : ""}
                     </p>
                   </div>
                   </div>
@@ -263,9 +290,10 @@ console.log("Thus is the user", user)
                       <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
-                        <Input placeholder="your.email@ui.edu.ng" {...field} disabled />
+                        <Input placeholder="your.email@ui.edu.ng" {...field}
+                        value={field.value} />
                         </FormControl>
-                        <FormDescription>Your email address cannot be changed</FormDescription>
+                        {/* <FormDescription>Your email address cannot be changed</FormDescription> */}
                         <FormMessage />
                       </FormItem>
                       )}

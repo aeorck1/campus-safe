@@ -56,7 +56,7 @@ export function AuthStatus() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={user?.avatar || "/avatars/01.png"} alt={user?.first_name || "User"} />
+            <AvatarImage src={user?.profile_picture} alt={user?.first_name || "User"} />
             <AvatarFallback>{user?.last_name?.charAt(0)  }</AvatarFallback>
           </Avatar>
         </Button>
