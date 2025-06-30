@@ -76,12 +76,26 @@ export type SignUp = {
   password: string
 }
 
+export type CreateRole ={
+  name: string,
+  id: string
+}
 export type RecentActivity = {
   id: string | number
   initials?: string
   description?: string
   time_ago?: string
  
+}
+
+export type InvestigatingTeamMembers = {
+  id: string,
+  name: string,
+  email: string
+}
+export type InvestigatingTeam = {
+  id: string,
+name: string
 }
 
 export interface AddUser {
@@ -160,6 +174,12 @@ export type AuthState = {
   addUser: (id: string, data: SignUp) => Promise<{ success: boolean; data?: any; message?: string }>
   verifyAccessToken: (token: string) => Promise<{ success: boolean; data?: any; message?: string }>
   getRoles: (id: string, data: object) => Promise<{ success: boolean; data?: any; message?: string }>
+  getUserDetails: (id: string, data: object) => Promise<{ success: boolean; data?: any; message?: string }>
+  createRoles: (id: string, data: CreateRole) => Promise<{ success: boolean; data?: any; message?: string }>
+  deleteRole: (id: string, data: object) => Promise<{ success: boolean; data?: any; message?: string }>
+  getInvestigatingTeam: () => Promise<{ success: boolean; data?: any; message?: string }>
+  postInvestigatingTeam: (id: string, data: InvestigatingTeamMembers) => Promise<{ success: boolean; data?: any; message?: string }>
+  createInvestigatingTeam: (id: string, data: InvestigatingTeam) => Promise<{ success: boolean; data?: any; message?: string }>
 }
 export type Login = {
   username: string,
@@ -744,6 +764,64 @@ updateIncident: async (id: string, data: object) => {
           return { success: true, data: response.data };
         } catch (error: any) {
           const message = error?.response?.data?.detail || error?.message || "Error fetching roles.";
+          return { success: false, message };
+        }
+      },
+       createRoles: async (id:string, data:object) => {
+        try {
+          const response = await axiosAuth.post(`/admin/roles/`, data);
+          return { success: true, data: response.data };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error fetching roles.";
+          return { success: false, message };
+        }
+      },
+       deleteRole: async (id:string, data:object) => {
+        try {
+          const response = await axiosAuth.delete(`/admin/roles/${id}/`, { data });
+          return { success: true, data: response.data };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error fetching roles.";
+          return { success: false, message };
+        }
+      },
+
+      getInvestigatingTeam: async () => {
+        try {
+          const response = await axiosAuth.get(`/admin/investigating-team-members/`);
+          return { success: true, data: response.data };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error fetching investigating team.";
+          return { success: false, message };
+        }
+      },
+
+          postInvestigatingTeam: async (id:string, data:object) => {
+        try {
+          const response = await axiosAuth.post(`/admin/investigating-team-members/`, data);
+          return { success: true, data: response.data };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error fetching investigating team.";
+          return { success: false, message };
+        }
+      },
+
+      createInvestigatingTeam: async (id:string, data:object) => {
+        try {
+          const response = await axiosAuth.post(`/admin/investigating-teams/`, data);
+          return { success: true, data: response.data };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error creating investigating team.";
+          return { success: false, message };
+        }
+      },
+
+  getUserDetails: async (id:string, data:object) => {
+        try {
+          const response = await axiosAuth.get(`/admin/users/${id}/`, data);
+          return { success: true, data: response.data };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error fetching user details.";
           return { success: false, message };
         }
       },

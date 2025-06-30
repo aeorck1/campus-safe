@@ -44,19 +44,16 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import {User} from "@/lib/auth"
+import InvestigatingTeamTabContent from "../investigating-team"
 
-// type User = {
-//   id: string
-//   name: string
-//   email: string
-//   avatar?: string
-//   first_name: string
-//   last_name?: string
-//   // [key: string]: any
-//   role: string
-// }
 
 export function AdminDashboard() {
+  // State for user details modal
+  const [isUserDetailsOpen, setIsUserDetailsOpen] = useState(false)
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
+  const [userDetails, setUserDetails] = useState<any>(null)
+  const [userDetailsLoading, setUserDetailsLoading] = useState(false)
+  const getUserDetails = useAuthStore((state) => state.getUserDetails)
   // Handler for Add User form submission
   const handleAddUserSubmit = async (e: React.FormEvent) => {
     try {
@@ -122,6 +119,7 @@ export function AdminDashboard() {
   const [users, setUsers] = useState<User[]>([])
   const [editUser, setEditUser] = useState<User | null>(null)
   const [editRole, setEditRole] = useState<string>("")
+  const [roles, setRoles] = useState<any[]>([])
   const [isEditOpen, setIsEditOpen] = useState(false)
   // Add User modal state
   const [isAddUserOpen, setIsAddUserOpen] = useState(false)
@@ -174,6 +172,7 @@ export function AdminDashboard() {
     async function fetchUsers() {
       try {
         const response = await getUsers()
+        console.log("Fetched Users", response.data)
         if (response && response.success && Array.isArray(response.data)) {
           setUsers(response.data)
           console.log("Fetched users:", response.data)
@@ -235,9 +234,10 @@ export function AdminDashboard() {
     const fetchRoles = async () => {
       try {
         const response = await getRoles('', {})
-        if (response && response.success) {
-          console.log("Fetched roles:", response.data)
+        if (response && response.success && Array.isArray(response.data)) {
+          setRoles(response.data)
         } else {
+          setRoles([])
           toast({
             title: "Error",
             description: response?.message || "Failed to fetch roles. Please try again later.",
@@ -245,6 +245,7 @@ export function AdminDashboard() {
           })
         }
       } catch (error) {
+        setRoles([])
         console.error("Failed to fetch roles:", error)
         toast({
           title: "Error",
@@ -259,7 +260,9 @@ export function AdminDashboard() {
   const handleDeleteUser = async (userId: string) => {
     try {
       const user = users.find(u => u.id === userId)
-      const userName = user ? `${user.first_name} ${user.last_name || ""}`.trim() : `User ID: ${user.first_name}`
+      const userName = user
+        ? `${user.first_name} ${user.last_name || ""}`.trim()
+        : `User ID: ${userId}`
       const result = await deleteUser(userId)
       if (result && result.success) {
         toast({
@@ -404,13 +407,33 @@ export function AdminDashboard() {
       incident.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
       incident.status.toLowerCase().includes(searchQuery.toLowerCase()),
   )
+  // Fetch user details when modal opens and selectedUserId changes
+  useEffect(() => {
+    if (isUserDetailsOpen && selectedUserId) {
+      setUserDetailsLoading(true);
+      getUserDetails(selectedUserId, {})
+        .then((res: any) => {
+          if (res && res.success && res.data) {
+            setUserDetails(res.data);
+          } else {
+            setUserDetails(null);
+          }
+        })
+        .catch(() => setUserDetails(null))
+        .finally(() => setUserDetailsLoading(false));
+    } else {
+      setUserDetails(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isUserDetailsOpen, selectedUserId, getUserDetails]);
+
 
   return (
     <>
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <Tabs defaultValue="users" className="w-full" onValueChange={setActiveTab}>
-            <TabsList className="grid w-full max-w-md grid-cols-2">  {/* Adjusted to 2 columns for better layout */}
+            <TabsList className="grid w-full max-w-md grid-cols-4">  {/* Adjusted to 4 columns for new tab */}
               <TabsTrigger value="users">
                 <Users className="mr-2 h-4 w-4" />
                 Users
@@ -419,10 +442,14 @@ export function AdminDashboard() {
                 <AlertTriangle className="mr-2 h-4 w-4" />
                 Incidents
               </TabsTrigger>
-              {/* <TabsTrigger value="settings">
-                <Shield className="mr-2 h-4 w-4" />
-                Settings
-              </TabsTrigger> */}
+            <TabsTrigger value="roles">
+              <Shield className="mr-2 h-4 w-4" />
+              Roles
+            </TabsTrigger>
+            <TabsTrigger value="investigating-team">
+              <Shield className="mr-2 h-4 w-4" />
+              Investigating Team
+            </TabsTrigger>
             </TabsList>
 
             <div className="flex items-center mt-4">
@@ -567,7 +594,7 @@ export function AdminDashboard() {
                     </TableHeader>
                     <TableBody>
                       {filteredUsers.map((user) => (
-                        <TableRow key={user.id}>
+                        <TableRow key={user.id} className="cursor-pointer hover:bg-orange-50" onClick={() => { setSelectedUserId(user.id); setIsUserDetailsOpen(true); }}>
                           <TableCell>
                             <div className="flex items-center gap-3">
                               <Avatar>
@@ -576,7 +603,6 @@ export function AdminDashboard() {
                               </Avatar>
                               <div>
                                 <p className="font-medium">{user.first_name}</p>
-                                {/* <p className="font-medium">{user.first_name} {user.last_name}</p> */}
                                 <p className="text-sm text-muted-foreground">{user.email}</p>
                               </div>
                             </div>
@@ -599,7 +625,7 @@ export function AdminDashboard() {
                           <TableCell className="text-right">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
+                                <Button variant="ghost" size="icon" onClick={e => e.stopPropagation()}>
                                   <MoreHorizontal className="h-4 w-4" />
                                   <span className="sr-only">Actions</span>
                                 </Button>
@@ -607,16 +633,16 @@ export function AdminDashboard() {
                               <DropdownMenuContent align="end">
                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => handleEditUser(user)}>
+                                <DropdownMenuItem onClick={e => { e.stopPropagation(); handleEditUser(user); }}>
                                   <Edit className="mr-2 h-4 w-4" />
-                                  Edit User
+                                  Edit User Role
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleResetPassword(user.id)}>
+                                <DropdownMenuItem onClick={e => { e.stopPropagation(); handleResetPassword(user.id); }}>
                                   <Shield className="mr-2 h-4 w-4" />
                                   Reset Password
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                {user.role === "ADMIN" ? (
+                                {(user.role === "ADMIN" || user.role==="SYSTEM_ADMIN")? (
                                   <DropdownMenuItem
                                     className="text-destructive focus:text-destructive"
                                     disabled={true}
@@ -629,7 +655,7 @@ export function AdminDashboard() {
                                     <DialogTrigger asChild>
                                       <DropdownMenuItem
                                         className="text-destructive focus:text-destructive"
-                                        onSelect={e => e.preventDefault()}
+                                        onSelect={e => { e.preventDefault(); e.stopPropagation(); }}
                                       >
                                         <Trash className="mr-2 h-4 w-4" />
                                         Delete User
@@ -667,6 +693,71 @@ export function AdminDashboard() {
                           </TableCell>
                         </TableRow>
                       ))}
+      {/* User Details Modal */}
+      <Dialog open={isUserDetailsOpen} onOpenChange={(open) => {
+        setIsUserDetailsOpen(open);
+        if (!open) {
+          setUserDetails(null);
+          setSelectedUserId(null);
+        }
+      }}>
+        <DialogContent className="max-w-2xl p-0">
+          {userDetailsLoading ? (
+            <div className="text-center py-16">Loading...</div>
+          ) : userDetails ? (
+            <div className="flex flex-col md:flex-row gap-6 p-10">
+              <div className="flex flex-col items-center md:items-start md:w-1/3 border-r border-gray-200 pr-6">
+                <Avatar className="w-28 h-28 mb-3 shadow-md">
+                  <AvatarImage src={userDetails.profile_picture || "/placeholder.svg"} alt={userDetails.first_name} />
+                  <AvatarFallback>{userDetails.first_name?.substring(0, 2)?.toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <div className="text-xl font-bold text-gray-900 text-center md:text-left">{userDetails.first_name} {userDetails.last_name}</div>
+                <div className="text-sm text-muted-foreground text-center md:text-left">{userDetails.email}</div>
+                <Badge className="mt-2 text-xs px-3 py-1">{userDetails.role}</Badge>
+                <div className="mt-2 text-xs text-gray-500">Joined: {userDetails.date_joined ? new Date(userDetails.date_joined).toLocaleDateString("en-GB") : ''}</div>
+                <div className="text-xs text-gray-500">Last login: {userDetails.last_login ? new Date(userDetails.last_login).toLocaleString("en-GB") : ''}</div>
+                <div className="mt-4 w-full">
+                  <span className="font-semibold text-gray-700">Bio:</span>
+                  <span className="text-gray-900 block mt-1">{userDetails.bio || '-'}</span>
+                </div>
+              </div>
+              <div className="flex-1 grid grid-cols-1 gap-y-2 gap-x-6 md:grid-cols-2">
+                <div><span className="font-semibold text-gray-700">Username:</span> <span className="text-gray-900">{userDetails.username}</span></div>
+                <hr className="my-1 col-span-2 border-gray-200" />
+                <div><span className="font-semibold text-gray-700">Department:</span> <span className="text-gray-900">{userDetails.department || '-'}</span></div>
+                <hr className="my-1 col-span-2 border-gray-200" />
+                <div><span className="font-semibold text-gray-700">Number of Reports:</span> <span className="text-gray-900">{userDetails.number_of_reported_incidents ?? 0}</span></div>
+                <hr className="my-1 col-span-2 border-gray-200" />
+                <div><span className="font-semibold text-gray-700">Active:</span> <span className="text-gray-900">{userDetails.is_active ? 'Yes' : 'No'}</span></div>
+                <hr className="my-1 col-span-2 border-gray-200" />
+                <div><span className="font-semibold text-gray-700">Verified:</span> <span className="text-gray-900">{userDetails.is_verified ? 'Yes' : 'No'}</span></div>
+                <hr className="my-1 col-span-2 border-gray-200" />
+                <div><span className="font-semibold text-gray-700">Superuser:</span> <span className="text-gray-900">{userDetails.is_superuser ? 'Yes' : 'No'}</span></div>
+                <hr className="my-1 col-span-2 border-gray-200" />
+                <div><span className="font-semibold text-gray-700">Staff:</span> <span className="text-gray-900">{userDetails.is_staff ? 'Yes' : 'No'}</span></div>
+                <hr className="my-1 col-span-2 border-gray-200" />
+                <div><span className="font-semibold text-gray-700">Middle Name:</span> <span className="text-gray-900">{userDetails.middle_name || '-'}</span></div>
+                <hr className="my-1 col-span-2 border-gray-200" />
+                <div><span className="font-semibold text-gray-700">Groups:</span> <span className="text-gray-900">{Array.isArray(userDetails.groups) ? userDetails.groups.join(', ') : '-'}</span></div>
+                <hr className="my-1 col-span-2 border-gray-200" />
+                <div><span className="font-semibold text-gray-700">Permissions:</span> <span className="text-gray-900">{Array.isArray(userDetails.user_permissions) ? userDetails.user_permissions.join(', ') : '-'}</span></div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-16 text-muted-foreground">No user details found.</div>
+          )}
+          <DialogFooter className="px-6 pb-4 pt-2">
+            <DialogClose asChild>
+              <Button variant="outline" className="w-full md:w-auto bg-blue-400 text-white">Close</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Fetch user details when modal opens and selectedUserId changes */}
+      {/* useEffect for fetching user details is below, outside the return block */}
+
+
 
                       {filteredUsers.length === 0 && (
                         <TableRow>
@@ -819,201 +910,83 @@ export function AdminDashboard() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="settings" className="mt-6">
-              <div className="grid gap-4 md:grid-cols-2">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Platform Settings</CardTitle>
-                    <CardDescription>Configure general platform settings</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <h3 className="text-sm font-medium">Campus Information</h3>
-                        <div className="grid gap-2">
-                          <div className="grid grid-cols-3 items-center gap-4">
-                            <label htmlFor="campus-name" className="text-sm font-medium">
-                              Campus Name
-                            </label>
-                            <Input id="campus-name" defaultValue="University Campus" className="col-span-2 h-8" />
-                          </div>
-                          <div className="grid grid-cols-3 items-center gap-4">
-                            <label htmlFor="emergency-number" className="text-sm font-medium">
-                              Emergency Number
-                            </label>
-                            <Input id="emergency-number" defaultValue="(555) 123-4567" className="col-span-2 h-8" />
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <h3 className="text-sm font-medium">Map Settings</h3>
-                        <div className="grid gap-2">
-                          <div className="grid grid-cols-3 items-center gap-4">
-                            <label htmlFor="default-zoom" className="text-sm font-medium">
-                              Default Zoom
-                            </label>
-                            <Input id="default-zoom" type="number" defaultValue="15" className="col-span-2 h-8" />
-                          </div>
-                          <div className="grid grid-cols-3 items-center gap-4">
-                            <label htmlFor="center-lat" className="text-sm font-medium">
-                              Center Latitude
-                            </label>
-                            <Input id="center-lat" defaultValue="34.0522" className="col-span-2 h-8" />
-                          </div>
-                          <div className="grid grid-cols-3 items-center gap-4">
-                            <label htmlFor="center-lng" className="text-sm font-medium">
-                              Center Longitude
-                            </label>
-                            <Input id="center-lng" defaultValue="-118.2437" className="col-span-2 h-8" />
-                          </div>
-                        </div>
-                      </div>
-
-                      <Button className="w-full">Save Settings</Button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Notification Settings</CardTitle>
-                    <CardDescription>Configure email and push notification settings</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <h3 className="text-sm font-medium">Email Notifications</h3>
-                        <div className="grid gap-2">
-                          <div className="flex items-center justify-between">
-                            <label htmlFor="email-new-incident" className="text-sm">
-                              New Incident Reports
-                            </label>
-                            <div className="flex items-center">
-                              <input type="checkbox" id="email-new-incident" defaultChecked className="mr-2" />
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <label htmlFor="email-high-severity" className="text-sm">
-                              High Severity Incidents Only
-                            </label>
-                            <div className="flex items-center">
-                              <input type="checkbox" id="email-high-severity" defaultChecked className="mr-2" />
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <label htmlFor="email-digest" className="text-sm">
-                              Daily Digest
-                            </label>
-                            <div className="flex items-center">
-                              <input type="checkbox" id="email-digest" className="mr-2" />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <h3 className="text-sm font-medium">System Notifications</h3>
-                        <div className="grid gap-2">
-                          <div className="flex items-center justify-between">
-                            <label htmlFor="system-user-signup" className="text-sm">
-                              New User Signups
-                            </label>
-                            <div className="flex items-center">
-                              <input type="checkbox" id="system-user-signup" defaultChecked className="mr-2" />
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <label htmlFor="system-comments" className="text-sm">
-                              New Comments
-                            </label>
-                            <div className="flex items-center">
-                              <input type="checkbox" id="system-comments" defaultChecked className="mr-2" />
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <label htmlFor="system-resolved" className="text-sm">
-                              Resolved Incidents
-                            </label>
-                            <div className="flex items-center">
-                              <input type="checkbox" id="system-resolved" className="mr-2" />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <Button className="w-full">Save Notification Settings</Button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="md:col-span-2">
-                  <CardHeader>
-                    <CardTitle>Incident Categories</CardTitle>
-                    <CardDescription>Manage incident categories and tags</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex flex-wrap gap-2">
-                        <Badge className="px-3 py-1">
-                          property damage
-                          <Button variant="ghost" size="icon" className="h-4 w-4 ml-1 -mr-1">
-                            <ChevronDown className="h-3 w-3" />
-                          </Button>
-                        </Badge>
-                        <Badge className="px-3 py-1">
-                          safety hazard
-                          <Button variant="ghost" size="icon" className="h-4 w-4 ml-1 -mr-1">
-                            <ChevronDown className="h-3 w-3" />
-                          </Button>
-                        </Badge>
-                        <Badge className="px-3 py-1">
-                          security concern
-                          <Button variant="ghost" size="icon" className="h-4 w-4 ml-1 -mr-1">
-                            <ChevronDown className="h-3 w-3" />
-                          </Button>
-                        </Badge>
-                        <Badge className="px-3 py-1">
-                          theft
-                          <Button variant="ghost" size="icon" className="h-4 w-4 ml-1 -mr-1">
-                            <ChevronDown className="h-3 w-3" />
-                          </Button>
-                        </Badge>
-                        <Badge className="px-3 py-1">
-                          vandalism
-                          <Button variant="ghost" size="icon" className="h-4 w-4 ml-1 -mr-1">
-                            <ChevronDown className="h-3 w-3" />
-                          </Button>
-                        </Badge>
-                        <Badge className="px-3 py-1">
-                          suspicious activity
-                          <Button variant="ghost" size="icon" className="h-4 w-4 ml-1 -mr-1">
-                            <ChevronDown className="h-3 w-3" />
-                          </Button>
-                        </Badge>
-                        <Badge className="px-3 py-1">
-                          facility issue
-                          <Button variant="ghost" size="icon" className="h-4 w-4 ml-1 -mr-1">
-                            <ChevronDown className="h-3 w-3" />
-                          </Button>
-                        </Badge>
-                        <Badge className="px-3 py-1">
-                          accessibility
-                          <Button variant="ghost" size="icon" className="h-4 w-4 ml-1 -mr-1">
-                            <ChevronDown className="h-3 w-3" />
-                          </Button>
-                        </Badge>
-                      </div>
-
-                      <div className="flex gap-2">
-                        <Input placeholder="Add new category..." className="max-w-xs" />
-                        <Button>Add Category</Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+            <RolesTabContent />
+            <TabsContent value="investigating-team" className="mt-6">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle>Investigating Team</CardTitle>
+                  <CardDescription>List, add, and remove investigating team members</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <InvestigatingTeamTabContent />
+                </CardContent>
+              </Card>
             </TabsContent>
+
+
+
+  {/* return (
+    <form onSubmit={handleAddMember} className="flex flex-col md:flex-row gap-2 mb-6">
+      <input
+        type="text"
+        className="border rounded px-3 py-2 w-full md:w-1/4"
+        placeholder="Name"
+        value={newMember.name}
+        onChange={e => setNewMember(n => ({ ...n, name: e.target.value }))}
+        disabled={creating}
+        required
+      />
+      <input
+        type="email"
+        className="border rounded px-3 py-2 w-full md:w-1/2"
+        placeholder="Email"
+        value={newMember.email}
+        onChange={e => setNewMember(n => ({ ...n, email: e.target.value }))}
+        disabled={creating}
+        required
+      />
+      <Button type="submit" disabled={creating || !newMember.name.trim() || !newMember.email.trim()}>Add</Button>
+      {error && <div className="text-destructive mb-2">{error}</div>}
+      {loading ? (
+        <div>Loading team...</div>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {team.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={3} className="text-center">No team members found.</TableCell>
+              </TableRow>
+            ) : (
+              team.map((member: any) => (
+                <TableRow key={member.id}>
+                  <TableCell>{member.name}</TableCell>
+                  <TableCell>{member.email}</TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDeleteMember(member.id)}
+                      disabled={deletingId === member.id}
+                    >
+                      {deletingId === member.id ? "Removing..." : "Remove"}
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      )}
+    </form>
+  ); */}
+{/* } */}
           </Tabs>
         </div>
       </div>
@@ -1036,10 +1009,14 @@ export function AdminDashboard() {
                 className="w-full border rounded px-3 py-2"
                 value={editRole}
                 onChange={e => setEditRole(e.target.value)}
+                required
               >
-                <option value="Student">Student</option>
-                <option value="Admin">Admin</option>
-                <option value="SECURITY_PERSONNEL">Security</option>
+                <option value="">Select a role</option>
+                {roles.map((role) => (
+                  <option key={role.id} value={role.id}>
+                    {role.name}
+                  </option>
+                ))}
               </select>
             </div>
             <DialogFooter>
@@ -1076,5 +1053,153 @@ export function AdminDashboard() {
         </DialogContent>
       </Dialog>
     </>
+  )
+}
+
+// --- RolesTabContent TabContent ---
+function RolesTabContent() {
+  const [roles, setRoles] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [newRoleId, setNewRoleId] = useState("")
+  const [newRoleName, setNewRoleName] = useState("")
+  const [creating, setCreating] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const getRoles = useAuthStore((state) => state.getRoles)
+  const createRole = useAuthStore((state) => state.createRoles)
+  const deleteRole = useAuthStore((state) => state.deleteRole)
+  const { toast } = useToast()
+
+  // Fetch roles
+  useEffect(() => {
+    setLoading(true)
+    getRoles('', {})
+      .then((res: any) => {
+        if (res && res.success && Array.isArray(res.data)) {
+          setRoles(res.data)
+        } else {
+          setRoles([])
+          setError(res?.message || "Failed to fetch roles.")
+        }
+      })
+      .catch(() => setError("Failed to fetch roles."))
+      .finally(() => setLoading(false))
+  }, [getRoles])
+
+  // Create new role
+  const handleCreateRole = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newRoleId.trim() || !newRoleName.trim()) return;
+    setCreating(true);
+    setError(null);
+    try {
+      const payload = { id: newRoleId, name: newRoleName };
+      const res = await createRole('', payload);
+      if (res && res.success) {
+        toast({ title: "Role created", description: `Role '${newRoleName}' created.`, variant: "success" });
+        setNewRoleId("");
+        setNewRoleName("");
+        // Refresh roles
+        const rolesRes = await getRoles('', {});
+        if (rolesRes && rolesRes.success && Array.isArray(rolesRes.data)) setRoles(rolesRes.data);
+      } else {
+        setError(res?.message || "Failed to create role.");
+      }
+    } catch (err: any) {
+      setError(err?.message || "Failed to create role.");
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  // Delete role
+  const handleDeleteRole = async (roleId: string) => {
+    setDeletingId(roleId)
+    setError(null)
+    try {
+      const res = await deleteRole(roleId, {})
+      if (res && res.success) {
+        toast({ title: "Role deleted", description: `Role deleted.`, variant: "destructive" })
+        // Refresh roles
+        const rolesRes = await getRoles('', {})
+        if (rolesRes && rolesRes.success && Array.isArray(rolesRes.data)) setRoles(rolesRes.data)
+      } else {
+        setError(res?.message || "Failed to delete role.")
+      }
+    } catch (err: any) {
+      setError(err?.message || "Failed to delete role.")
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  return (
+    <TabsContent value="roles" className="mt-6">
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle>Role Management</CardTitle>
+          <CardDescription>List, create, and delete user roles</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleCreateRole} className="flex flex-col md:flex-row gap-2 mb-6">
+            <input
+              type="text"
+              className="border rounded px-3 py-2 w-full md:w-40"
+              placeholder="Role ID (e.g. ADMIN)"
+              value={newRoleId}
+              onChange={e => setNewRoleId(e.target.value)}
+              disabled={creating}
+              required
+            />
+            <input
+              type="text"
+              className="border rounded px-3 py-2 w-full md:flex-1"
+              placeholder="Role name (e.g. Admin)"
+              value={newRoleName}
+              onChange={e => setNewRoleName(e.target.value)}
+              disabled={creating}
+              required
+            />
+            <Button type="submit" disabled={creating || !newRoleId.trim() || !newRoleName.trim()}>Create</Button>
+          </form>
+          {error && <div className="text-destructive mb-2">{error}</div>}
+          {loading ? (
+            <div>Loading roles...</div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Role Name</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {roles.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={2} className="text-center">No roles found.</TableCell>
+                  </TableRow>
+                ) : (
+                  roles.map((role: any) => (
+                    <TableRow key={role.id}>
+                      <TableCell>{role.name}</TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDeleteRole(role.id)}
+                          disabled={deletingId === role.id}
+                        >
+                          {deletingId === role.id ? "Deleting..." : "Delete"}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    </TabsContent>
   )
 }
