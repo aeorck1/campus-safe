@@ -1,10 +1,13 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import type { RecentActivity } from "@/lib/auth"
 import { useAuthStore } from "@/lib/auth"
 import { useEffect, useState } from "react"
+
+
 export function RecentActivity() {
 
 
-  const [activities, setActivities] = useState([]) 
+  const [activities, setActivities] = useState<RecentActivity[]>([]) 
 
     const getRecentActivity = useAuthStore ((state) => state.getRecentActivity)
     useEffect(() => {
@@ -24,7 +27,7 @@ export function RecentActivity() {
 
   return (
     <div className="space-y-4">
-      {activities.map((activity) => (
+      {activities.slice(0, 7).map((activity) => (
         <div key={activity.id} className="flex items-center gap-4">
           <Avatar className="h-8 w-8">
             {/* <AvatarImage src={activity.user.avatar || "/placeholder.svg"} alt={activity.user} /> */}

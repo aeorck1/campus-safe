@@ -74,6 +74,14 @@ export type SignUp = {
   password: string
 }
 
+export type RecentActivity = {
+  id: string | number
+  initials?: string
+  description?: string
+  time_ago?: string
+ 
+}
+
 export interface AddUser {
   first_name: string,
   last_name: string,
