@@ -216,7 +216,12 @@ export function IncidentDashboard() {
             <CardContent>
               <div className="space-y-4">
                 {[...incidents].reverse().map((incident: any) => (
-                  <div key={incident.id} className="flex items-start space-x-4 p-4 rounded-lg border">
+                  <Link
+                    key={incident.id}
+                    href={`/incidents/${incident.id}`}
+                    className="flex items-start space-x-4 p-4 rounded-lg border transition-shadow hover:shadow-lg cursor-pointer"
+                    style={{ textDecoration: 'none' }}
+                  >
                     <div
                       className={`p-2 rounded-full ${
                         incident.severity === "HIGH"
@@ -275,16 +280,11 @@ export function IncidentDashboard() {
                         ))}
                       </div>
                     </div>
-                    <div className="ml-4 flex flex-col items-center">
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <ThumbsUp className="h-4 w-4" />
-                      </Button>
-                      <span className="text-xs text-center">{incident.upvotes}</span>
-                      <Button variant="outline" size="sm" asChild className="mt-2">
-                        <Link href={`/incidents/${incident.id}`}>Details</Link>
-                      </Button>
+                    <div className="ml-4 flex flex-col items-center gap-2">
+                      <span className="text-green-600 text-xs">Upvotes: {incident.up_votes ?? 0}</span>
+                      <span className="text-red-600 text-xs">Downvotes: {incident.down_votes ?? 0}</span>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </CardContent>

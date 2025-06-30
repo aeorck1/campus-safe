@@ -94,17 +94,14 @@ export function AuthStatus() {
         </DropdownMenuItem>
 
         {/* Show admin link for admin users */}
-        {user?.role?.id === "SYSTEM_ADMIN" && (
+        {(user?.role?.id === "SYSTEM_ADMIN" || user?.role?.id === "ADMIN") && (
           <DropdownMenuItem asChild>
             <Link href="/admin" className="cursor-pointer">
-              Admin Dashboard
-            </Link>
-          </DropdownMenuItem>
-        )}
-
-         {user?.role?.id === "ADMIN" && (
-          <DropdownMenuItem asChild>
-            <Link href="/admin" className="cursor-pointer">
+              {/* Heroicons: Shield Check */}
+              <svg className="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3l8 4v5c0 5.25-3.5 9.74-8 11-4.5-1.26-8-5.75-8-11V7l8-4z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4" />
+              </svg>
               Admin Dashboard
             </Link>
           </DropdownMenuItem>
@@ -114,6 +111,11 @@ export function AuthStatus() {
         {user?.role?.id === "SECURITY_PERSONNEL" && (
           <DropdownMenuItem asChild>
             <Link href="/security" className="cursor-pointer">
+              {/* Heroicons: Shield Exclamation */}
+              <svg className="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3l8 4v5c0 5.25-3.5 9.74-8 11-4.5-1.26-8-5.75-8-11V7l8-4z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v4m0 4h.01" />
+              </svg>
               Security Dashboard
             </Link>
           </DropdownMenuItem>

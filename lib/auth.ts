@@ -21,6 +21,8 @@ export type User = {
   profile_picture: string
   bio: string // Optional bio field
   role: any // Adjust based on your role type
+  key?: string // Unique key for React lists
+  number_of_reported_incidents?: number // Optional field for reported incidents
 }
 
 export type RefreshToken = {
@@ -156,7 +158,7 @@ export type AuthState = {
   updateIncident: (id: string, data: object) => Promise<{ success: boolean; data?: any; message?: string }>
   getRecentActivity: () => Promise<{ success: boolean; data?: any; message?: string }>
   addUser: (id: string, data: SignUp) => Promise<{ success: boolean; data?: any; message?: string }>
-
+  verifyAccessToken: (token: string) => Promise<{ success: boolean; data?: any; message?: string }>
   getRoles: (id: string, data: object) => Promise<{ success: boolean; data?: any; message?: string }>
 }
 export type Login = {
@@ -749,6 +751,15 @@ updateIncident: async (id: string, data: object) => {
       logout: () => {
         set({ user: null, isAuthenticated: false, accessToken: null })
         delete axios.defaults.headers.common["Authorization"]
+      },
+      verifyAccessToken: async (token: string) => {
+        try {
+          const response = await axiosAuth.post("auth/token/verify/", { token });
+          return { success: true, data: response.data };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Token verification failed.";
+          return { success: false, message };
+        }
       },
     }),
     {

@@ -43,18 +43,18 @@ import {
   DialogClose,
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
-import { get } from "http"
+import {User} from "@/lib/auth"
 
-type User = {
-  id: string
-  name: string
-  email: string
-  avatar?: string
-  first_name: string
-  last_name?: string
-  [key: string]: any
-  role: string
-}
+// type User = {
+//   id: string
+//   name: string
+//   email: string
+//   avatar?: string
+//   first_name: string
+//   last_name?: string
+//   // [key: string]: any
+//   role: string
+// }
 
 export function AdminDashboard() {
   // Handler for Add User form submission
@@ -256,13 +256,36 @@ export function AdminDashboard() {
     fetchRoles()
   }, [getRoles, toast])
 
-  const handleDeleteUser = (userId: string) => {
-    deleteUser(userId)
-    toast({
-      title: "User deleted",
-      description: `User ID: ${userId} has been deleted.`,
-      variant: "destructive"
-    })
+  const handleDeleteUser = async (userId: string) => {
+    try {
+      const user = users.find(u => u.id === userId)
+      const userName = user ? `${user.first_name} ${user.last_name || ""}`.trim() : `User ID: ${user.first_name}`
+      const result = await deleteUser(userId)
+      if (result && result.success) {
+        toast({
+          title: "User deleted",
+          description: `${userName} has been deleted.`,
+          variant: "destructive"
+        })
+        // Refresh users after successful deletion
+        const response = await getUsers()
+        if (response && response.success && Array.isArray(response.data)) {
+          setUsers(response.data)
+        }
+      } else {
+        toast({
+          title: "Error",
+          description: result?.message || "Failed to delete user.",
+          variant: "destructive"
+        })
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to delete user.",
+        variant: "destructive"
+      })
+    }
   }
 
   const handleResetPassword = (userId: string) => {
@@ -319,27 +342,32 @@ export function AdminDashboard() {
   const handleUpdateRole = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!editUser) return
+    // Accept both label and value for role
     const roleMap: Record<string, string> = {
       Student: "STUDENT",
       Admin: "ADMIN",
       Security: "SECURITY_PERSONNEL",
+      SECURITY_PERSONNEL: "SECURITY_PERSONNEL",
+      ADMIN: "ADMIN",
+      STUDENT: "STUDENT"
     }
+    // Try to resolve role_id from editRole, fallback to editRole itself
+    const role_id = roleMap[editRole] || editRole;
     const payload = {
       user_id: editUser.id,
-      role_id: roleMap[editRole],
+      role_id: role_id
     }
     try {
       const response = await updateRole(payload)
       if (response && response.success) {
-        toast({ title: "Role updated!", description: `User role updated to ${editRole}`, 
+        toast({ title: "Role updated!", description: `User role updated to ${editRole}`,
           variant: "success"
         })
-        // Optionally update local state
-        setUsers((prev) =>
-          prev.map((u) =>
-            u.id === editUser.id ? { ...u, role: editRole } : u
-          )
-        )
+        // Refresh users after successful role update
+        const usersResponse = await getUsers()
+        if (usersResponse && usersResponse.success && Array.isArray(usersResponse.data)) {
+          setUsers(usersResponse.data)
+        }
       } else {
         toast({
           title: "Error updating role",
@@ -382,7 +410,7 @@ export function AdminDashboard() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <Tabs defaultValue="users" className="w-full" onValueChange={setActiveTab}>
-            <TabsList className="grid w-full max-w-md grid-cols-3">
+            <TabsList className="grid w-full max-w-md grid-cols-2">  {/* Adjusted to 2 columns for better layout */}
               <TabsTrigger value="users">
                 <Users className="mr-2 h-4 w-4" />
                 Users
@@ -391,10 +419,10 @@ export function AdminDashboard() {
                 <AlertTriangle className="mr-2 h-4 w-4" />
                 Incidents
               </TabsTrigger>
-              <TabsTrigger value="settings">
+              {/* <TabsTrigger value="settings">
                 <Shield className="mr-2 h-4 w-4" />
                 Settings
-              </TabsTrigger>
+              </TabsTrigger> */}
             </TabsList>
 
             <div className="flex items-center mt-4">
@@ -670,6 +698,7 @@ export function AdminDashboard() {
                         <TableHead>Location</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Reported</TableHead>
+                        
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
