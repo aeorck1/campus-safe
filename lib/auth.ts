@@ -90,8 +90,10 @@ export type RecentActivity = {
 
 export type InvestigatingTeamMembers = {
   id: string,
-  name: string,
-  email: string
+  name?: string,
+  email?: string,
+  team: string,
+  member: string
 }
 export type InvestigatingTeam = {
   id: string,
@@ -178,8 +180,8 @@ export type AuthState = {
   createRoles: (id: string, data: CreateRole) => Promise<{ success: boolean; data?: any; message?: string }>
   deleteRole: (id: string, data: object) => Promise<{ success: boolean; data?: any; message?: string }>
   getInvestigatingTeam: () => Promise<{ success: boolean; data?: any; message?: string }>
-  postInvestigatingTeam: (id: string, data: InvestigatingTeamMembers) => Promise<{ success: boolean; data?: any; message?: string }>
-  createInvestigatingTeam: (id: string, data: InvestigatingTeam) => Promise<{ success: boolean; data?: any; message?: string }>
+  postInvestigatingTeam: (data: InvestigatingTeamMembers) => Promise<{ success: boolean; data?: any; message?: string }>
+  createInvestigatingTeam: (data: InvestigatingTeam) => Promise<{ success: boolean; data?: any; message?: string }>
 }
 export type Login = {
   username: string,
@@ -796,7 +798,7 @@ updateIncident: async (id: string, data: object) => {
         }
       },
 
-          postInvestigatingTeam: async (id:string, data:object) => {
+          postInvestigatingTeam: async (data:object) => {
         try {
           const response = await axiosAuth.post(`/admin/investigating-team-members/`, data);
           return { success: true, data: response.data };
@@ -806,7 +808,7 @@ updateIncident: async (id: string, data: object) => {
         }
       },
 
-      createInvestigatingTeam: async (id:string, data:object) => {
+      createInvestigatingTeam: async ( data:object) => {
         try {
           const response = await axiosAuth.post(`/admin/investigating-teams/`, data);
           return { success: true, data: response.data };

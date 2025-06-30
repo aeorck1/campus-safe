@@ -44,7 +44,7 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import {User} from "@/lib/auth"
-import InvestigatingTeamTabContent from "../investigating-team"
+import InvestigatingTeamTabContent from "@/components/investigating-team"
 
 
 export function AdminDashboard() {
@@ -433,23 +433,23 @@ export function AdminDashboard() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <Tabs defaultValue="users" className="w-full" onValueChange={setActiveTab}>
-            <TabsList className="grid w-full max-w-md grid-cols-4">  {/* Adjusted to 4 columns for new tab */}
-              <TabsTrigger value="users">
+            <TabsList className="grid w-full grid-cols-4 gap-0 rounded-lg overflow-hidden border bg-muted">
+              <TabsTrigger value="users" className="w-full flex justify-center items-center py-2 rounded-none border-0">
                 <Users className="mr-2 h-4 w-4" />
                 Users
               </TabsTrigger>
-              <TabsTrigger value="incidents">
+              <TabsTrigger value="incidents" className="w-full flex justify-center items-center py-2 rounded-none border-0">
                 <AlertTriangle className="mr-2 h-4 w-4" />
                 Incidents
               </TabsTrigger>
-            <TabsTrigger value="roles">
-              <Shield className="mr-2 h-4 w-4" />
-              Roles
-            </TabsTrigger>
-            <TabsTrigger value="investigating-team">
-              <Shield className="mr-2 h-4 w-4" />
-              Investigating Team
-            </TabsTrigger>
+              <TabsTrigger value="roles" className="w-full flex justify-center items-center py-2 rounded-none border-0">
+                <Shield className="mr-2 h-4 w-4" />
+                Roles
+              </TabsTrigger>
+              <TabsTrigger value="investigating-team" className="w-full flex justify-center items-center py-2 rounded-none border-0">
+                <Shield className="mr-2 h-4 w-4" />
+                Investigating Team
+              </TabsTrigger>
             </TabsList>
 
             <div className="flex items-center mt-4">
@@ -754,9 +754,6 @@ export function AdminDashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* Fetch user details when modal opens and selectedUserId changes */}
-      {/* useEffect for fetching user details is below, outside the return block */}
-
 
 
                       {filteredUsers.length === 0 && (
@@ -913,7 +910,7 @@ export function AdminDashboard() {
             <RolesTabContent />
             <TabsContent value="investigating-team" className="mt-6">
               <Card>
-                <CardHeader className="pb-2">
+                <CardHeader className="pb-2 w-full">
                   <CardTitle>Investigating Team</CardTitle>
                   <CardDescription>List, add, and remove investigating team members</CardDescription>
                 </CardHeader>
@@ -924,69 +921,6 @@ export function AdminDashboard() {
             </TabsContent>
 
 
-
-  {/* return (
-    <form onSubmit={handleAddMember} className="flex flex-col md:flex-row gap-2 mb-6">
-      <input
-        type="text"
-        className="border rounded px-3 py-2 w-full md:w-1/4"
-        placeholder="Name"
-        value={newMember.name}
-        onChange={e => setNewMember(n => ({ ...n, name: e.target.value }))}
-        disabled={creating}
-        required
-      />
-      <input
-        type="email"
-        className="border rounded px-3 py-2 w-full md:w-1/2"
-        placeholder="Email"
-        value={newMember.email}
-        onChange={e => setNewMember(n => ({ ...n, email: e.target.value }))}
-        disabled={creating}
-        required
-      />
-      <Button type="submit" disabled={creating || !newMember.name.trim() || !newMember.email.trim()}>Add</Button>
-      {error && <div className="text-destructive mb-2">{error}</div>}
-      {loading ? (
-        <div>Loading team...</div>
-      ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {team.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={3} className="text-center">No team members found.</TableCell>
-              </TableRow>
-            ) : (
-              team.map((member: any) => (
-                <TableRow key={member.id}>
-                  <TableCell>{member.name}</TableCell>
-                  <TableCell>{member.email}</TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDeleteMember(member.id)}
-                      disabled={deletingId === member.id}
-                    >
-                      {deletingId === member.id ? "Removing..." : "Remove"}
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      )}
-    </form>
-  ); */}
-{/* } */}
           </Tabs>
         </div>
       </div>
@@ -1203,3 +1137,4 @@ function RolesTabContent() {
     </TabsContent>
   )
 }
+
