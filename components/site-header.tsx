@@ -43,7 +43,7 @@ export function SiteHeader() {
           active: pathname === "/admin",
           protected: true,
         }
-      : user?.role?.name === "Security"
+      : user?.role?.name === "SECURITY_PERSONNEL"
       ? {
           href: "/security",
           label: "Security",

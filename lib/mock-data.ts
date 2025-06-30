@@ -15,7 +15,7 @@ export const mockUsers = [
     name: "Security Officer",
     email: "security@ui.edu.ng",
     password: "password123",
-    role: "security",
+    role: "SECURITY_PERSONNEL",
     avatar: "/avatars/02.png",
     department: "Campus Security",
     joinedAt: "2023-02-15",

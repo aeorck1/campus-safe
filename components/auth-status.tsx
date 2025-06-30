@@ -111,7 +111,7 @@ export function AuthStatus() {
         )}
 
         {/* Show security link for security users */}
-        {user?.role?.id === "SECURITY" && (
+        {user?.role?.id === "SECURITY_PERSONNEL" && (
           <DropdownMenuItem asChild>
             <Link href="/security" className="cursor-pointer">
               Security Dashboard

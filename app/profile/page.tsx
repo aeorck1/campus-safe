@@ -138,7 +138,7 @@ console.log("Thus is the user", user)
         <Tabs defaultValue="general" className="space-y-6">
           <TabsList>
             <TabsTrigger value="general">General</TabsTrigger>
-            <TabsTrigger value="security">Security</TabsTrigger>
+            <TabsTrigger value="SECURITY_PERSONNEL">Security</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
           </TabsList>
 
@@ -203,7 +203,7 @@ console.log("Thus is the user", user)
                       className={`rounded px-3 py-1 text-sm font-semibold text-white text-muted-foreground ${
                         user.role?.name === "Student"
                           ? "bg-green-600"
-                          : user.role?.name === "Security"
+                          : user.role?.name === "SECURITY_PERSONNEL"
                           ? "bg-orange-500"
                           : user.role?.name === "Admin" || "System Admin"
                           ? "bg-orange-500"
@@ -213,7 +213,7 @@ console.log("Thus is the user", user)
                       {user.role?.name === "Admin" && "Administrator"}
                       {user.role?.name === "System Admin" && "System Admin"}
                       {user.role?.name === "Student" && "Student"}
-                      {user.role?.name === "Security" && "Security Personnel"}
+                      {user.role?.name === "SECURITY_PERSONNEL" && "Security Personnel"}
                     </div>
                     <p className="text-xs text-muted-foreground">
                       Joined: {user.date_joined ? new Date(user.date_joined).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) : ""}
@@ -346,7 +346,7 @@ console.log("Thus is the user", user)
             </Card>
           </TabsContent>
 
-          <TabsContent value="security" className="space-y-6">
+          <TabsContent value="SECURITY_PERSONNEL" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Password</CardTitle>

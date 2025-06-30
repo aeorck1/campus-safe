@@ -14,7 +14,7 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   let roleBgClass = ""
   if (role === "Admin" || role === "ADMIN" || role === "System Admin") {
     roleBgClass = "bg-role-admin dark:bg-role-admin-dark"
-  } else if (role === "Security" || role === "SECURITY") {
+  } else if (role === "SECURITY_PERSONNEL" || role === "SECURITY_PERSONNEL") {
     roleBgClass = "bg-role-security dark:bg-role-security-dark"
   }
 
