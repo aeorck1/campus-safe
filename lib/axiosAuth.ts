@@ -3,8 +3,8 @@ import axios from 'axios';
 import { useAuthStore } from './auth';
 
 const axiosAuth = axios.create({
-  baseURL: 'http://127.0.0.1:8000/api/v1/',
-  // baseURL: 'https://campussecuritybackend.onrender.com/api/v1/',
+  // baseURL: 'http://127.0.0.1:8000/api/v1/',
+  baseURL: 'https://campussecuritybackend.onrender.com/api/v1/',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -64,8 +64,8 @@ axiosAuth.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // const res = await axios.post('http://127.0.0.1:8000/api/v1/token/refresh/', {
-          const res = await axios.post('http://127.0.0.1:8000/api/v1/token/refresh/', {
+        const res = await axios.post('http://127.0.0.1:8000/api/v1/token/refresh/', {
+          // const res = await axios.post('http://127.0.0.1:8000/api/v1/token/refresh/', {
           refresh: authStore.refreshToken,
         });
 
