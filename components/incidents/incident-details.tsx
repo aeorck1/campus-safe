@@ -92,7 +92,12 @@ if (!incident) {
     if (!user) {
       toast({
         title: "You are not a logged in User",
-        description: "Please log in to upvote incidents.",
+        description: (
+          <>
+        Please log in to upvote incidents.{" "}
+        <Link href="/login" className="underline text-orange-200">Login</Link>
+          </>
+        ),
         variant: "destructive",
       })
       return
@@ -120,7 +125,12 @@ if (!incident) {
     if (!user) {
       toast({
         title: "You are not a logged in User",
-        description: "Please log in to downvote incidents.",
+        description: (
+          <>
+        Please log in to downvote incidents.{" "}
+        <Link href="/login" className="underline text-orange-200">Login</Link>
+          </>
+        ),
         variant: "destructive",
       })
       return
@@ -408,7 +418,7 @@ const handleCommentSubmit = async () => {
             </div>
             {!useAuthStore.getState().user && (
           <p className="text-xs text-muted-foreground mt-2">
-            Please <Link href="/login" className="underline text-primary">sign in</Link> to add a comment.
+            Please <Link href="/login" className="underline text-primary">Sign in</Link> to add a comment.
           </p>
             )}
           </div>

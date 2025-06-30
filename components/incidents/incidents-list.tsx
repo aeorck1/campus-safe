@@ -135,7 +135,11 @@ const allTags = Array.from(tagMap.values());
     if (!user) {
       toast({
         title: "You are not a logged in User",
-        description: "Please log in to vote on incidents.",
+        description: (
+          <>
+        Please <a href="/login" className="underline text-blue-600">log in</a> to vote on incidents.
+          </>
+        ),
         variant: "destructive",
       })
       return

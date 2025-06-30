@@ -683,7 +683,7 @@ useEffect(() => {
               <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
                 3
               </div>
-              <h2 className="text-xl font-semibold">Contact Information</h2>
+              <h2 className="text-xl font-semibold">Report Preview</h2>
             </div>
 
             <FormField
