@@ -101,7 +101,6 @@ name: string
 }
 
 export type PasswordReset = {
-  
   new_password: string
 }
 
@@ -188,6 +187,7 @@ export type AuthState = {
   postInvestigatingTeam: (data: InvestigatingTeamMembers) => Promise<{ success: boolean; data?: any; message?: string }>
   createInvestigatingTeam: (data: InvestigatingTeam) => Promise<{ success: boolean; data?: any; message?: string }>
   passwordReset: (token: string, data: PasswordReset) => Promise<{ success: boolean; data?: any; message?: string }>
+  adminResetPassword: (data: AdminPassReset) => Promise<{ success: boolean; data?: any; message?: string }>
 }
 export type Login = {
   username: string,
@@ -201,6 +201,10 @@ export type ChangeRole = {
 export type UpdateComments = {
   id: string,
   comment: string
+}
+
+export type AdminPassReset = {
+  user_id: string,
 }
 // Create auth store with persistence
 export const useAuthStore = create<AuthState>()(
@@ -483,7 +487,15 @@ getRecentActivity: async () =>{
           return { success: false, message };
         }
       },
-
+      adminResetPassword: async (data: AdminPassReset) => {
+        try {
+          const response = await axiosAuth.post(`admin/users/op/reset-password/`, data);
+          return { success: true, data: response.data };
+        } catch (error: any) {
+    const message = error?.response?.data?.detail || error?.message || "Error resetting password.";
+    return { success: false, message };
+  }
+},
 
       updateAdminIncidentStatus: async (incidentId: string, status: string) => {
         try {

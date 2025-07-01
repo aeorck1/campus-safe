@@ -168,6 +168,7 @@ export function AdminDashboard() {
   const incidents = useAuthStore((state) => state.incidents)
   const updateIncident = useAuthStore((state)=> state.updateIncident)
   const deleteIncident = useAuthStore((state) => state.deleteAdminIncident)
+  const adminResetPassword = useAuthStore((state) => state.adminResetPassword);
   useEffect(() => {
     async function fetchUsers() {
       try {
@@ -291,12 +292,43 @@ export function AdminDashboard() {
     }
   }
 
-  const handleResetPassword = (userId: string) => {
+  const handleResetPassword = async (userId: string) => {
+  // Show the "Sending Mail..." toast and keep its id
+  const toastObj = toast({
+    title: "Sending Mail...",
+    description: "Sending password reset link",
+    variant: "default",
+    className: "bg-orange-100 border-orange-300 text-orange-800",
+    style: { borderColor: "#ea580c", color: "#b45309" },
+    // No duration: stays until dismissed
+  });
+
+  try {
+    const res = await adminResetPassword({ user_id: userId });
+    // Dismiss the "Sending Mail..." toast
+    toastObj.dismiss();
+    if (res && res.success) {
+      toast({
+        title: "Password reset email sent",
+        description: `A password reset email has been sent to the user.`,
+        variant: "success",
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: res?.message || "Failed to send password reset email.",
+        variant: "destructive",
+      });
+    }
+  } catch (error: any) {
+    toastObj.dismiss();
     toast({
-      title: "Password reset email sent",
-      description: `A password reset email has been sent to the user.`,
-    })
+      title: "Error",
+      description: error?.message || "Failed to send password reset email.",
+      variant: "destructive",
+    });
   }
+}
 
   const handleDeleteIncident = (incidentId: string) => {
     const foundIncident = incidentsData.find((incident) => incident.id === incidentId)
