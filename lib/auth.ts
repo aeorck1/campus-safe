@@ -100,6 +100,11 @@ export type InvestigatingTeam = {
 name: string
 }
 
+export type PasswordReset = {
+  
+  new_password: string
+}
+
 export interface AddUser {
   first_name: string,
   last_name: string,
@@ -182,6 +187,7 @@ export type AuthState = {
   getInvestigatingTeam: () => Promise<{ success: boolean; data?: any; message?: string }>
   postInvestigatingTeam: (data: InvestigatingTeamMembers) => Promise<{ success: boolean; data?: any; message?: string }>
   createInvestigatingTeam: (data: InvestigatingTeam) => Promise<{ success: boolean; data?: any; message?: string }>
+  passwordReset: (token: string, data: PasswordReset) => Promise<{ success: boolean; data?: any; message?: string }>
 }
 export type Login = {
   username: string,
@@ -814,6 +820,17 @@ updateIncident: async (id: string, data: object) => {
           return { success: true, data: response.data };
         } catch (error: any) {
           const message = error?.response?.data?.detail || error?.message || "Error creating investigating team.";
+          return { success: false, message };
+        }
+      },
+
+      passwordReset: async (token:string, data:object)=>{
+        try{
+          const response = await axiosAuth.post(`auth/complete-password-reset/`, { token, ...data });
+          return { success: true, data: response.data };
+        }
+        catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error resetting password.";
           return { success: false, message };
         }
       },
