@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, use } from "react"
+import React, { useState, useEffect, use } from "react"
 import Link from "next/link"
 import {
   AlertTriangle,
@@ -1029,12 +1029,14 @@ function RolesTabContent() {
   const [error, setError] = useState<string | null>(null)
   const [newRoleId, setNewRoleId] = useState("")
   const [newRoleName, setNewRoleName] = useState("")
+  const [newRoleDetails, setNewRoleDetails] = useState("")
   const [creating, setCreating] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const getRoles = useAuthStore((state) => state.getRoles)
   const createRole = useAuthStore((state) => state.createRoles)
   const deleteRole = useAuthStore((state) => state.deleteRole)
   const { toast } = useToast()
+  const [openRoleId, setOpenRoleId] = useState<string | null>(null);
 
   // Fetch roles
   useEffect(() => {
@@ -1055,16 +1057,17 @@ function RolesTabContent() {
   // Create new role
   const handleCreateRole = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newRoleId.trim() || !newRoleName.trim()) return;
+    if (!newRoleId.trim() || !newRoleName.trim() || !newRoleDetails.trim()) return;
     setCreating(true);
     setError(null);
     try {
-      const payload = { id: newRoleId, name: newRoleName };
+      const payload = { id: newRoleId, name: newRoleName, description: newRoleDetails || "" };
       const res = await createRole('', payload);
       if (res && res.success) {
         toast({ title: "Role created", description: `Role '${newRoleName}' created.`, variant: "success" });
         setNewRoleId("");
         setNewRoleName("");
+        setNewRoleDetails("");
         // Refresh roles
         const rolesRes = await getRoles('', {});
         if (rolesRes && rolesRes.success && Array.isArray(rolesRes.data)) setRoles(rolesRes.data);
@@ -1085,7 +1088,11 @@ function RolesTabContent() {
     try {
       const res = await deleteRole(roleId, {})
       if (res && res.success) {
-        toast({ title: "Role deleted", description: `Role deleted.`, variant: "destructive" })
+        toast({ 
+          title: "Role deleted",
+          description: `Role '${roles.find(r => r.id === roleId)?.name || roleId}' deleted.`,
+          variant: "destructive" 
+        })
         // Refresh roles
         const rolesRes = await getRoles('', {})
         if (rolesRes && rolesRes.success && Array.isArray(rolesRes.data)) setRoles(rolesRes.data)
@@ -1107,7 +1114,7 @@ function RolesTabContent() {
           <CardDescription>List, create, and delete user roles</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleCreateRole} className="flex flex-col md:flex-row gap-2 mb-6">
+            <form onSubmit={handleCreateRole} className="flex flex-col md:flex-row gap-2 mb-6">
             <input
               type="text"
               className="border rounded px-3 py-2 w-full md:w-40"
@@ -1126,8 +1133,16 @@ function RolesTabContent() {
               disabled={creating}
               required
             />
-            <Button type="submit" disabled={creating || !newRoleId.trim() || !newRoleName.trim()}>Create</Button>
-          </form>
+            <input
+              type="text"
+              className="border rounded px-3 py-2 w-full md:flex-1"
+              placeholder="Role details (optional)"
+              value={newRoleDetails}
+              onChange={e => setNewRoleDetails(e.target.value)}
+              disabled={creating}
+            />
+            <Button type="submit" disabled={creating || !newRoleId.trim() || !newRoleName.trim() || !newRoleDetails.trim()}>Create</Button>
+            </form>
           {error && <div className="text-destructive mb-2">{error}</div>}
           {loading ? (
             <div>Loading roles...</div>
@@ -1145,21 +1160,69 @@ function RolesTabContent() {
                     <TableCell colSpan={2} className="text-center">No roles found.</TableCell>
                   </TableRow>
                 ) : (
-                  roles.map((role: any) => (
-                    <TableRow key={role.id}>
-                      <TableCell>{role.name}</TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDeleteRole(role.id)}
-                          disabled={deletingId === role.id}
+                  roles.map((role: any) => {
+                    
+                    return (
+                      <React.Fragment key={role.id}>
+                        <TableRow
+                          className="cursor-pointer hover:bg-orange-50"
+                          onClick={() => setOpenRoleId(role.id)}
                         >
-                          {deletingId === role.id ? "Deleting..." : "Delete"}
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                          <TableCell>{role.name}</TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={e => {
+                                e.stopPropagation();
+                                handleDeleteRole(role.id);
+                              }}
+                              disabled={deletingId === role.id}
+                            >
+                              {deletingId === role.id ? "Deleting..." : "Delete"}
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                        <Dialog open={openRoleId === role.id} onOpenChange={open => setOpenRoleId(open ? role.id : null)}>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Role Details</DialogTitle>
+                              <DialogDescription>
+                                Details for role <span className="font-bold">{role.name}</span>
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-2">
+                              <div>
+                                <span className="font-semibold">Name:</span> {role.name}
+                              </div>
+                              <div>
+                                <span className="font-semibold">Description:</span> {role.description || "-"}
+                              </div>
+                              <div>
+                                <span className="font-semibold">Created By:</span> {role.created_by_user || "-"}
+                              </div>
+                              <div>
+                                <span className="font-semibold">Last Modified By:</span> {role.last_modified_by_user || "-"}
+                              </div>
+                              <div>
+                                <span className="font-semibold">Date Created:</span>{" "}
+                                {role.date_created ? new Date(role.date_created).toLocaleString() : "-"}
+                              </div>
+                              <div>
+                                <span className="font-semibold">Date Last Modified:</span>{" "}
+                                {role.date_last_modified ? new Date(role.date_last_modified).toLocaleString() : "-"}
+                              </div>
+                            </div>
+                            <DialogFooter>
+                              <DialogClose asChild>
+                                <Button variant="outline">Close</Button>
+                              </DialogClose>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      </React.Fragment>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>

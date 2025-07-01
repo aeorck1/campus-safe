@@ -20,7 +20,7 @@ function InvestigatingTeamTabContent() {
   const [team, setTeam] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [newMember, setNewMember] = useState<{ name: string; id: string; team: string }>({ name: '', id: '', team: '' });
+  const [newMember, setNewMember] = useState<{ user_name: string; id: string; team: string; role?: string }>({ user_name: '', id: '', team: '', role: '' });
   const [creating, setCreating] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [newTeam, setNewTeam] = useState<{ id: string; name: string }>({ id: '', name: '' });
@@ -36,10 +36,9 @@ function InvestigatingTeamTabContent() {
         if (res && res.success && Array.isArray(res.data)) {
           // If your backend has a separate endpoint for teams, use it. Here, we assume each member has a team property.
           // const teams = Array.from(new Set(res.data.map((m: any) => m.team))).filter(Boolean);
-          // setAllTeams(res.map((name: string, idx: number) => ({ id: String(idx), name })));
-          
+            setAllTeams(res.data.map((team: any) => ({ id: team.id, name: team.name })));
+            console.log("Here is data", res.data);
         }
-        console.log("Here is data", res.data)
       } catch {}
     }
     fetchTeams();
@@ -60,37 +59,43 @@ function InvestigatingTeamTabContent() {
 
   // Fetch team from backend
   useEffect(() => {
-    setLoading(true);
-    setError(null);
-    getInvestigatingTeam()
-      .then((res: any) => {
+    async function fetchTeam() {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await getInvestigatingTeamMembers();
         if (res && res.success && Array.isArray(res.data)) {
           setTeam(res.data);
         } else {
           setTeam([]);
           setError(res?.message || 'Failed to fetch team.');
         }
-      })
-      .catch(() => setError('Failed to fetch team.'))
-      .finally(() => setLoading(false));
+      } catch {
+        setError('Failed to fetch team.');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchTeam();
   }, [getInvestigatingTeam]);
 
   // Add member
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMember.name.trim() || !newMember.team.trim() || !newMember.id) return;
+    if (!newMember.user_name.trim() || !newMember.team.trim() || !newMember.id) return;
     setCreating(true);
     setError(null);
     try {
       // Send { id, team, member } to backend
-      const payload = { id: newMember.id, team: newMember.team, member: newMember.name };
+      const payload = { id: newMember.id, team: newMember.team, member: newMember.user_name };
       const res = await postInvestigatingTeam(payload);
       if (res && res.success) {
-        toast({ title: 'Member Added', description: `${newMember.name} added to ${newMember.team}.`, variant: 'success' });
+        toast({ title: 'Member Added', description: `${newMember.user_name} added to ${newMember.team}.`, variant: 'success' });
         // Refresh team
         const teamRes = await getInvestigatingTeamMembers();
-        if (teamRes && teamRes.success && Array.isArray(teamRes.data)) setTeam(teamRes.data);
-        setNewMember({ name: '', id: '', team: '' });
+        if (teamRes && teamRes.success && Array.isArray(teamRes.data))
+           setTeam(teamRes.data);
+        setNewMember({ user_name: '', id: '', team: '' });
       } else {
         setError(res?.message || 'Failed to add member.');
         toast({ title: 'Error', description: res?.message || 'Failed to add member.', variant: 'destructive' });
@@ -208,7 +213,8 @@ function InvestigatingTeamTabContent() {
                   setNewMember((prev) => ({
                     ...prev,
                     id: val,
-                    name: user ? `${user.first_name} ${user.last_name}` : '',
+                    user_name: user ? user.username : '', // set user_name to username
+                    role: user? user.role : ""
                   }));
                 }}
                 placeholder="Select User"
@@ -216,7 +222,7 @@ function InvestigatingTeamTabContent() {
                 required
               />
             </div>
-            <Button type="submit" disabled={creating || !newMember.name.trim() || !newMember.team.trim() || !newMember.id} className="flex gap-2 h-10">
+            <Button type="submit" disabled={creating || !newMember.user_name.trim() || !newMember.team.trim() || !newMember.id} className="flex gap-2 h-10">
               <UserPlus className="w-4 h-4" />
               {creating ? 'Adding...' : 'Add Member'}
             </Button>
@@ -227,42 +233,49 @@ function InvestigatingTeamTabContent() {
               <div className="text-center py-8">Loading team...</div>
             ) : (
               <Table className="w-full">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+              <TableHeader>
+                <TableRow>
+                <TableHead>Team</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {team.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center">No team members found.</TableCell>
+                </TableRow>
+                ) : (
+                team.map((member: any) => (
+                  <TableRow key={member.id}>
+                  <TableCell>
+                    <Badge variant="outline">{member.team_name || member.team || '-'}</Badge>
+                  </TableCell>
+                  <TableCell className="font-medium flex items-center gap-2">
+                    <Badge variant="secondary">{member.name || member.username || '-'}</Badge>
+                  </TableCell>
+                  <TableCell>{member.email || '-'}</TableCell>
+                  <TableCell>
+                    <Badge variant="default">{member.role || '-'}</Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDeleteMember(member.id)}
+                    disabled={deletingId === member.id}
+                    className="gap-2"
+                    >
+                    <Trash className="w-4 h-4" />
+                    {deletingId === member.id ? 'Removing...' : 'Remove'}
+                    </Button>
+                  </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {team.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={3} className="text-center">No team members found.</TableCell>
-                    </TableRow>
-                  ) : (
-                    team.map((member: any) => (
-                      <TableRow key={member.id}>
-                        <TableCell className="font-medium flex items-center gap-2">
-                          <Badge variant="secondary">{member.name}</Badge>
-                        </TableCell>
-                        <TableCell>{member.email}</TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleDeleteMember(member.id)}
-                            disabled={deletingId === member.id}
-                            className="gap-2"
-                          >
-                            <Trash className="w-4 h-4" />
-                            {deletingId === member.id ? 'Removing...' : 'Remove'}
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    )))
-                  }
-                  
-                </TableBody>
+                ))
+                )}
+              </TableBody>
               </Table>
             )}
           </div>

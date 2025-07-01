@@ -78,7 +78,8 @@ export type SignUp = {
 
 export type CreateRole ={
   name: string,
-  id: string
+  id: string,
+  details?: string
 }
 export type RecentActivity = {
   id: string | number
@@ -93,7 +94,8 @@ export type InvestigatingTeamMembers = {
   name?: string,
   email?: string,
   team: string,
-  member: string
+  member: string,
+  user_name?:string
 }
 export type InvestigatingTeam = {
   id: string,
