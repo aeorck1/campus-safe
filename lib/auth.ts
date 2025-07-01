@@ -97,7 +97,8 @@ export type InvestigatingTeamMembers = {
 }
 export type InvestigatingTeam = {
   id: string,
-name: string
+name: string,
+created_by_user: any
 }
 
 export type PasswordReset = {
@@ -188,6 +189,7 @@ export type AuthState = {
   createInvestigatingTeam: (data: InvestigatingTeam) => Promise<{ success: boolean; data?: any; message?: string }>
   passwordReset: (token: string, data: PasswordReset) => Promise<{ success: boolean; data?: any; message?: string }>
   adminResetPassword: (data: AdminPassReset) => Promise<{ success: boolean; data?: any; message?: string }>
+  getInvestigatingTeamMembers: () => Promise<{ success: boolean; data?: any; message?: string }>
 }
 export type Login = {
   username: string,
@@ -806,7 +808,7 @@ updateIncident: async (id: string, data: object) => {
         }
       },
 
-      getInvestigatingTeam: async () => {
+      getInvestigatingTeamMembers: async () => {
         try {
           const response = await axiosAuth.get(`/admin/investigating-team-members/`);
           return { success: true, data: response.data };
@@ -816,7 +818,17 @@ updateIncident: async (id: string, data: object) => {
         }
       },
 
-          postInvestigatingTeam: async (data:object) => {
+      getInvestigatingTeam: async() => {
+        try{
+          const response= await axiosAuth.get(`/admin/investigating-teams/`)
+          return { success: true, data: response.data };
+        }
+        catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error fetching investigating team.";
+          return { success: false, message };
+        }
+      },
+      postInvestigatingTeam: async (data:object) => {
         try {
           const response = await axiosAuth.post(`/admin/investigating-team-members/`, data);
           return { success: true, data: response.data };

@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/lib/auth';
@@ -15,6 +14,7 @@ import { TabsContent } from '@/components/ui/tabs';
 function InvestigatingTeamTabContent() {
   const { toast } = useToast();
   const getInvestigatingTeam = useAuthStore((state) => state.getInvestigatingTeam);
+  const getInvestigatingTeamMembers= useAuthStore((state) => state.getInvestigatingTeamMembers)
   const postInvestigatingTeam = useAuthStore((state) => state.postInvestigatingTeam);
   const createInvestigatingTeam = useAuthStore((state) => state.createInvestigatingTeam);
   const [team, setTeam] = useState<any[]>([]);
@@ -27,6 +27,7 @@ function InvestigatingTeamTabContent() {
   const [creatingTeam, setCreatingTeam] = useState(false);
   const [allTeams, setAllTeams] = useState<any[]>([]);
   const [allUsers, setAllUsers] = useState<any[]>([]);
+  const user= useAuthStore((state) => state.user);
   // Fetch all teams for dropdown
   useEffect(() => {
     async function fetchTeams() {
@@ -34,9 +35,11 @@ function InvestigatingTeamTabContent() {
         const res = await getInvestigatingTeam();
         if (res && res.success && Array.isArray(res.data)) {
           // If your backend has a separate endpoint for teams, use it. Here, we assume each member has a team property.
-          const teams = Array.from(new Set(res.data.map((m: any) => m.team))).filter(Boolean);
-          setAllTeams(teams.map((name: string, idx: number) => ({ id: idx + '', name })));
+          // const teams = Array.from(new Set(res.data.map((m: any) => m.team))).filter(Boolean);
+          // setAllTeams(res.map((name: string, idx: number) => ({ id: String(idx), name })));
+          
         }
+        console.log("Here is data", res.data)
       } catch {}
     }
     fetchTeams();
@@ -85,7 +88,7 @@ function InvestigatingTeamTabContent() {
       if (res && res.success) {
         toast({ title: 'Member Added', description: `${newMember.name} added to ${newMember.team}.`, variant: 'success' });
         // Refresh team
-        const teamRes = await getInvestigatingTeam();
+        const teamRes = await getInvestigatingTeamMembers();
         if (teamRes && teamRes.success && Array.isArray(teamRes.data)) setTeam(teamRes.data);
         setNewMember({ name: '', id: '', team: '' });
       } else {
@@ -107,7 +110,13 @@ function InvestigatingTeamTabContent() {
     setCreatingTeam(true);
     setError(null);
     try {
-      const payload = { id: newTeam.id, name: newTeam.name };
+      // Use the user from state (already fetched at the top)
+      if (!user || !user.username) {
+        setError('User information is missing.');
+        setCreatingTeam(false);
+        return;
+      }
+      const payload = { id: newTeam.id, name: newTeam.name, created_by_user: user.username };
       const res = await createInvestigatingTeam(payload);
       if (res && res.success) {
         toast({ title: 'Team Created', description: `Team '${newTeam.name}' created.`, variant: 'success' });
@@ -180,7 +189,7 @@ function InvestigatingTeamTabContent() {
             {/* Team Combobox */}
             <div className="w-full md:w-1/4">
               <Combobox
-                options={allTeams.map((t) => ({ value: t.name, label: t.name }))}
+                options={allTeams.map((t) => ({ value: t.id, label: t.name }))}
                 value={newMember.team}
                 onChange={val => setNewMember((prev) => ({ ...prev, team: val }))}
                 placeholder="Select Team"
@@ -250,8 +259,9 @@ function InvestigatingTeamTabContent() {
                           </Button>
                         </TableCell>
                       </TableRow>
-                    ))
-                  )}
+                    )))
+                  }
+                  
                 </TableBody>
               </Table>
             )}
