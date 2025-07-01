@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -21,7 +21,15 @@ const formSchema = z.object({
   path: ["confirmPassword"],
 })
 
-export default function PasswordResetPage() {
+export default function PasswordResetPageWrapper() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PasswordResetPage />
+    </Suspense>
+  )
+}
+
+function PasswordResetPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
