@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, use } from "react"
+import React, { useState, useEffect, use, useRef } from "react"
 import Link from "next/link"
 import {
   AlertTriangle,
@@ -169,6 +169,7 @@ export function AdminDashboard() {
   const updateIncident = useAuthStore((state)=> state.updateIncident)
   const deleteIncident = useAuthStore((state) => state.deleteAdminIncident)
   const adminResetPassword = useAuthStore((state) => state.adminResetPassword);
+  const assignTeam = useAuthStore ((state) => state.assignInvestigatingTeam)
   useEffect(() => {
     async function fetchUsers() {
       try {
@@ -291,6 +292,65 @@ export function AdminDashboard() {
       })
     }
   }
+
+  const assignIncident = async (payLoad :{incident_id: string, team_id: string}) => {
+    try {
+      const response = await assignTeam(payLoad.incident_id, payLoad.team_id);
+      if (response && response.success) {
+        toast({
+          title: "Incident Assigned",
+          description: `Incident has been assigned to the team.`,
+          variant: "success"
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: response?.message || "Failed to assign incident.",
+          variant: "destructive"
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to assign incident.",
+        variant: "destructive"
+      });
+    }
+  }
+
+  // State for assigning team to incident
+  const [assigningIncidentId, setAssigningIncidentId] = useState<string | null>(null);
+  const assignDropdownRef = useRef<HTMLDivElement>(null);
+  const fetchTeam = useAuthStore((state)=> state.getInvestigatingTeam)
+  // Dummy teams array, replace with actual fetching logic if needed
+  const [allTeams, setAllTeams] = useState<{ id: string; name: string }[]>([]);
+  // Example: Fetch teams on mount (replace with your actual fetch logic)
+  useEffect(() => {
+    // Replace with actual API call if needed
+    const fetchTeams = async () => {
+      try {
+        const response = await fetchTeam();
+        if (response && response.success && Array.isArray(response.data)) {
+          setAllTeams(response.data);
+        } else {
+          setAllTeams([]);
+          toast({
+            title: "Error",
+            description: response?.message || "Failed to fetch teams. Please try again later.",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch teams:", error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch teams. Please try again later.",
+          variant: "destructive",
+        });
+      }
+    };
+    fetchTeams();
+  }, []);
 
   const handleResetPassword = async (userId: string) => {
   // Show the "Sending Mail..." toast and keep its id
@@ -909,6 +969,12 @@ export function AdminDashboard() {
                                     Mark as Resolved
                                   </DropdownMenuItem>
                                 )}
+                                <DropdownMenuItem
+                                  onClick={() => setAssigningIncidentId(incident.id)}
+                                >
+                                  <Shield className="mr-2 h-4 w-4" />
+                                  Assign Team
+                                </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                   className="text-destructive focus:text-destructive"
@@ -1018,6 +1084,48 @@ export function AdminDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Assign Team Popup */}
+      {assigningIncidentId && (
+        <div
+          ref={assignDropdownRef}
+          className="fixed inset-0 z-[110] flex items-center justify-center bg-black/30"
+          onClick={e => {
+            if (e.target === assignDropdownRef.current) setAssigningIncidentId(null)
+          }}
+        >
+          <div className="bg-white rounded-lg shadow-lg p-6 min-w-[320px] max-w-xs">
+            <h3 className="font-semibold mb-4 text-lg">Assign Team</h3>
+            <ul className="space-y-2">
+              {allTeams.length === 0 ? (
+                <li className="text-muted-foreground">No teams available</li>
+              ) : (
+                allTeams.map(team => (
+                  <li key={team.id}>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => {
+                        assignIncident({ incident_id: assigningIncidentId, team_id: team.id })
+                        setAssigningIncidentId(null)
+                      }}
+                    >
+                      {team.name}
+                    </Button>
+                  </li>
+                ))
+              )}
+            </ul>
+            <Button
+              variant="ghost"
+              className="mt-4 w-full"
+              onClick={() => setAssigningIncidentId(null)}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
     </>
   )
 }

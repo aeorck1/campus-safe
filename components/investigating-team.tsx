@@ -28,6 +28,12 @@ function InvestigatingTeamTabContent() {
   const [allTeams, setAllTeams] = useState<any[]>([]);
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const user= useAuthStore((state) => state.user);
+  const deleteInvestigatingTeamMember= useAuthStore((state)=>state.deleteInvestigatingTeamMember)
+  
+  // Add state for deleting a team
+  const [deletingTeamId, setDeletingTeamId] = useState<string | null>(null);
+  const deleteInvestigatingTeam = useAuthStore((state) => state.deleteInvestigatingTeam);
+
   // Fetch all teams for dropdown
   useEffect(() => {
     async function fetchTeams() {
@@ -84,18 +90,33 @@ function InvestigatingTeamTabContent() {
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMember.user_name.trim() || !newMember.team.trim() || !newMember.id) return;
+
+    // Check if member is already on the team
+    const alreadyExists = team.some(
+      (m) => m.id === newMember.id && (m.team === newMember.team || m.team_id === newMember.team)
+    );
+    if (alreadyExists) {
+      setError('This member is already on the selected team.');
+      toast({
+        title: 'Error',
+        description: 'This member is already on the selected team.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setCreating(true);
     setError(null);
     try {
       // Send { id, team, member } to backend
-      const payload = { id: newMember.id, team: newMember.team, member: newMember.user_name , created_by_user: user?.username || '' };
+      const payload = { member: newMember.id, team: newMember.team, created_by_user: user?.username || '' };
       const res = await postInvestigatingTeam(payload);
       if (res && res.success) {
         toast({ title: 'Member Added', description: `${newMember.user_name} added to ${newMember.team}.`, variant: 'success' });
         // Refresh team
         const teamRes = await getInvestigatingTeamMembers();
         if (teamRes && teamRes.success && Array.isArray(teamRes.data))
-           setTeam(teamRes.data);
+          setTeam(teamRes.data);
         setNewMember({ user_name: '', id: '', team: '' });
       } else {
         setError(res?.message || 'Failed to add member.');
@@ -113,10 +134,16 @@ function InvestigatingTeamTabContent() {
   const handleCreateTeam = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTeam.id.trim() || !newTeam.name.trim()) return;
+    // Check if team with the same id already exists
+    const exists = allTeams.some((team) => team.id === newTeam.id.trim());
+    if (exists) {
+      setError('A team with this ID already exists.');
+      toast({ title: 'Error', description: 'A team with this ID already exists.', variant: 'destructive' });
+      return;
+    }
     setCreatingTeam(true);
     setError(null);
     try {
-      // Use the user from state (already fetched at the top)
       if (!user || !user.username) {
         setError('User information is missing.');
         setCreatingTeam(false);
@@ -127,6 +154,15 @@ function InvestigatingTeamTabContent() {
       if (res && res.success) {
         toast({ title: 'Team Created', description: `Team '${newTeam.name}' created.`, variant: 'success' });
         setNewTeam({ id: '', name: '' });
+        // Refresh teams and team members after creating a new team
+        const teamsRes = await getInvestigatingTeam();
+        if (teamsRes && teamsRes.success && Array.isArray(teamsRes.data)) {
+          setAllTeams(teamsRes.data.map((team: any) => ({ id: team.id, name: team.name })));
+        }
+        const teamRes = await getInvestigatingTeamMembers();
+        if (teamRes && teamRes.success && Array.isArray(teamRes.data)) {
+          setTeam(teamRes.data);
+        }
       } else {
         setError(res?.message || 'Failed to create team.');
         toast({ title: 'Error', description: res?.message || 'Failed to create team.', variant: 'destructive' });
@@ -145,12 +181,48 @@ function InvestigatingTeamTabContent() {
     setError(null);
     try {
       // If you have a delete endpoint, use it here. For now, just filter locally:
-      // await deleteInvestigatingTeam(id)
+      await deleteInvestigatingTeamMember(id)
       setTeam((prev) => prev.filter((m) => m.id !== id));
     } catch (err: any) {
       setError(err?.message || 'Failed to remove member.');
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  // Delete team handler
+  const handleDeleteTeam = async (teamId: string) => {
+    setDeletingTeamId(teamId);
+    setError(null);
+    try {
+      const res = await deleteInvestigatingTeam(teamId);
+      if (res && res.success) {
+        toast({
+          title: "Team deleted",
+          description: "Team has been deleted successfully.",
+          variant: "success",
+        });
+        setAllTeams((prev) => prev.filter((team) => team.id !== teamId));
+        // Optionally refresh team members if needed
+        const teamRes = await getInvestigatingTeamMembers();
+        if (teamRes && teamRes.success && Array.isArray(teamRes.data)) {
+          setTeam(teamRes.data);
+        }
+      } else {
+        toast({
+          title: "Error",
+          description: res?.message || "Failed to delete team.",
+          variant: "destructive",
+        });
+      }
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err?.message || "Failed to delete team.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingTeamId(null);
     }
   };
 
@@ -228,7 +300,6 @@ function InvestigatingTeamTabContent() {
               {creating ? 'Adding...' : 'Add Member'}
             </Button>
           </form>
-          {error && <div className="text-destructive mb-2">{error}</div>}
           <div className="flex-1 w-full overflow-auto">
             {loading ? (
               <div className="text-center py-8">Loading team...</div>
@@ -280,6 +351,47 @@ function InvestigatingTeamTabContent() {
               </Table>
             )}
           </div>
+
+          {/* Teams List Section */}
+          <div className="mt-8">
+            <h3 className="text-lg font-semibold mb-2">Teams</h3>
+            <Table className="w-full">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Team ID</TableHead>
+                  <TableHead>Team Name</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {allTeams.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center">
+                      No teams found.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  allTeams.map((team: any) => (
+                    <TableRow key={team.id}>
+                      <TableCell>{team.id}</TableCell>
+                      <TableCell>{team.name}</TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDeleteTeam(team.id)}
+                          disabled={deletingTeamId === team.id}
+                        >
+                          {deletingTeamId === team.id ? "Deleting..." : "Delete"}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
         </CardContent>
       </Card>
     </TabsContent>

@@ -90,7 +90,7 @@ export type RecentActivity = {
 }
 
 export type InvestigatingTeamMembers = {
-  id: string,
+  id?: string,
   name?: string,
   email?: string,
   team: string,
@@ -193,6 +193,10 @@ export type AuthState = {
   passwordReset: (token: string, data: PasswordReset) => Promise<{ success: boolean; data?: any; message?: string }>
   adminResetPassword: (data: AdminPassReset) => Promise<{ success: boolean; data?: any; message?: string }>
   getInvestigatingTeamMembers: () => Promise<{ success: boolean; data?: any; message?: string }>
+  deleteInvestigatingTeamMember: (id: string) => Promise<{ success: boolean; data?: any; message?: string }>
+  assignInvestigatingTeam: (incident_id: string, team_id: string) => Promise<{ success: boolean; data?: any; message?: string }>
+  deleteInvestigatingTeam: (id: string) => Promise<{ success: boolean; data?: any; message?: string }>
+
 }
 export type Login = {
   username: string,
@@ -211,6 +215,12 @@ export type UpdateComments = {
 export type AdminPassReset = {
   user_id: string,
 }
+
+export type AssignTeam = {
+  incident_id: string,
+  team_id: string
+}
+
 // Create auth store with persistence
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -817,6 +827,34 @@ updateIncident: async (id: string, data: object) => {
           return { success: true, data: response.data };
         } catch (error: any) {
           const message = error?.response?.data?.detail || error?.message || "Error fetching investigating team.";
+          return { success: false, message };
+        }
+      },
+
+      deleteInvestigatingTeamMember: async (id: string) => {
+        try {
+          await axiosAuth.delete(`/admin/investigating-team-members/${id}/`);
+          return { success: true };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error deleting investigating team member.";
+          return { success: false, message }; 
+        }
+      },
+deleteInvestigatingTeam: async(id:string) => {
+        try {
+          await axiosAuth.delete(`/admin/investigating-teams/${id}/`);
+          return { success: true };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error deleting investigating team.";
+          return { success: false, message };
+        }
+      },  
+      assignInvestigatingTeam: async (incident_id: string, team_id: string) => {
+        try {
+          const response = await axiosAuth.post(`/admin/incidents/op/assign-team/`, { incident_id, team_id });
+          return { success: true, data: response.data };
+        } catch (error: any) {
+          const message = error?.response?.data?.detail || error?.message || "Error fetching investigating teams.";
           return { success: false, message };
         }
       },
