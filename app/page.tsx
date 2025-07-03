@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import dynamic from "next/dynamic"
 import { useEffect, useState } from "react"
 import {useAuthStore} from "@/lib/auth"
+import SubscribePage from "./subscribe/page"
 
 
 // Dynamically import the CampusMap component with no SSR
@@ -51,6 +52,7 @@ export default function LandingPage() {
   const [averageResponseTime, setAverageResponseTime] = useState(stateCount)
   const [userSatisfaction, setUserSatisfaction] = useState(stateCount)
   const [incidents, setIncidents] = useState<[]>([])
+  const [showSubscribe, setShowSubscribe] = useState(true);
 
   const publicStats = useAuthStore((state) => state.getPublicStats)
   const incidentsMap = useAuthStore((state)=>state.incidents)
@@ -189,6 +191,7 @@ export default function LandingPage() {
     config: { duration: 20000 },
     loop: { reverse: true },
   })
+
 
   return (
     <div className="flex-1 space-y-16 py-6">
@@ -379,7 +382,10 @@ export default function LandingPage() {
         </Card>
       </animated.section>
 
-    
+      {/* Subscription Section */}
+      {/* <section className="container mx-auto px-4">
+        <SubscribePage />
+      </section> */}
 
       {/* CTA Section */}
       <section
@@ -425,6 +431,11 @@ export default function LandingPage() {
             })()}
         </div>
       </section>
+
+  
+      {showSubscribe && (
+        <SubscribePage onClose={() => setShowSubscribe(false)} />
+      )}
     </div>
   )
 }

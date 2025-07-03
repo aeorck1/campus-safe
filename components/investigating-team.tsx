@@ -66,6 +66,7 @@ function InvestigatingTeamTabContent() {
         const res = await getInvestigatingTeamMembers();
         if (res && res.success && Array.isArray(res.data)) {
           setTeam(res.data);
+          console.log("Here is the team", res.data);
         } else {
           setTeam([]);
           setError(res?.message || 'Failed to fetch team.');
@@ -87,7 +88,7 @@ function InvestigatingTeamTabContent() {
     setError(null);
     try {
       // Send { id, team, member } to backend
-      const payload = { id: newMember.id, team: newMember.team, member: newMember.user_name };
+      const payload = { id: newMember.id, team: newMember.team, member: newMember.user_name , created_by_user: user?.username || '' };
       const res = await postInvestigatingTeam(payload);
       if (res && res.success) {
         toast({ title: 'Member Added', description: `${newMember.user_name} added to ${newMember.team}.`, variant: 'success' });
@@ -154,7 +155,7 @@ function InvestigatingTeamTabContent() {
   };
 
   return (
-    <TabsContent value="investigating-team" className="flex flex-col flex-1 h-full min-h-[70vh] w-full p-0 m-0">
+    <TabsContent value="investigating-team" className="flex flex-col flex-1 h-full min-h-[70vh] w-full -0 m-0">
       <Card className="flex flex-col flex-1 h-full w-full m-0">
         <CardHeader className="pb-2 w-full">
           <CardTitle className="flex items-center gap-2">
@@ -214,7 +215,7 @@ function InvestigatingTeamTabContent() {
                     ...prev,
                     id: val,
                     user_name: user ? user.username : '', // set user_name to username
-                    role: user? user.role : ""
+                    // role: user? user.role : ""
                   }));
                 }}
                 placeholder="Select User"

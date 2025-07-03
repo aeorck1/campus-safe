@@ -95,7 +95,8 @@ export type InvestigatingTeamMembers = {
   email?: string,
   team: string,
   member: string,
-  user_name?:string
+  user_name?:string,
+  created_by_user: any
 }
 export type InvestigatingTeam = {
   id: string,

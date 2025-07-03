@@ -283,17 +283,17 @@ const allTags = Array.from(tagMap.values());
                   {filteredIncidents.map((incident) => (
                     <div
                       key={incident.id}
-                      className="flex items-start p-4 py-6 bg-white hover:bg-gray-100 transition-colors group my-3 cursor-pointer"
+                      className="flex items-start p-4 py-6 bg-white hover:bg-gray-100 transition-colors group my-3 cursor-pointer dark:bg-transparent"
                       style={{ textDecoration: "none" }}
                       onClick={() => router.push(`/incidents/${incident.id}`)}
                     >
                       <div
                         className={`p-2 rounded-full mr-4 ${
                         incident.severity === "HIGH"
-                          ? "bg-red-100 dark:bg-red-900"
+                          ? "bg-red-100 dark:bg-red-900 border border-red-200 dark:border-red-800"
                           : incident.severity === "MEDIUM"
-                          ? "bg-yellow-100 dark:bg-yellow-900"
-                          : "bg-blue-100 dark:bg-blue-900"
+                          ? "bg-yellow-100 dark:bg-white border border-yellow-600 dark:border-yellow-400"
+                          : "bg-blue-100 dark:bg-blue-900 border border-blue-200 dark:border-blue-800"
                         }`}
                       >
                         <AlertTriangle
