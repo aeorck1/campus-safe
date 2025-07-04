@@ -216,7 +216,7 @@ useEffect(() => {
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Notifications</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem>New incident reported near Library</DropdownMenuItem>
+                    <DropdownMenuItem>New incient reported near Library</DropdownMenuItem>
                     <DropdownMenuItem>Your report has been reviewed</DropdownMenuItem>
                     <DropdownMenuItem>Campus alert: Scheduled maintenance</DropdownMenuItem>
                   </DropdownMenuContent>
