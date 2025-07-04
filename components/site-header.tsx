@@ -27,7 +27,8 @@ export function SiteHeader() {
   const router = useRouter()
   const pathname = usePathname()
   const { isAuthenticated } = useAuthStore()
-
+  const[notificationCount, setNotificationCount] = useState(0)
+const notification = useAuthStore((state)=>(state.getUserNotification))
   const { user } = useAuthStore()
 
   const routes = [
@@ -74,9 +75,6 @@ export function SiteHeader() {
   // Close sidebar on route change (mobile navigation)
   useEffect(() => {
     const handleRouteChange = () => setSidebarOpen(false)
-    // Next.js router events for navigation
-    // router.events is not available in app router, so use workaround:
-    // Listen for "routeChangeStart" on window (Next.js app router triggers navigation events)
     window.addEventListener("next-route-change", handleRouteChange)
     return () => {
       window.removeEventListener("next-route-change", handleRouteChange)
@@ -99,6 +97,29 @@ export function SiteHeader() {
       router.push = origPush
     }
   }, [router])
+
+
+useEffect(() => {
+  const notif = async () => {
+    try {
+      const response = await notification();
+      if (response.success) {
+        setNotificationCount(response.data.count);
+        console.log("Notifications", response.data);
+      } else {
+        console.error("Failed to fetch notifications:", response.message);
+      }
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    }
+  };
+
+  if (isAuthenticated) {
+    notif();
+  }
+}, [isAuthenticated, notification]); // include isAuthenticated in the dependencies
+
+
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background">
@@ -186,9 +207,9 @@ export function SiteHeader() {
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="icon" className="relative">
                       <Bell className="h-5 w-5" />
-                      {/* <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center bg-campus-primary">
-                        3
-                      </Badge> */}
+                      <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center bg-campus-primary">
+                        {notificationCount}
+                      </Badge>
                       <span className="sr-only">Notifications</span>
                     </Button>
                   </DropdownMenuTrigger>

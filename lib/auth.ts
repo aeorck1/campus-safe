@@ -196,7 +196,7 @@ export type AuthState = {
   deleteInvestigatingTeamMember: (id: string) => Promise<{ success: boolean; data?: any; message?: string }>
   assignInvestigatingTeam: (incident_id: string, team_id: string) => Promise<{ success: boolean; data?: any; message?: string }>
   deleteInvestigatingTeam: (id: string) => Promise<{ success: boolean; data?: any; message?: string }>
-
+  getUserNotification: () => Promise<{success: boolean; data?: any; message?: string}>
 }
 export type Login = {
   username: string,
@@ -857,6 +857,17 @@ deleteInvestigatingTeam: async(id:string) => {
           const message = error?.response?.data?.detail || error?.message || "Error fetching investigating teams.";
           return { success: false, message };
         }
+      },
+
+      getUserNotification: async()=> {
+          try{
+            const response= await axiosAuth.get(`/notifications/`)
+            return {success: true, data: response.data}
+          }
+          catch(error:any){
+            const message = error?.response?.data?.detail || "Error fecthing notification"
+            return{success: false, message}
+          }
       },
 
       getInvestigatingTeam: async() => {
