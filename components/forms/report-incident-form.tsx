@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm, useWatch } from "react-hook-form"
 import { boolean, z } from "zod"
-import { MapPin, AlertTriangle, Info, Check } from "lucide-react"
+import { MapPin, AlertTriangle, Info, Check, Camera, Image as ImageIcon, Video, Mic, FileAudio, FileImage, FileVideo } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
@@ -48,7 +48,7 @@ const formSchema = z.object({
   tags: z.array(z.string()).default([]),
   anonymous: z.boolean().default(false),
   contactInfo: z.string().email("Please enter a valid email address.").optional().or(z.literal("")),
-  images: z
+  media: z
     .array(
       z.object({
         name: z.string(),
@@ -158,9 +158,9 @@ const isStep2Disabled = watchedLocation.trim().length < 10 || watchedCoordinates
       values.tags.forEach((tag) => formData.append("tags", tag));
       formData.append("anonymous", String(values.anonymous));
       if (values.contactInfo) formData.append("contactInfo", values.contactInfo);
-      if (selectedFiles && selectedFiles.length > 0) {
-        selectedFiles.forEach((file) => {
-          formData.append("images", file);
+      if (selectedMedia && selectedMedia.length > 0) {
+        selectedMedia.forEach((file) => {
+          formData.append("media", file);
         });
       }
       const result = await report(formData);
@@ -202,9 +202,9 @@ const isStep2Disabled = watchedLocation.trim().length < 10 || watchedCoordinates
       values.tags.forEach((tag) => formData.append("tags", tag));
       formData.append("anonymous", String(values.anonymous));
       if (values.contactInfo) formData.append("contactInfo", values.contactInfo);
-      if (selectedFiles && selectedFiles.length > 0) {
-        selectedFiles.forEach((file) => {
-          formData.append("images", file);
+      if (selectedMedia && selectedMedia.length > 0) {
+        selectedMedia.forEach((file) => {
+          formData.append("media", file);
         });
       }
       const result = await anonymousReport(formData);
@@ -268,6 +268,7 @@ toast({
 
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [selectedMedia, setSelectedMedia] = useState<File[]>([]);
   // Duplicate detection state
 const [isDuplicate, setIsDuplicate] = useState(false)
 
@@ -280,8 +281,10 @@ useEffect(() => {
     setIsDuplicate(false)
   }
 }, [form.watch("title"), incidentTitles])
-  return (
+  return ( 
+       
     <Form {...form}>
+      
       <form onSubmit={form.handleSubmit((values) => {
         if (values.anonymous) {
           onSubmitAnonymous(values)
@@ -579,63 +582,147 @@ useEffect(() => {
               )}
             />
 
-            {/* Image Upload Section */}
+            {/* Media Upload Section */}
             <div className="space-y-2">
-              <FormLabel>Upload Images (optional, max 3)</FormLabel>
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={e => {
-                  const files = Array.from(e.target.files || []);
-                  // Combine with already selected files, but max 3
-                  let newFiles = [...selectedFiles, ...files];
-                  if (newFiles.length > 3) {
-                    toast({
-                      title: "Too many images",
-                      description: "You can only upload up to 3 images.",
-                      variant: "destructive"
-                    });
-                    // Only keep the first 3 files
-                    newFiles = newFiles.slice(0, 3);
-                  }
-                  setSelectedFiles(newFiles);
-                  form.setValue(
-                    "images",
-                    newFiles.map(file => ({
-                      name: file.name,
-                      type: file.type
-                    }))
-                  );
-                  form.trigger("images");
-                  // Reset input value so same file can be selected again if removed
-                  e.target.value = "";
-                }}
-                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/80"
-                data-testid="incident-images-input"
-                disabled={selectedFiles?.length >= 3}
-              />
-              <FormDescription>Attach up to 3 images to help describe the incident.</FormDescription>
+              <FormLabel>Upload Media (optional, max 3)</FormLabel>
+              <div className="flex gap-2">
+                {/* Camera */}
+                <label className="cursor-pointer flex flex-col items-center">
+                  <span className="text-xs mb-1 font-semibold flex items-center gap-1">
+        <Camera className="h-5 w-5 font-bold text-primary" /> Camera
+      </span>
+                  <input
+                    type="file"
+                    accept="image/*,video/*,audio/*"
+                    capture="environment"
+                    multiple
+                    hidden
+                    onChange={e => {
+                      const files = Array.from(e.target.files || []);
+                      let newFiles = [...selectedMedia, ...files];
+                      if (newFiles.length > 3) {
+                        toast({
+                          title: "Too many files",
+                          description: "You can only upload up to 3 media files.",
+                          variant: "destructive"
+                        });
+                        newFiles = newFiles.slice(0, 3);
+                      }
+                      setSelectedMedia(newFiles);
+                      form.setValue(
+                        "media",
+                        newFiles.map(file => ({
+                          name: file.name,
+                          type: file.type
+                        }))
+                      );
+                      form.trigger("media");
+                      e.target.value = "";
+                    }}
+                  />
+               
+                </label>
+                {/* Gallery/File */}
+                <label className="cursor-pointer flex flex-col items-center">
+                  <span className="text-xs mb-1 font-semibold flex items-center gap-1">
+        <ImageIcon className="h-5 w-5 font-bold text-primary" /> Gallery/File
+      </span>
+                  <input
+                    type="file"
+                    accept="image/*,video/*,audio/*"
+                    multiple
+                    hidden
+                    onChange={e => {
+                      const files = Array.from(e.target.files || []);
+                      let newFiles = [...selectedMedia, ...files];
+                      if (newFiles.length > 3) {
+                        toast({
+                          title: "Too many files",
+                          description: "You can only upload up to 3 media files.",
+                          variant: "destructive"
+                        });
+                        newFiles = newFiles.slice(0, 3);
+                      }
+                      setSelectedMedia(newFiles);
+                      form.setValue(
+                        "media",
+                        newFiles.map(file => ({
+                          name: file.name,
+                          type: file.type
+                        }))
+                      );
+                      form.trigger("media");
+                      e.target.value = "";
+                    }}
+                  />
+                 
+                </label>
+                {/* Audio */}
+                <label className="cursor-pointer flex flex-col items-center">
+                  <span className="text-xs mb-1 font-semibold flex items-center gap-1">
+        <Mic className="h-5 w-5 font-bold text-primary" /> Audio
+      </span>
+                  <input
+                    type="file"
+                    accept="audio/*"
+                    capture="microphone"
+                    multiple
+                    hidden
+                    onChange={e => {
+                      const files = Array.from(e.target.files || []);
+                      let newFiles = [...selectedMedia, ...files];
+                      if (newFiles.length > 3) {
+                        toast({
+                          title: "Too many files",
+                          description: "You can only upload up to 3 media files.",
+                          variant: "destructive"
+                        });
+                        newFiles = newFiles.slice(0, 3);
+                      }
+                      setSelectedMedia(newFiles);
+                      form.setValue(
+                        "media",
+                        newFiles.map(file => ({
+                          name: file.name,
+                          type: file.type
+                        }))
+                      );
+                      form.trigger("media");
+                      e.target.value = "";
+                    }}
+                  />
+                
+                </label>
+              </div>
+              <FormDescription>Attach up to 3 media files (images, audio, or video).</FormDescription>
               <div className="flex gap-2 mt-2 flex-wrap">
-                {selectedFiles?.map((file, idx) => (
-                  <div key={idx} className="relative w-24 h-24 border rounded overflow-hidden">
-                    <img src={URL.createObjectURL(file)} alt={file.name} className="object-cover w-full h-full" />
+                {selectedMedia?.map((file, idx) => (
+                  <div key={idx} className="relative w-24 h-24 border rounded overflow-hidden flex items-center justify-center bg-gray-50">
+                    {file.type?.startsWith("image/") ? (
+                      <FileImage className="h-8 w-8 text-primary font-bold" />
+                    ) : file.type?.startsWith("video/") ? (
+                      <FileVideo className="h-8 w-8 text-primary font-bold" />
+                    ) : file.type?.startsWith("audio/") ? (
+                      <FileAudio className="h-8 w-8 text-primary font-bold" />
+                    ) : (
+                      <span className="text-xs font-bold">{file.name}</span>
+                    )}
                     <button
                       type="button"
-                      className="absolute top-1 right-1 bg-white bg-opacity-80 rounded-full p-1 text-xs"
+                      className="absolute top-1 right-1 bg-white bg-opacity-80 rounded-full p-1 text-xs font-bold"
                       onClick={() => {
-                        const newFiles = selectedFiles.filter((_, i) => i !== idx);
-                        setSelectedFiles(newFiles);
+                        const newFiles = selectedMedia.filter((_, i) => i !== idx);
+                        setSelectedMedia(newFiles);
                         form.setValue(
-                          "images",
+                          "media",
                           newFiles.map(f => ({
                             name: f.name,
                             type: f.type
                           }))
                         );
-                        form.trigger("images");
+                        form.trigger("media");
                       }}
-                      aria-label="Remove image"
+                      aria-label="Remove media"
                     >
                       ×
                     </button>
@@ -754,16 +841,24 @@ useEffect(() => {
                   </p>
                 </div>
                 <div>
-                  <h4 className="text-sm font-medium">Images</h4>
+                  <h4 className="text-sm font-medium">Media</h4>
                   <div className="flex gap-2 mt-1">
-                    {selectedFiles && selectedFiles.length > 0 ? (
-                      selectedFiles.map((file, idx) => (
+                    {selectedMedia && selectedMedia.length > 0 ? (
+                      selectedMedia.map((file, idx) => (
                         <div key={idx} className="relative w-24 h-24 border rounded overflow-hidden">
-                          <img src={URL.createObjectURL(file)} alt={file.name} className="object-cover w-full h-full" />
+                          {file.type?.startsWith("image/") ? (
+                            <img src={URL.createObjectURL(file)} alt={file.name} className="object-cover w-full h-full" />
+                          ) : file.type?.startsWith("video/") ? (
+                            <video src={URL.createObjectURL(file)} controls className="object-cover w-full h-full" />
+                          ) : file.type?.startsWith("audio/") ? (
+                            <audio src={URL.createObjectURL(file)} controls className="w-full" />
+                          ) : (
+                            <span className="text-xs">{file.name}</span>
+                          )}
                         </div>
                       ))
                     ) : (
-                      <p className="text-sm text-muted-foreground">No images uploaded</p>
+                      <p className="text-sm text-muted-foreground">No media uploaded</p>
                     )}
                   </div>
                 </div>
@@ -781,6 +876,8 @@ useEffect(() => {
           </div>
         )}
       </form>
+
     </Form>
+    
   )
 }

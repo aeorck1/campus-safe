@@ -44,7 +44,11 @@ export type ReportIncident = {
   severity: "LOW" | "MEDIUM" | "HIGH",
   location: string,
   latitude: number,
-  longitude: number
+  longitude: number,
+  media?: Array<{
+    name: string,
+    type?: string
+  }>
 
 }
 
@@ -62,6 +66,10 @@ export type ReportAnonymous = {
   location: string,
   latitude: number,
   longitude: number
+  media?: Array<{
+    name: string,
+    type?: string
+  }>
 }
 
 export type CreateTags = {

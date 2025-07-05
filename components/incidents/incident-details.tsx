@@ -294,26 +294,82 @@ const handleCommentSubmit = async () => {
           <p className="whitespace-pre-line mb-4">{incident.description}</p>
 
           {/* Incident Images Section */}
-          {incident.images && incident.images.length > 0 && (
+          {incident.media && incident.media.length > 0 && (
             <div className="mb-6">
-          <h4 className="text-sm font-medium mb-2">Images</h4>
-          <div className="flex gap-2 flex-wrap">
-            {incident.images.map((image: any, id: number) => (
-              <a
-            key={id}
-            href={typeof image === 'string' ? image : image.image}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block w-24 h-24 sm:w-28 sm:h-28 border rounded overflow-hidden hover:shadow-lg"
-              >
-            <img
-              src={typeof image === 'string' ? image : image.image}
-              alt={`Incident image ${id + 1}`}
-              className="object-cover w-full h-full"
-            />
-              </a>
-            ))}
-          </div>
+              <h4 className="text-sm font-medium mb-2">Media</h4>
+              <div className="flex gap-2 flex-wrap">
+                {incident.media.map((media: any, id: number) => {
+                  // Use media.media as the URL
+                  const url = typeof media === "string" ? media : media.media;
+                  const extension = url?.split(".").pop()?.toLowerCase();
+                  const isImage =
+                    ["jpg", "jpeg", "png", "gif", "webp", "bmp"].includes(extension);
+                  const isVideo =
+                    ["mp4", "webm", "ogg", "mov"].includes(extension);
+                  const isAudio =
+                    ["mp3", "wav", "ogg", "aac", "m4a"].includes(extension);
+
+                  if (isImage) {
+                    return (
+                      <a
+                        key={id}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block w-24 h-24 sm:w-28 sm:h-28 border rounded overflow-hidden hover:shadow-lg"
+                      >
+                        <img
+                          src={url}
+                          alt={`Incident Image ${id + 1}`}
+                          className="object-cover w-full h-full"
+                        />
+                      </a>
+                    );
+                  }
+                  if (isVideo) {
+                    return (
+                      <div
+                        key={id}
+                        className="block w-24 h-24 sm:w-28 sm:h-28 border rounded overflow-hidden hover:shadow-lg flex items-center justify-center bg-black"
+                      >
+                        <video
+                          src={url}
+                          controls
+                          className="object-cover w-full h-full"
+                          title={`Incident Video ${id + 1}`}
+                        />
+                      </div>
+                    );
+                  }
+                  if (isAudio) {
+                    return (
+                      <div
+                        key={id}
+                        className="block w-48 sm:w-60 border rounded overflow-hidden hover:shadow-lg flex items-center p-2 bg-muted"
+                      >
+                        <audio
+                          src={url}
+                          controls
+                          className="w-full"
+                          title={`Incident Audio ${id + 1}`}
+                        />
+                      </div>
+                    );
+                  }
+                  // Fallback for unknown type
+                  return (
+                    <a
+                      key={id}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block w-24 h-24 sm:w-28 sm:h-28 border rounded overflow-hidden hover:shadow-lg flex items-center justify-center text-xs text-muted-foreground"
+                    >
+                      Unknown Media
+                    </a>
+                  );
+                })}
+              </div>
             </div>
           )}
 
