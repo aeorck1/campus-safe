@@ -8,6 +8,7 @@ import dynamic from "next/dynamic"
 import { useEffect, useState } from "react"
 import {useAuthStore} from "@/lib/auth"
 import SubscribePage from "./subscribe/page"
+import { set } from "zod"
 
 
 // Dynamically import the CampusMap component with no SSR
@@ -49,8 +50,8 @@ export default function LandingPage() {
   const stateCount = 0
   const [totalIncidents, setTotalIncidents] = useState(stateCount)
   const [resolvedIncidents, setResolvedIncidents] = useState(stateCount)
-  const [averageResponseTime, setAverageResponseTime] = useState(stateCount)
-  const [userSatisfaction, setUserSatisfaction] = useState(stateCount)
+  const [investigatingIncidents, setInvestigatingIncidents] = useState(stateCount)
+  const [activeIncidents, setActiveIncidents]= useState(stateCount)
   const [incidents, setIncidents] = useState<[]>([])
   const [showSubscribe, setShowSubscribe] = useState(true)
   
@@ -92,8 +93,8 @@ useEffect(() => {
         console.log("Public stats data:", data.data)
         setTotalIncidents(data.data?.total_incidents || 0)
         setResolvedIncidents(data.data?.resolved_incidents || 0)
-        setAverageResponseTime(data.data?.average_response_time)
-        setUserSatisfaction(data.data?.user_satisfaction || 0)
+        setInvestigatingIncidents(data.data?.investigating_incidents||0)
+        setActiveIncidents(data.data?.active_incidents || 0)
       } catch (error) {
         console.error("Failed to fetch public stats:", error)
       }
@@ -355,17 +356,17 @@ useEffect(() => {
           <Card className="feature-card border-campus-warning/20">
             <CardHeader className="pb-2">
               <CardTitle className="text-2xl font-bold text-campus-warning flex">
-                {averageResponseTime}
+                {investigatingIncidents}
               </CardTitle>
-              <CardDescription>Average Response Time</CardDescription>
+              <CardDescription>Investigating Incident</CardDescription>
             </CardHeader>
           </Card>
           <Card className="feature-card border-campus-accent/20">
             <CardHeader className="pb-2">
               <CardTitle className="text-2xl font-bold text-campus-accent flex">
-                {userSatisfaction}
+                {activeIncidents}
               </CardTitle>
-              <CardDescription>User Satisfaction</CardDescription>
+              <CardDescription>Active Incident</CardDescription>
             </CardHeader>
           </Card>
         </div>
