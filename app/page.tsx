@@ -52,10 +52,25 @@ export default function LandingPage() {
   const [averageResponseTime, setAverageResponseTime] = useState(stateCount)
   const [userSatisfaction, setUserSatisfaction] = useState(stateCount)
   const [incidents, setIncidents] = useState<[]>([])
-  const [showSubscribe, setShowSubscribe] = useState(true);
+  const [showSubscribe, setShowSubscribe] = useState(true)
+  
 
   const publicStats = useAuthStore((state) => state.getPublicStats)
   const incidentsMap = useAuthStore((state)=>state.incidents)
+
+    // Only show if not already subscribed
+useEffect(() => {
+  if (typeof window !== "undefined") {
+    for (let i = 0; i < localStorage.length; i++) {
+      if (localStorage.key(i)?.startsWith("secure_ui")) {
+        setShowSubscribe(false);
+        break;
+      }
+    }
+  }
+}, []);
+
+
   useEffect(() => {
     // Fetch incidents when the component mounts
     const fetchIncidents = async () => {

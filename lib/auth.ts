@@ -198,7 +198,9 @@ export type AuthState = {
   assignInvestigatingTeam: (incident_id: string, team_id: string) => Promise<{ success: boolean; data?: any; message?: string }>
   deleteInvestigatingTeam: (id: string) => Promise<{ success: boolean; data?: any; message?: string }>
   getUserNotification: () => Promise<{success: boolean; data?: any; message?: string}>
-  markNotification: (id: string) => Promise<{success: boolean; data?: any; message?: string}>
+  markNotification: (id: string, read: boolean) => Promise<{success: boolean; data?: any; message?: string}>
+  subscribeToNotifications: (data: Subscribe) => Promise<{success: boolean; data?: any; message?: string}>
+  adminGetSubscription: () => Promise<{success: boolean; data?: any; message?: string}>
 }
 export type Login = {
   username: string,
@@ -217,6 +219,20 @@ export type UpdateComments = {
 export type AdminPassReset = {
   user_id: string,
 }
+ export type Notification = {
+    id: string
+    title: string
+    message: string
+    date_created?: string
+    read?: boolean
+    link?: string
+    [key: string]: any
+  }
+
+  export type Subscribe ={
+    email?: string
+    phone_number?: string
+  }
 
 export type AssignTeam = {
   incident_id: string,
@@ -512,6 +528,27 @@ getRecentActivity: async () =>{
     const message = error?.response?.data?.detail || error?.message || "Error resetting password.";
     return { success: false, message };
   }
+},
+
+subscribeToNotifications: async (data: Subscribe) => {
+  try{
+    const response = await axiosAuth.post(`subscriptions/`, data);
+    return { success: true, data: response.data };
+  } catch (error: any) {
+    const message = error?.response?.data?.detail || error?.message || "Error subscribing to notifications.";
+    return { success: false, message };
+  }
+},
+
+adminGetSubscription: async  () =>{
+try{
+  const response = await axiosAuth.get(`admin/subscriptions/`)
+  return{success: true, data: response.data}
+}
+catch(err: any){
+  const message = err?.response.data?.detail || err?.message || "Error fetching subscriptions.";
+  return {success: false, message}
+}
 },
 
       updateAdminIncidentStatus: async (incidentId: string, status: string) => {
@@ -872,9 +909,9 @@ deleteInvestigatingTeam: async(id:string) => {
           }
       },
 
-markNotification: async (id:string) => {
+markNotification: async (id:string, read:boolean) => {
   try{ 
-    const response = await axiosAuth.patch(`notifications/${id}/mark-read/`)
+    const response = await axiosAuth.patch(`notifications/${id}/mark-read/`, { read });
     return{success: true, data:response.data}
   }
   catch(error:any){

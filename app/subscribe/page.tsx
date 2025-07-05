@@ -1,11 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { z } from "zod"
+import { useAuthStore } from "@/lib/auth"
 
 const emailOrPhoneSchema = z.object({
   email: z.string().email().optional(),
@@ -24,6 +25,7 @@ export default function SubscribePage({ onClose }: { onClose?: () => void }) {
   const [isLoading, setIsLoading] = useState(false)
   const [subscribed, setSubscribed] = useState(false)
   const [alreadySubscribed, setAlreadySubscribed] = useState(false)
+  const subscribeToNotifications = useAuthStore((state) => state.subscribeToNotifications)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value })
@@ -33,38 +35,61 @@ export default function SubscribePage({ onClose }: { onClose?: () => void }) {
     e.preventDefault()
     setIsLoading(true)
     setAlreadySubscribed(false)
-    const result = emailOrPhoneSchema.safeParse({
-      email: form.email.trim() || undefined,
-      phone: form.phone.trim() || undefined,
+
+    const { email, phone } = form
+    const parsed = emailOrPhoneSchema.safeParse({
+      email: email.trim() || undefined,
+      phone: phone.trim() || undefined,
     })
-    if (!result.success) {
+
+    if (!parsed.success) {
       toast({
         title: "Invalid input",
-        description: result.error.errors[0].message,
+        description: parsed.error.errors[0].message,
         variant: "destructive",
       })
       setIsLoading(false)
       return
     }
 
-    const key = form.email.trim() || "+234" + form.phone.trim()
-    if (localStorage.getItem("campus_subscribed_" + key)) {
+    const key = email.trim() || "+234" + phone.trim()
+    if (localStorage.getItem("secure_ui" + key)) {
       setAlreadySubscribed(true)
       setIsLoading(false)
       return
     }
 
-    setTimeout(() => {
-      localStorage.setItem("campus_subscribed_" + key, "1")
+    try {
+      await subscribeToNotifications({
+        email: email.trim() || undefined,
+        phone_number: phone.trim() || undefined,
+      })
+      localStorage.setItem("secure_ui" + key, "1")
       setSubscribed(true)
-      setIsLoading(false)
       toast({
         title: "Subscribed!",
         description: "You will now receive notifications for Incidents on Campus from SecureUI.",
         variant: "success",
       })
-    }, 1200)
+    } catch (error: any) {
+      toast({
+        title: "Subscription failed",
+        description: error?.message || "An error occurred while subscribing.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
+
+  useEffect(() => {
+    if (subscribed && onClose) {
+      const timeout = setTimeout(() => {
+        onClose();
+      }, 3000); // Close after 2 seconds
+      return () => clearTimeout(timeout);
+    }
+  }, [subscribed, onClose]);
 
   return (
     <div className="fixed bottom-6 right-6 z-[100] flex items-end justify-end">
@@ -91,7 +116,7 @@ export default function SubscribePage({ onClose }: { onClose?: () => void }) {
             <div className="text-center py-8">
               <div className="text-3xl mb-2">🎉</div>
               <div className="font-semibold text-green-700 mb-2">Subscription successful!</div>
-              <div className="text-muted-foreground">You will receive notifications for campus events.</div>
+              <div className="text-muted-foreground">You will receive notifications for campus incidents.</div>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -102,7 +127,7 @@ export default function SubscribePage({ onClose }: { onClose?: () => void }) {
                 value={form.email}
                 onChange={handleChange}
                 disabled={isLoading || !!form.phone}
-                autoComplete="email"
+                
               />
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground select-none">+234</span>
@@ -116,7 +141,7 @@ export default function SubscribePage({ onClose }: { onClose?: () => void }) {
                   className="pl-14"
                   maxLength={10}
                   pattern="\d{10}"
-                  autoComplete="tel"
+                  
                 />
               </div>
               <Button

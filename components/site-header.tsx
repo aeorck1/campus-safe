@@ -21,6 +21,7 @@ import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { AuthStatus } from "@/components/auth-status"
 import { useAuthStore } from "@/lib/auth"
+import { Notification } from "@/lib/auth"
 
 export function SiteHeader() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -28,15 +29,7 @@ export function SiteHeader() {
   const pathname = usePathname()
   const { isAuthenticated } = useAuthStore()
   const[notificationCount, setNotificationCount] = useState(0)
-  type Notification = {
-    id: string
-    title: string
-    message: string
-    date_created?: string
-    read?: boolean
-    link?: string
-    [key: string]: any
-  }
+
   const [notifications, setNotifications] = useState<Notification[]>([])
 const notification = useAuthStore((state)=>(state.getUserNotification))
   const { user } = useAuthStore()
@@ -135,9 +128,9 @@ useEffect(() => {
   };
 }, [isAuthenticated, notification]);
 
-  const handleNotificationClick = async (id: string) => {
+  const handleNotificationClick = async (id: string, read: boolean) => {
     try {
-      const response = await markNotification(id);
+      const response = await markNotification(id, read);
       if (response.success) {
         setNotifications((prev) =>
           prev.map((notif) =>
@@ -259,7 +252,7 @@ useEffect(() => {
                             !notif.read && "bg-orange-50"
                           )}
                           asChild={!!notif.link}
-                          onClick={() => handleNotificationClick(notif.id)}
+                          onClick={() => handleNotificationClick(notif.id, true)}
                         >
                           <div className="w-full flex items-start">
                             <div className="flex-1">
@@ -293,7 +286,7 @@ useEffect(() => {
                                   <DropdownMenuItem
                                     onClick={e => {
                                       e.stopPropagation();
-                                      handleNotificationClick(notif.id);
+                                      handleNotificationClick(notif.id, true);
                                     }}
                                     disabled={notif.read}
                                   >
