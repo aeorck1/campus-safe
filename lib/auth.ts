@@ -4,6 +4,7 @@ import axios from "axios"
 import axiosAuth from "./axiosAuth"
 // import axiosAuth from "./axiosAuth"
 import { object } from "zod"
+import { resourceLimits } from "worker_threads"
 // const API_BASE_URL = "https://campussecuritybackend.onrender.com/api/v1/"
 
 
@@ -197,6 +198,7 @@ export type AuthState = {
   assignInvestigatingTeam: (incident_id: string, team_id: string) => Promise<{ success: boolean; data?: any; message?: string }>
   deleteInvestigatingTeam: (id: string) => Promise<{ success: boolean; data?: any; message?: string }>
   getUserNotification: () => Promise<{success: boolean; data?: any; message?: string}>
+  markNotification: (id: string) => Promise<{success: boolean; data?: any; message?: string}>
 }
 export type Login = {
   username: string,
@@ -869,6 +871,17 @@ deleteInvestigatingTeam: async(id:string) => {
             return{success: false, message}
           }
       },
+
+markNotification: async (id:string) => {
+  try{ 
+    const response = await axiosAuth.patch(`notifications/${id}/mark-read/`)
+    return{success: true, data:response.data}
+  }
+  catch(error:any){
+    const message= error?.response?.data?.detail || "Error marking notification as read"
+    return {success: false, message}
+  }
+},
 
       getInvestigatingTeam: async() => {
         try{

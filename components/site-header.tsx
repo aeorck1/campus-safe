@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Bell, Menu, Plus, Shield } from "lucide-react"
+import { Bell, Menu, Plus, Shield, MoreVertical } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -28,8 +28,19 @@ export function SiteHeader() {
   const pathname = usePathname()
   const { isAuthenticated } = useAuthStore()
   const[notificationCount, setNotificationCount] = useState(0)
+  type Notification = {
+    id: string
+    title: string
+    message: string
+    date_created?: string
+    read?: boolean
+    link?: string
+    [key: string]: any
+  }
+  const [notifications, setNotifications] = useState<Notification[]>([])
 const notification = useAuthStore((state)=>(state.getUserNotification))
   const { user } = useAuthStore()
+  const markNotification = useAuthStore((state)=>(state.markNotification))
 
   const routes = [
     {
@@ -100,24 +111,45 @@ const notification = useAuthStore((state)=>(state.getUserNotification))
 
 
 useEffect(() => {
-  const notif = async () => {
+  let interval: NodeJS.Timeout | null = null;
+
+  const fetchNotifications = async () => {
     try {
       const response = await notification();
       if (response.success) {
         setNotificationCount(response.data.count);
-        console.log("Notifications", response.data);
-      } else {
-        console.error("Failed to fetch notifications:", response.message);
+        setNotifications(response.data.results || []);
       }
     } catch (error) {
-      console.error("Error fetching notifications:", error);
+      // Optionally handle error
     }
   };
 
   if (isAuthenticated) {
-    notif();
+    fetchNotifications(); // Initial fetch
+    interval = setInterval(fetchNotifications, 15000); // Poll every 15 seconds
   }
-}, [isAuthenticated, notification]); // include isAuthenticated in the dependencies
+
+  return () => {
+    if (interval) clearInterval(interval);
+  };
+}, [isAuthenticated, notification]);
+
+  const handleNotificationClick = async (id: string) => {
+    try {
+      const response = await markNotification(id);
+      if (response.success) {
+        setNotifications((prev) =>
+          prev.map((notif) =>
+            notif.id === id ? { ...notif, read: true } : notif
+          )
+        );
+        setNotificationCount((prev) => prev - 1);
+      }
+    } catch (error) {
+      // Optionally handle error
+    }
+  };
 
 
 
@@ -216,9 +248,64 @@ useEffect(() => {
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Notifications</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem>New incient reported near Library</DropdownMenuItem>
-                    <DropdownMenuItem>Your report has been reviewed</DropdownMenuItem>
-                    <DropdownMenuItem>Campus alert: Scheduled maintenance</DropdownMenuItem>
+                    {notifications.length === 0 ? (
+                      <DropdownMenuItem className="text-muted-foreground">No notifications</DropdownMenuItem>
+                    ) : (
+                      notifications.map((notif: any) => (
+                        <DropdownMenuItem
+                          key={notif.id}
+                          className={cn(
+                            "flex flex-col items-start group relative pr-10",
+                            !notif.read && "bg-orange-50"
+                          )}
+                          asChild={!!notif.link}
+                          onClick={() => handleNotificationClick(notif.id)}
+                        >
+                          <div className="w-full flex items-start">
+                            <div className="flex-1">
+                              {notif.link ? (
+                                <Link href={notif.link} className="w-full block">
+                                  <div className="font-medium">{notif.title}</div>
+                                  <div className="text-xs text-muted-foreground">{notif.message}</div>
+                                  <div className="text-[10px] text-right w-full text-muted-foreground">
+                                    {notif.date_created ? new Date(notif.date_created).toLocaleString() : ""}
+                                  </div>
+                                </Link>
+                              ) : (
+                                <div className="w-full">
+                                  <div className="font-medium">{notif.title}</div>
+                                  <div className="text-xs text-muted-foreground">{notif.message}</div>
+                                  <div className="text-[10px] text-right w-full text-muted-foreground">
+                                    {notif.date_created ? new Date(notif.date_created).toLocaleString() : ""}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            {/* 3 vertical dots and Mark as read */}
+                            <div className="absolute top-2 right-2">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-6 w-6 p-0 opacity-70 hover:opacity-100">
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      handleNotificationClick(notif.id);
+                                    }}
+                                    disabled={notif.read}
+                                  >
+                                    Mark as read
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </div>
+                        </DropdownMenuItem>
+                      ))
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </>
