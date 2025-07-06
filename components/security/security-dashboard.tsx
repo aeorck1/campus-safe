@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import dynamic from "next/dynamic"
-import { AlertTriangle, ArrowUpDown, Check, Clock, MoreHorizontal, Search, Shield, ShieldAlert } from "lucide-react"
+import { AlertTriangle, ArrowUpDown, Check, Clock, MoreHorizontal, Search, Shield } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -245,7 +246,6 @@ useEffect(() => {
             <Card className="border-campus-warning/30 bg-campus-warning/10 shadow-lg">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg text-yellow-900">Under Investigation</CardTitle>
-                 <ShieldAlert className="h-4 w-4 text-campus-warning" />
                 <CardDescription className="text-yellow-800">Currently being addressed</CardDescription>
               </CardHeader>
               <CardContent>
@@ -253,7 +253,7 @@ useEffect(() => {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-tr from-green-300 via-green-100 to-white border-green-400/70 shadow-lg">
+            <Card className=" bg-green-200 border-green-400/70 shadow-lg">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg text-green-900">Recently Resolved</CardTitle>
                 <CardDescription className="text-green-800">Incidents Resolved Today</CardDescription>
@@ -263,7 +263,7 @@ useEffect(() => {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-tr from-purple-300 via-purple-100 to-white border-purple-400/70 shadow-lg">
+            <Card className="bg-purple-200 border-purple-400/70 shadow-lg">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg text-purple-900">Security Personnel</CardTitle>
                 <CardDescription className="text-purple-800">Currently on duty</CardDescription>
@@ -273,7 +273,7 @@ useEffect(() => {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-tr from-red-300 via-red-100 to-white border-red-400/70 shadow-lg">
+            <Card className="bg-red-200 border-red-400/70 shadow-lg">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg text-red-900">Active Incidents</CardTitle>
                 <CardDescription className="text-red-800">Currently being addressed</CardDescription>
@@ -283,7 +283,7 @@ useEffect(() => {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-tr from-emerald-300 via-emerald-100 to-white border-emerald-400/70 shadow-lg">
+            <Card className="bg-emerald-300 border-emerald-400/70 shadow-lg">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg text-emerald-900">Total Resolved Incidents</CardTitle>
                 <CardDescription className="text-emerald-800">Total Incidents Resolved</CardDescription>
