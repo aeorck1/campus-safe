@@ -45,6 +45,7 @@ import {
 import { Label } from "@/components/ui/label"
 import {User} from "@/lib/auth"
 import InvestigatingTeamTabContent from "@/components/investigating-team"
+import { SubscriptionsList } from "@/components/subscriptions"
 
 
 export function AdminDashboard() {
@@ -525,7 +526,7 @@ export function AdminDashboard() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <Tabs defaultValue="users" className="w-full" onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-4 gap-0 rounded-lg overflow-hidden border bg-muted">
+            <TabsList className="grid w-full grid-cols-5 gap-0 rounded-lg overflow-hidden border bg-muted">
               <TabsTrigger value="users" className="w-full flex justify-center items-center py-2 rounded-none border-0">
                 <Users className="mr-2 h-4 w-4" />
                 Users
@@ -541,6 +542,11 @@ export function AdminDashboard() {
               <TabsTrigger value="investigating-team" className="w-full flex justify-center items-center py-2 rounded-none border-0">
                 <Shield className="mr-2 h-4 w-4" />
                 Investigating Team
+              </TabsTrigger>
+
+              <TabsTrigger value="subscriptions" className="w-full flex justify-center items-center">
+                <Shield className="mr-2 h-4 w-4" />
+                Subscription
               </TabsTrigger>
             </TabsList>
 
@@ -959,10 +965,10 @@ export function AdminDashboard() {
                                     View Details
                                   </Link>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
+                                {/* <DropdownMenuItem>
                                   <Edit className="mr-2 h-4 w-4" />
                                   Edit Incident
-                                </DropdownMenuItem>
+                                </DropdownMenuItem> */}
                                 {incident.status !== "resolved" && (
                                   <DropdownMenuItem onClick={() => handleResolveIncident(incident.id)}>
                                     <Check className="mr-2 h-4 w-4" />
@@ -1014,6 +1020,18 @@ export function AdminDashboard() {
                 </CardHeader>
                 <CardContent>
                   <InvestigatingTeamTabContent />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="subscriptions" className="mt-6">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle>Subscriptions</CardTitle>
+                  <CardDescription>Manage users Subscription to notifications</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <SubscriptionsList />
                 </CardContent>
               </Card>
             </TabsContent>
