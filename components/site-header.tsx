@@ -110,7 +110,8 @@ useEffect(() => {
     try {
       const response = await notification();
       if (response.success) {
-        setNotificationCount(response.data.count);
+      
+        setNotificationCount(response.data.results.filter((item: any) => item.read === false).length);
         setNotifications(response.data.results || []);
       }
     } catch (error) {
@@ -232,10 +233,12 @@ useEffect(() => {
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="icon" className="relative">
                       <Bell className="h-5 w-5" />
-                      <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center bg-campus-primary">
-                        {notificationCount}
-                      </Badge>
-                      <span className="sr-only">Notifications</span>
+                     {notificationCount > 0 && (
+                        <Badge className="absolute top-0 right-0 h-4 w-4 bg-red-500 text-xs text-white flex items-center justify-center">
+                          {notificationCount}
+                          <span className="sr-only">Notifications</span>
+                        </Badge>
+                      )}
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">

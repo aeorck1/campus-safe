@@ -919,7 +919,7 @@ deleteInvestigatingTeam: async(id:string) => {
 
 markNotification: async (id:string, read:boolean) => {
   try{ 
-    const response = await axiosAuth.patch(`notifications/${id}/mark-read/`, { read });
+    const response = await axiosAuth.patch(`notifications/${id}/mark-read/?read=${read}`);
     return{success: true, data:response.data}
   }
   catch(error:any){
