@@ -133,12 +133,12 @@ function InvestigatingTeamTabContent() {
   // Create Investigation Team
   const handleCreateTeam = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTeam.name.trim()) return;
-    // Check if team with the same name already exists
-    const exists = allTeams.some((team) => team.name === newTeam.name.trim());
+    if (!newTeam.id.trim() || !newTeam.name.trim()) return;
+    // Check if team with the same id already exists
+    const exists = allTeams.some((team) => team.id === newTeam.id.trim());
     if (exists) {
-      setError('A team with this name already exists.');
-      toast({ title: 'Error', description: 'A team with this name already exists.', variant: 'destructive' });
+      setError('A team with this ID already exists.');
+      toast({ title: 'Error', description: 'A team with this ID already exists.', variant: 'destructive' });
       return;
     }
     setCreatingTeam(true);
@@ -149,7 +149,7 @@ function InvestigatingTeamTabContent() {
         setCreatingTeam(false);
         return;
       }
-      const payload = { name: newTeam.name, created_by_user: user.username };
+      const payload = { id: newTeam.id, name: newTeam.name, created_by_user: user.username };
       const res = await createInvestigatingTeam(payload);
       if (res && res.success) {
         toast({ title: 'Team Created', description: `Team '${newTeam.name}' created.`, variant: 'success' });
@@ -238,7 +238,15 @@ function InvestigatingTeamTabContent() {
         <CardContent className="flex flex-col flex-1 w-full">
           {/* Create Investigation Team Box */}
           <form onSubmit={handleCreateTeam} className="flex flex-col md:flex-row gap-2 mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4 shadow-sm w-full">
-         
+            <Input
+              type="text"
+              placeholder="Team ID (e.g. TEAM1)"
+              value={newTeam.id}
+              onChange={e => setNewTeam({ ...newTeam, id: e.target.value })}
+              disabled={creatingTeam}
+              required
+              className="md:w-1/4"
+            />
             <Input
               type="text"
               placeholder="Team Name (e.g. Main Investigation Team)"
@@ -248,7 +256,7 @@ function InvestigatingTeamTabContent() {
               required
               className="md:w-1/2"
             />
-            <Button type="submit" disabled={creatingTeam || !newTeam.name.trim()} className="flex gap-2">
+            <Button type="submit" disabled={creatingTeam || !newTeam.id.trim() || !newTeam.name.trim()} className="flex gap-2">
               <UserPlus className="w-4 h-4" />
               {creatingTeam ? 'Creating...' : 'Create Team'}
             </Button>
