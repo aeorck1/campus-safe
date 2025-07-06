@@ -113,6 +113,7 @@ name: string,
 created_by_user: any
 }
 
+
 export type PasswordReset = {
   new_password: string
 }
@@ -209,6 +210,7 @@ export type AuthState = {
   markNotification: (id: string, read: boolean) => Promise<{success: boolean; data?: any; message?: string}>
   subscribeToNotifications: (data: Subscribe) => Promise<{success: boolean; data?: any; message?: string}>
   adminGetSubscription: () => Promise<{success: boolean; data?: any; message?: string}>
+  securityGetStats: () => Promise<{success: boolean; data?: any; message?: string}>
 }
 export type Login = {
   username: string,
@@ -555,6 +557,17 @@ try{
 }
 catch(err: any){
   const message = err?.response.data?.detail || err?.message || "Error fetching subscriptions.";
+  return {success: false, message}
+}
+},
+
+securityGetStats: async () =>{
+  try{
+  const response = await axiosAuth.get(`security/incident-statistics/`)
+  return{success: true, data: response.data}
+}
+catch(err: any){
+  const message = err?.response.data?.detail || err?.message || "Error fetching security statistics.";
   return {success: false, message}
 }
 },

@@ -48,10 +48,10 @@ const notification = useAuthStore((state)=>(state.getUserNotification))
           active: pathname === "/admin",
           protected: true,
         }
-      : user?.role?.name === "SECURITY_PERSONNEL"
+      : user?.role?.name === "Security Personnel"
       ? {
           href: "/security",
-          label: "Security",
+          label: "Security Dashboard",
           active: pathname === "/security",
           protected: true,
         }

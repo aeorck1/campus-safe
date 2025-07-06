@@ -22,7 +22,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { mockIncidents } from "@/lib/mock-data"
-import { useToast } from "@/components/ui/use-toast"
+// Update the import path if use-toast is actually in a subfolder like 'ui'
+import { useToast } from "@/hooks/use-toast"
 import { useAuthStore } from "@/lib/auth"
 
 // Dynamically import the CampusMap component with no SSR
@@ -41,10 +42,32 @@ export function SecurityDashboard() {
   const [statusFilter, setStatusFilter] = useState("all")
   const [severityFilter, setSeverityFilter] = useState("all")
   const [sortBy, setSortBy] = useState("newest")
+  const [incidentList, setIncidentLists]= useState([])
+  const updateIncident = useAuthStore((state) => state.updateIncident)
+  const assignIncident = useAuthStore ((state)=> state.assignInvestigatingTeam)
+  const getSecurityStats = useAuthStore((state)=> state.securityGetStats)
+  const getTeams = useAuthStore((state)=> state.getInvestigatingTeam)
+  const [securityStats, setSecurityStats] = useState([])
   // const [incidentsList, setIncidents]= use
 
 
   const incidents = useAuthStore((state) => state.incidents)
+
+useEffect(() => {
+  const fetchStats = async () =>{
+    try{
+      const response = await getSecurityStats()
+      if(response && response.success ===true){
+        setSecurityStats(response.data) 
+        console.log("Security stats fetched successfully:", response.data)
+      }
+    }
+    catch(err){
+
+    }
+  }
+  fetchStats()
+}, [getSecurityStats])
 
   useEffect(() => {
     const fetchIncidents = async () => {
@@ -52,6 +75,7 @@ export function SecurityDashboard() {
         const response = await incidents()
         if (response && response.success === true) {
           // Assuming the response data is an array of incidents
+          setIncidentLists(response.data)
           console.log("Incidents fetched successfully:", response.data)
           toast({
             title: "Incidents loaded",
@@ -73,7 +97,7 @@ export function SecurityDashboard() {
   }, [incidents])
 
   // Filter and sort incidents
-  const filteredIncidents = mockIncidents
+  const filteredIncidents = incidentList
     .filter((incident) => {
       // Search filter
       const matchesSearch =
@@ -106,18 +130,35 @@ export function SecurityDashboard() {
       return 0
     })
 
-  const handleResolveIncident = (incidentId: string) => {
-    toast({
-      title: "Incident status updated",
-      description: "The incident has been marked as resolved.",
-    })
+  const handleResolveIncident = async (incidentId: string) => {
+    const result = await updateIncident(incidentId, { status: "RESOLVED" })
+    if (result && result.success) {
+      const resolvedIncident = incidentList.find((incident) => incident.id === incidentId)
+      toast({
+        title: "Incident resolved",
+        description: `Incident "${resolvedIncident?.title || incidentId}" has been resolved.`,
+        variant: "success",
+      })
+    }
+    // Refresh incidents after resolving
+    const response = await incidents()
+    if (response && response.success && Array.isArray(response.data)) {
+      setIncidentLists(response.data)
+
+    }
   }
 
-  const handleAssignIncident = (incidentId: string) => {
-    toast({
-      title: "Incident assigned",
-      description: "The incident has been assigned to the security team.",
-    })
+
+
+  const handleAssignIncident = async (incidentId: string) => {
+    const result = await assignIncident(incidentId)
+    if (result && result.success) {
+      toast({
+        title: "Incident assigned",
+        description: "The incident has been assigned to the security team.",
+        variant: "success",
+      })
+    }
   }
 
   return (
@@ -157,9 +198,9 @@ export function SecurityDashboard() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="investigating">Investigating</SelectItem>
-                <SelectItem value="resolved">Resolved</SelectItem>
+                <SelectItem value="ACTIVE">Active</SelectItem>
+                <SelectItem value="INVESTIGATING">Investigating</SelectItem>
+                <SelectItem value="RESOLVED">Resolved</SelectItem>
               </SelectContent>
             </Select>
 
@@ -169,9 +210,9 @@ export function SecurityDashboard() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Severities</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="low">Low</SelectItem>
+                <SelectItem value="HIGH">High</SelectItem>
+                <SelectItem value="MEDIUM">Medium</SelectItem>
+                <SelectItem value="LOW">Low</SelectItem>
               </SelectContent>
             </Select>
 
@@ -200,45 +241,64 @@ export function SecurityDashboard() {
         </div>
 
         <TabsContent value="active" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card className="bg-campus-primary/10 border-campus-primary/30">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <Card className="bg-gradient-to-tr from-blue-300 via-blue-100 to-white border-blue-400/70 shadow-lg">
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg text-campus-primary">Active Incidents</CardTitle>
-                <CardDescription>Requiring immediate attention</CardDescription>
+                <CardTitle className="text-lg text-blue-900">Total Incidents</CardTitle>
+                <CardDescription className="text-blue-800">Total number of incidents</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">
-                  {filteredIncidents.filter((i) => i.status === "active").length}
-                </div>
+                <div className="text-4xl font-extrabold text-blue-900 drop-shadow">{securityStats.total_incidents}</div>
               </CardContent>
             </Card>
-            <Card className="bg-yellow-500/10 border-yellow-500/30">
+
+            <Card className="bg-gradient-to-tr from-yellow-300 via-yellow-100 to-white border-yellow-400/70 shadow-lg">
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg text-yellow-500">Under Investigation</CardTitle>
-                <CardDescription>Currently being addressed</CardDescription>
+                <CardTitle className="text-lg text-yellow-900">Under Investigation</CardTitle>
+                <CardDescription className="text-yellow-800">Currently being addressed</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">
-                  {filteredIncidents.filter((i) => i.status === "investigating").length}
-                </div>
+                <div className="text-4xl font-extrabold text-yellow-900 drop-shadow">{securityStats.investigating_incidents}</div>
               </CardContent>
             </Card>
-            <Card className="bg-campus-secondary/10 border-campus-secondary/30">
+
+            <Card className="bg-gradient-to-tr from-green-300 via-green-100 to-white border-green-400/70 shadow-lg">
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg text-campus-secondary">Resolved Today</CardTitle>
-                <CardDescription>Completed in the last 24h</CardDescription>
+                <CardTitle className="text-lg text-green-900">Recently Resolved</CardTitle>
+                <CardDescription className="text-green-800">Incidents Resolved Today</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">3</div>
+                <div className="text-4xl font-extrabold text-green-900 drop-shadow">{securityStats.total_resolved_today}</div>
               </CardContent>
             </Card>
-            <Card className="bg-campus-accent/10 border-campus-accent/30">
+
+            <Card className="bg-gradient-to-tr from-purple-300 via-purple-100 to-white border-purple-400/70 shadow-lg">
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg text-campus-accent">Security Personnel</CardTitle>
-                <CardDescription>Currently on duty</CardDescription>
+                <CardTitle className="text-lg text-purple-900">Security Personnel</CardTitle>
+                <CardDescription className="text-purple-800">Currently on duty</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">8</div>
+                <div className="text-4xl font-extrabold text-purple-900 drop-shadow">{securityStats.total_security_personnel}</div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-tr from-red-300 via-red-100 to-white border-red-400/70 shadow-lg">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg text-red-900">Active Incidents</CardTitle>
+                <CardDescription className="text-red-800">Currently being addressed</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-4xl font-extrabold text-red-900 drop-shadow">{securityStats.active_incidents}</div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-tr from-emerald-300 via-emerald-100 to-white border-emerald-400/70 shadow-lg">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg text-emerald-900">Total Resolved Incidents</CardTitle>
+                <CardDescription className="text-emerald-800">Total Incidents Resolved</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-4xl font-extrabold text-emerald-900 drop-shadow">{securityStats.resolved_incidents}</div>
               </CardContent>
             </Card>
           </div>
@@ -294,7 +354,7 @@ export function SecurityDashboard() {
                           <Badge
                             variant={
                               incident.status === "RESOLVED"
-                                ? "secpndary"
+                                ? "secondary"
                                 : incident.status === "INVESTIGATING"
                                   ? "outline"
                                   : "destructive"
@@ -346,7 +406,7 @@ export function SecurityDashboard() {
                       </TableRow>
                     ))}
 
-                  {filteredIncidents.filter((incident) => incident.status !== "resolved").length === 0 && (
+                  {filteredIncidents.filter((incident) => incident.status !== "RESOLVED").length === 0 && (
                     <TableRow>
                       <TableCell colSpan={5} className="text-center py-6">
                         <div className="flex flex-col items-center justify-center">
@@ -411,10 +471,10 @@ export function SecurityDashboard() {
                       <TableCell>
                         <Badge
                           variant={
-                            incident.status === "resolved"
-                              ? "outline"
-                              : incident.status === "investigating"
-                                ? "secondary"
+                            incident.status === "RESOLVED"
+                              ? "secondary"
+                              : incident.status === "INVESTIGATING"
+                                ? "outline"
                                 : "destructive"
                           }
                         >
