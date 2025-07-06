@@ -108,7 +108,7 @@ export type InvestigatingTeamMembers = {
   created_by_user: any
 }
 export type InvestigatingTeam = {
-  id: string,
+  id?: string,
 name: string,
 created_by_user: any
 }
