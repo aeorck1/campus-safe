@@ -43,6 +43,10 @@ export function SecurityDashboard() {
   const [severityFilter, setSeverityFilter] = useState("all")
   const [sortBy, setSortBy] = useState("newest")
   const [incidentList, setIncidentLists]= useState([])
+  const [teamList, setTeamList] = useState<{ id: string; name: string }[]>([])
+  const [assigningIncidentId, setAssigningIncidentId] = useState<string | null>(null)
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null)
+  const [assigning, setAssigning] = useState(false)
   const updateIncident = useAuthStore((state) => state.updateIncident)
   const assignIncident = useAuthStore ((state)=> state.assignInvestigatingTeam)
   const getSecurityStats = useAuthStore((state)=> state.securityGetStats)
@@ -86,6 +90,21 @@ useEffect(() => {
     }
     fetchIncidents()
   }, [incidents])
+
+  // Fetch teams on mount
+  useEffect(() => {
+    const fetchTeams = async () => {
+      try {
+        const res = await getTeams()
+        if (res && res.success && Array.isArray(res.data)) {
+          setTeamList(res.data.map((team: any) => ({ id: team.id, name: team.name })))
+        }
+      } catch (error) {
+        // Optionally handle error
+      }
+    }
+    fetchTeams()
+  }, [getTeams])
 
   // Filter and sort incidents
   const filteredIncidents = incidentList
@@ -137,19 +156,46 @@ useEffect(() => {
       setIncidentLists(response.data)
 
     }
+       const securityStatistics = await getSecurityStats()
+      setSecurityStats(securityStatistics.data)
   }
 
+  // Modified handleAssignIncident to open modal
+  const handleAssignIncident = (incidentId: string) => {
+    setAssigningIncidentId(incidentId)
+    setSelectedTeamId(null)
+  }
 
-
-  const handleAssignIncident = async (incidentId: string) => {
-    const result = await assignIncident(incidentId)
+  // Confirm assignment
+  const handleConfirmAssign = async () => {
+    if (!assigningIncidentId || !selectedTeamId) return
+    setAssigning(true)
+    const result = await assignIncident(assigningIncidentId, selectedTeamId)
+    setAssigning(false)
     if (result && result.success) {
       toast({
         title: "Incident assigned",
-        description: "The incident has been assigned to the security team.",
+        description: "The incident has been assigned to the selected team.",
         variant: "success",
       })
+      setAssigningIncidentId(null)
+      setSelectedTeamId(null)
+      // Optionally refresh incidents
+    
+      
     }
+    else {
+      toast({
+        title: "Assignment failed",
+        description: "Failed to assign the incident. Please try again.",
+        variant: "destructive",
+      })
+    }
+      const response = await incidents()
+      setIncidentLists(response.data)
+      const securityStatistics = await getSecurityStats()
+      setSecurityStats(securityStatistics.data)
+
   }
 
   return (
@@ -520,6 +566,55 @@ useEffect(() => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Assign Team Modal */}
+      {assigningIncidentId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+          <div className="bg-white rounded-lg shadow-lg p-6 min-w-[320px] max-w-xs relative">
+            <button
+              className="absolute top-2 right-2 text-lg font-bold text-gray-500 hover:text-gray-800"
+              onClick={() => setAssigningIncidentId(null)}
+              aria-label="Close"
+            >
+              ×
+            </button>
+            <h3 className="font-semibold mb-4 text-lg">Assign Team</h3>
+            <div className="space-y-2">
+              {teamList.length === 0 ? (
+                <div className="text-muted-foreground">No teams available</div>
+              ) : (
+                <select
+                  className="w-full border rounded px-3 py-2"
+                  value={selectedTeamId || ""}
+                  onChange={e => setSelectedTeamId(e.target.value)}
+                >
+                  <option value="" disabled>Select a team</option>
+                  {teamList.map(team => (
+                    <option key={team.id} value={team.id}>{team.name}</option>
+                  ))}
+                </select>
+              )}
+            </div>
+            <div className="flex gap-2 mt-6">
+              <Button
+                className="flex-1"
+                onClick={handleConfirmAssign}
+                disabled={!selectedTeamId || assigning}
+              >
+                {assigning ? "Assigning..." : "Assign"}
+              </Button>
+              <Button
+                className="flex-1"
+                variant="outline"
+                onClick={() => setAssigningIncidentId(null)}
+                disabled={assigning}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
