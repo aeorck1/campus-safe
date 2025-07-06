@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import dynamic from "next/dynamic"
-import { AlertTriangle, ArrowUpDown, Check, Clock, MoreHorizontal, Search, Shield } from "lucide-react"
-
+import { AlertTriangle, ArrowUpDown, Check, Clock, MoreHorizontal, Search, Shield, ShieldAlert } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -77,20 +76,11 @@ useEffect(() => {
           // Assuming the response data is an array of incidents
           setIncidentLists(response.data)
           console.log("Incidents fetched successfully:", response.data)
-          toast({
-            title: "Incidents loaded",
-            description: "All incidents have been successfully loaded.",
-            variant: "success",
-          })
+         
         }
 
       } catch (error) {
-        console.error("Error fetching incidents:", error)
-        toast({
-          title: "Error fetching incidents",
-          description: "Unable to load incidents at this time.",
-          variant: "destructive",
-        })
+      
       }
     }
     fetchIncidents()
@@ -242,7 +232,7 @@ useEffect(() => {
 
         <TabsContent value="active" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Card className="bg-gradient-to-tr from-blue-300 via-blue-100 to-white border-blue-400/70 shadow-lg">
+            <Card className="border-campus-primary/30 bg-campus-primary/10 shadow-lg">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg text-blue-900">Total Incidents</CardTitle>
                 <CardDescription className="text-blue-800">Total number of incidents</CardDescription>
@@ -252,9 +242,10 @@ useEffect(() => {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-tr from-yellow-300 via-yellow-100 to-white border-yellow-400/70 shadow-lg">
+            <Card className="border-campus-warning/30 bg-campus-warning/10 shadow-lg">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg text-yellow-900">Under Investigation</CardTitle>
+                 <ShieldAlert className="h-4 w-4 text-campus-warning" />
                 <CardDescription className="text-yellow-800">Currently being addressed</CardDescription>
               </CardHeader>
               <CardContent>

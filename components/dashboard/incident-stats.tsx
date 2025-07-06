@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2, Clock, ShieldAlert } from "lucide-react"
+import { AlertTriangle, CheckCircle2, Clock, Shield, ShieldAlert } from "lucide-react"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAuthStore } from "@/lib/auth"
