@@ -24,6 +24,7 @@ export type User = {
   role: any // Adjust based on your role type
   key?: string // Unique key for React lists
   number_of_reported_incidents?: number // Optional field for reported incidents
+  notifications_enabled?: boolean // Optional field for notification preferences
 }
 
 export type RefreshToken = {
@@ -211,6 +212,7 @@ export type AuthState = {
   subscribeToNotifications: (data: Subscribe) => Promise<{success: boolean; data?: any; message?: string}>
   adminGetSubscription: () => Promise<{success: boolean; data?: any; message?: string}>
   securityGetStats: () => Promise<{success: boolean; data?: any; message?: string}>
+  updateSubscription: () => Promise<{success: boolean; data?: any; message?: string}>
 }
 export type Login = {
   username: string,
@@ -336,6 +338,19 @@ export const useAuthStore = create<AuthState>()(
             error?.response.data.detail ||
             error?.message ||
             "Unable to initate password reset"
+          return { success: false, message }
+        }
+      },
+
+      updateSubscription: async () =>{
+        try{
+          const response = await axiosAuth.patch(`/users/subscription/`)
+          return { success: true, data: response.data }
+        } catch (error: any) {
+          const message =
+            error?.response?.data?.detail ||
+            error?.message ||
+            "Network error. Please try again."
           return { success: false, message }
         }
       },

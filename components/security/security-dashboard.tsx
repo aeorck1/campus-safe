@@ -25,6 +25,7 @@ import { mockIncidents } from "@/lib/mock-data"
 // Update the import path if use-toast is actually in a subfolder like 'ui'
 import { useToast } from "@/hooks/use-toast"
 import { useAuthStore } from "@/lib/auth"
+import {Incident, Statistics} from "@/lib/type"
 
 // Dynamically import the CampusMap component with no SSR
 const CampusMap = dynamic(() => import("@/components/map/campus-map").then((mod) => mod.CampusMap), {
@@ -42,7 +43,8 @@ export function SecurityDashboard() {
   const [statusFilter, setStatusFilter] = useState("all")
   const [severityFilter, setSeverityFilter] = useState("all")
   const [sortBy, setSortBy] = useState("newest")
-  const [incidentList, setIncidentLists]= useState([])
+
+  const [incidentList, setIncidentLists]= useState<Incident[]>([])
   const [teamList, setTeamList] = useState<{ id: string; name: string }[]>([])
   const [assigningIncidentId, setAssigningIncidentId] = useState<string | null>(null)
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null)
@@ -51,8 +53,14 @@ export function SecurityDashboard() {
   const assignIncident = useAuthStore ((state)=> state.assignInvestigatingTeam)
   const getSecurityStats = useAuthStore((state)=> state.securityGetStats)
   const getTeams = useAuthStore((state)=> state.getInvestigatingTeam)
-  const [securityStats, setSecurityStats] = useState([])
-  // const [incidentsList, setIncidents]= use
+  const [securityStats, setSecurityStats] = useState<Statistics>({
+    total_incidents: 0,
+    investigating_incidents: 0,
+    total_resolved_today: 0,
+    total_security_personnel: 0,
+    active_incidents: 0,
+    resolved_incidents: 0,
+  })
 
 
   const incidents = useAuthStore((state) => state.incidents)
@@ -482,17 +490,17 @@ useEffect(() => {
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <div
-                            className={`p-1.5 rounded-full ${incident.severity === "high"
+                            className={`p-1.5 rounded-full ${incident.severity === "HIGH"
                                 ? "bg-red-100 dark:bg-red-900"
-                                : incident.severity === "medium"
+                                : incident.severity === "MEDIUM"
                                   ? "bg-yellow-100 dark:bg-yellow-900"
                                   : "bg-blue-100 dark:bg-blue-900"
                               }`}
                           >
                             <AlertTriangle
-                              className={`h-4 w-4 ${incident.severity === "high"
+                              className={`h-4 w-4 ${incident.severity === "HIGH"
                                   ? "text-red-600 dark:text-red-400"
-                                  : incident.severity === "medium"
+                                  : incident.severity === "MEDIUM"
                                     ? "text-yellow-600 dark:text-yellow-400"
                                     : "text-blue-600 dark:text-blue-400"
                                 }`}
@@ -560,7 +568,11 @@ useEffect(() => {
             </CardHeader>
             <CardContent>
               <div className="h-[600px] rounded-md border">
-                <CampusMap incidents={filteredIncidents} />
+                <CampusMap incidents={filteredIncidents.map(incident => ({
+                  ...incident,
+                  tags: incident.tags ?? [],
+                  upvotes: incident.upvotes ?? 0,
+                }))} />
               </div>
             </CardContent>
           </Card>

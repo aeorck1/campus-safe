@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { Camera } from "lucide-react"
-
+import {Switch} from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -26,44 +26,61 @@ export default function ProfilePage() {
   const { user } = useAuthStore()
   const [isMounted, setIsMounted] = useState(false)
   const updateUser = useAuthStore((state) => state.updateUserProfile)
-  const profileFormSchema = z.object({
-    first_name: z.string().min(2, {
-      message: "First name must be at least 2 characters.",
-    }),
-    last_name: z.string().min(2, {
-      message: "Last name must be at least 2 characters.",
-    }),
-    middle_name: z.string().min(1, {
-      message: "Middle name must be at least 1 character.",
-    }),
-    email: z.string().email({
-      message: "Please enter a valid email address.",
-    }),
-    department: z.string().min(4, {
-      message: "Department must be at least 4 characters.",
-    }),
-    bio: z.string().max(500, {
-      message: "Bio must be at most 500 characters.",
-    }).min(10, {
-      message: "Bio must be at least 10 characters.",
-    }),
-    profile_picture: z.string().optional(),
-  })
+  const [notificationEnabled, setNotificationEnabled] = useState(true)
+  const subscriptionSwitch = useAuthStore((state)=>state.updateSubscription)
+
+  
+ const profileFormSchema = z.object({
+  first_name: z.string().min(2, { message: "First name must be at least 2 characters." }),
+  last_name: z.string().min(2, { message: "Last name must be at least 2 characters." }),
+  middle_name: z.string().min(1, { message: "Middle name must be at least 1 character." }),
+  email: z.string().email({ message: "Please enter a valid email address." }),
+  department: z.string().min(4, { message: "Department must be at least 4 characters." }),
+  bio: z.string().max(500).min(10),
+  profile_picture: z.string().optional(),
+  notifications_enabled: z.boolean(), // <- Add this
+})
+
 
   const form = useForm<z.infer<typeof profileFormSchema>>({
     resolver: zodResolver(profileFormSchema),
-    defaultValues: {
-      first_name: user?.first_name || "",
-      last_name: user?.last_name || "",
-      middle_name: user?.middle_name || "",
-      email: user?.email || "",
-      department: user?.department || "",
-      bio: user?.bio || "",
-      profile_picture: user?.profile_picture || "",
-    },
-  })
-console.log("Thus is the user", user)
+  defaultValues: {
+  first_name: user?.first_name || "",
+  last_name: user?.last_name || "",
+  middle_name: user?.middle_name || "",
+  email: user?.email || "",
+  department: user?.department || "",
+  bio: user?.bio || "",
+  profile_picture: user?.profile_picture || "",
+  notifications_enabled: user?.notifications_enabled ?? true, // <- Add this line
+},
 
+  })
+
+  const handlePreferences = async () => {
+    try {
+      const response = await subscriptionSwitch()
+      if (response.success) {
+        toast({
+          title: "Preferences updated",
+          description: "Your notification preferences have been updated successfully",
+          variant: "success",
+        })
+      } else {
+        toast({
+          title: "Error updating preferences",
+          description: response.message || "An error occurred",
+          variant: "destructive",
+        })
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error updating preferences",
+        description: error.message || "An error occurred",
+        variant: "destructive",
+      })
+    }
+  }
   // const []
   useEffect(() => {
     setIsMounted(true)
@@ -372,80 +389,33 @@ console.log("Thus is the user", user)
             </Card>
           </TabsContent>
 
-          <TabsContent value="notifications" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Notification Preferences</CardTitle>
-                <CardDescription>Manage how you receive notifications about campus incidents</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Email Notifications</h3>
-                  <div className="grid gap-2">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="email-new-incident" className="flex-1">
-                        New incidents in your area
-                      </Label>
-                      <input type="checkbox" id="email-new-incident" defaultChecked className="mr-2" />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="email-updates" className="flex-1">
-                        Updates to incidents you've reported
-                      </Label>
-                      <input type="checkbox" id="email-updates" defaultChecked className="mr-2" />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="email-resolved" className="flex-1">
-                        Resolved incidents
-                      </Label>
-                      <input type="checkbox" id="email-resolved" className="mr-2" />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="email-digest" className="flex-1">
-                        Weekly digest of campus incidents
-                      </Label>
-                      <input type="checkbox" id="email-digest" className="mr-2" />
-                    </div>
-                  </div>
-                </div>
+       <TabsContent value="notifications" className="space-y-6">
+  <Card>
+    <CardHeader>
+      <CardTitle>Notification Preferences</CardTitle>
+      <CardDescription>Toggle email alerts about campus incidents</CardDescription>
+    </CardHeader>
+    <CardContent>
+      <div className="flex items-center justify-between border p-4 rounded-lg">
+        <div>
+          <Label className="text-base">Enable Notifications</Label>
+          <p className="text-sm text-muted-foreground">Receive incident alerts via email.</p>
+        </div>
+        <Switch
+          checked={notificationEnabled}
+          onCheckedChange={setNotificationEnabled}
+        />
+      </div>
+    </CardContent>
+    <CardFooter>
+      <Button onClick={handlePreferences} disabled={isLoading}>
+        {isLoading ? "Saving..." : "Save Preferences"}
+      </Button>
+    </CardFooter>
+  </Card>
+</TabsContent>
 
-                <Separator />
 
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Push Notifications</h3>
-                  <div className="grid gap-2">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="push-new-incident" className="flex-1">
-                        New incidents in your area
-                      </Label>
-                      <input type="checkbox" id="push-new-incident" defaultChecked className="mr-2" />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="push-updates" className="flex-1">
-                        Updates to incidents you've reported
-                      </Label>
-                      <input type="checkbox" id="push-updates" defaultChecked className="mr-2" />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="push-resolved" className="flex-1">
-                        Resolved incidents
-                      </Label>
-                      <input type="checkbox" id="push-resolved" className="mr-2" />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="push-emergency" className="flex-1">
-                        Emergency alerts
-                      </Label>
-                      <input type="checkbox" id="push-emergency" defaultChecked className="mr-2" />
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button>Save Preferences</Button>
-              </CardFooter>
-            </Card>
-          </TabsContent>
         </Tabs>
       </div>
     </div>
