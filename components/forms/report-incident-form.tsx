@@ -89,11 +89,13 @@ export function ReportIncidentForm() {
   const anonymousReport = useAuthStore((state)=> state.reportIncidentAnonymous)
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const incidents = useAuthStore((state)=> state.incidents)
-
+const [searchResults, setSearchResults] = useState<any[]>([]);
+const [searching, setSearching] = useState(false);
 
 
 const form = useForm<z.infer<typeof formSchema>>({
   resolver: zodResolver(formSchema),
+  mode: "onChange",
   defaultValues: {
     title: "",
     description: "",
@@ -130,6 +132,25 @@ const isStep2Disabled = watchedLocation.trim().length < 10 || watchedCoordinates
     }
     getTags()
   }, [])
+
+const handleLocationSearch = async (query: string) => {
+  if (!query.trim()) {
+    setSearchResults([]);
+    return;
+  }
+  setSearching(true);
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`
+    );
+    const data = await res.json();
+    setSearchResults(data);
+  } catch {
+    setSearchResults([]);
+  }
+  setSearching(false);
+};
+
 
   useEffect(() => {
     const fetchIncidentTitles = async () => {
@@ -285,13 +306,26 @@ useEffect(() => {
        
     <Form {...form}>
       
-      <form onSubmit={form.handleSubmit((values) => {
-        if (values.anonymous) {
-          onSubmitAnonymous(values)
-        } else {
-          onSubmit(values)
-        }
-      })} className="space-y-8 ">
+      <form
+  onSubmit={form.handleSubmit((values) => {
+    if (values.anonymous) {
+      onSubmitAnonymous(values)
+    } else {
+      onSubmit(values)
+    }
+  })}
+
+  className="space-y-8 "
+  onKeyDown={e => {
+    if (
+      e.key === "Enter" &&
+      // Prevent Enter from submitting if not all required fields are valid
+      (!form.formState.isValid || isButtonDisabled || isDuplicate || isStep2Disabled)
+    ) {
+      e.preventDefault();
+    }
+  }}
+>
         {step === 1 && (
           <div className="space-y-6">
             <div className="flex items-center space-x-2">
@@ -323,7 +357,7 @@ useEffect(() => {
                     <Checkbox checked={field.value} onCheckedChange={field.onChange} disabled={!isAuthenticated} />
                   </FormControl>
                   <div className="space-y-1 leading-none">
-                    <FormLabel>You are submitting this report anonymously</FormLabel>
+                    <FormLabel>Report anonymously</FormLabel>
                     <FormDescription>
                       Your identity will not be associated with this report. Note that this may limit our ability to
                       follow up for additional information.
@@ -479,23 +513,52 @@ useEffect(() => {
                 <FormItem>
                   <FormLabel>Location</FormLabel>
                   <FormControl>
-                    <div className="flex space-x-2">
-                      <Input placeholder="Building name, room number, or area" {...field} />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        className="shrink-0"
-                        onClick={handleDetectLocation}
-                        disabled={isLocating}
-                        title="Detect my location"
-                      >
-                        <MapPin className="h-4 w-4" />
-                      </Button>
+                    <div className="flex flex-col space-y-1 relative">
+                      <div className="flex space-x-2">
+                        <Input
+                          placeholder="Building name, room number, or area"
+                          {...field}
+                          onChange={e => {
+                            field.onChange(e);
+                            handleLocationSearch(e.target.value);
+                          }}
+                          value={field.value}
+                          autoComplete="off"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="shrink-0"
+                          onClick={handleDetectLocation}
+                          disabled={isLocating}
+                          title="Detect my location"
+                        >
+                          <MapPin className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      {/* Suggestions dropdown */}
+                      {searchResults.length > 0 && (
+                        <div className="absolute top-12 left-0 w-full bg-white border rounded shadow z-50 max-h-48 overflow-auto">
+                          {searchResults.map((result, idx) => (
+                            <div
+                              key={idx}
+                              className="px-3 py-2 hover:bg-blue-50 cursor-pointer text-xs"
+                              onClick={() => {
+                                setCoordinates([parseFloat(result.lat), parseFloat(result.lon)]);
+                                form.setValue("location", result.display_name);
+                                setSearchResults([]);
+                              }}
+                            >
+                              {result.display_name}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </FormControl>
                   <FormDescription>
-                    Specify where the incident occurred. You can also use the pin icon to detect your current location.
+                    Specify where the incident occurred. You can also use the pin icon to detect your current location or search for a place.
                   </FormDescription>
                   <FormMessage />
                   {coordinates && (
