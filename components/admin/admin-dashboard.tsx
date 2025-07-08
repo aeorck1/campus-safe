@@ -12,6 +12,9 @@ import {
   Search,
   Shield,
   Trash,
+  BellRing,
+  Eye,
+  UserCog,
   Users,
 } from "lucide-react"
 
@@ -160,6 +163,8 @@ export function AdminDashboard() {
   // Add state for delete confirmation dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [incidentToDelete, setIncidentToDelete] = useState<any>(null)
+
+  const [deleteDialogUser, setDeleteDialogUser] = useState<User | null>(null);
 
   const getUsers = useAuthStore((state) => state.adminGetAllUsers)
   const deleteUser = useAuthStore((state) => state.deleteUser)
@@ -526,7 +531,7 @@ export function AdminDashboard() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <Tabs defaultValue="users" className="w-full" onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-5 gap-0 rounded-lg overflow-hidden border bg-muted">
+            <TabsList className="grid md:w-full grid-cols-5 gap-0 rounded-lg md:overflow-hidden border bg-muted w-[600px] place-items-center">
               <TabsTrigger value="users" className="w-full flex justify-center items-center py-2 rounded-none border-0">
                 <Users className="mr-2 h-4 w-4" />
                 Users
@@ -536,16 +541,16 @@ export function AdminDashboard() {
                 Incidents
               </TabsTrigger>
               <TabsTrigger value="roles" className="w-full flex justify-center items-center py-2 rounded-none border-0">
-                <Shield className="mr-2 h-4 w-4" />
+                <UserCog className="mr-2 h-4 w-4" />
                 Roles
               </TabsTrigger>
               <TabsTrigger value="investigating-team" className="w-full flex justify-center items-center py-2 rounded-none border-0">
-                <Shield className="mr-2 h-4 w-4" />
+                <Eye className="mr-2 h-4 w-4" />
                 Investigating Team
               </TabsTrigger>
 
               <TabsTrigger value="subscriptions" className="w-full flex justify-center items-center">
-                <Shield className="mr-2 h-4 w-4" />
+                <BellRing className="mr-2 h-4 w-4" />
                 Subscription
               </TabsTrigger>
             </TabsList>
@@ -692,11 +697,11 @@ export function AdminDashboard() {
                     </TableHeader>
                     <TableBody>
                       {filteredUsers.map((user) => (
-                        <TableRow key={user.id} className="cursor-pointer hover:bg-orange-50" onClick={() => { setSelectedUserId(user.id); setIsUserDetailsOpen(true); }}>
+                        <TableRow key={user.id} className="hover:bg-orange-50">
                           <TableCell>
                             <div className="flex items-center gap-3">
                               <Avatar>
-                                <AvatarImage src={user.profile_picture || "/placeholder.svg"} alt={user.first_name} />
+                                <AvatarImage src={user.profile_picture} alt={user.first_name} />
                                 <AvatarFallback>{user.first_name.substring(0, 2).toUpperCase()}</AvatarFallback>
                               </Avatar>
                               <div>
@@ -723,7 +728,7 @@ export function AdminDashboard() {
                           <TableCell className="text-right">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" onClick={e => e.stopPropagation()}>
+                                <Button variant="ghost" size="icon">
                                   <MoreHorizontal className="h-4 w-4" />
                                   <span className="sr-only">Actions</span>
                                 </Button>
@@ -731,60 +736,51 @@ export function AdminDashboard() {
                               <DropdownMenuContent align="end">
                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
+                                
+                                {/* Add User Details menu item */}
+                                <DropdownMenuItem onClick={() => { 
+                                  setSelectedUserId(user.id); 
+                                  setIsUserDetailsOpen(true); 
+                                }}>
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  User Details
+                                </DropdownMenuItem>
+                                
                                 <DropdownMenuItem onClick={e => { e.stopPropagation(); handleEditUser(user); }}>
                                   <Edit className="mr-2 h-4 w-4" />
                                   Edit User Role
                                 </DropdownMenuItem>
+                                
                                 <DropdownMenuItem onClick={e => { e.stopPropagation(); handleResetPassword(user.id); }}>
                                   <Shield className="mr-2 h-4 w-4" />
                                   Reset Password
                                 </DropdownMenuItem>
+                                
                                 <DropdownMenuSeparator />
+                                
+                                {/* ...existing delete user logic... */}
                                 {(user.role === "ADMIN" || user.role==="SYSTEM_ADMIN")? (
                                   <DropdownMenuItem
                                     className="text-destructive focus:text-destructive"
                                     disabled={true}
+                                    onClick={e => { e.stopPropagation(); }}
+                                    onSelect={e => { e.stopPropagation()}}
                                   >
                                     <Trash className="mr-2 h-4 w-4" />
                                     Delete User
                                   </DropdownMenuItem>
                                 ) : (
-                                  <Dialog>
-                                    <DialogTrigger asChild>
-                                      <DropdownMenuItem
-                                        className="text-destructive focus:text-destructive"
-                                        onSelect={e => { e.preventDefault(); e.stopPropagation(); }}
-                                      >
-                                        <Trash className="mr-2 h-4 w-4" />
-                                        Delete User
-                                      </DropdownMenuItem>
-                                    </DialogTrigger>
-                                    <DialogContent>
-                                      <DialogHeader>
-                                        <DialogTitle className="flex items-center gap-2 text-destructive">
-                                          <AlertTriangle className="h-5 w-5 text-destructive" />
-                                          Delete User
-                                        </DialogTitle>
-                                        <DialogDescription>
-                                          Are you sure you want to delete user <span className="font-bold">{user.first_name}</span>?<br />
-                                          This action cannot be undone.
-                                        </DialogDescription>
-                                      </DialogHeader>
-                                      <DialogFooter>
-                                        <Button
-                                          variant="destructive"
-                                          onClick={() => {
-                                            handleDeleteUser(user.id)
-                                          }}
-                                        >
-                                          Delete
-                                        </Button>
-                                        <DialogClose asChild>
-                                          <Button variant="outline">Cancel</Button>
-                                        </DialogClose>
-                                      </DialogFooter>
-                                    </DialogContent>
-                                  </Dialog>
+                                  <DropdownMenuItem
+                                    className="text-destructive focus:text-destructive"
+                                    onSelect={e => e.stopPropagation()}
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      setDeleteDialogUser(user);
+                                    }}
+                                  >
+                                    <Trash className="mr-2 h-4 w-4" />
+                                    Delete User
+                                  </DropdownMenuItem>
                                 )}
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -1144,6 +1140,39 @@ export function AdminDashboard() {
           </div>
         </div>
       )}
+
+      <Dialog open={deleteDialogUser !== null} onOpenChange={(open) => {
+        if (!open) setDeleteDialogUser(null);
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Delete User
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete user <span className="font-bold">{deleteDialogUser?.first_name}</span>?<br />
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (deleteDialogUser) {
+                  handleDeleteUser(deleteDialogUser.id);
+                  setDeleteDialogUser(null);
+                }
+              }}
+            >
+              Delete
+            </Button>
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

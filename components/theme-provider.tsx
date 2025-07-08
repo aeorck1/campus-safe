@@ -9,7 +9,6 @@ import { useAuthStore } from '@/lib/auth'
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   const role = useAuthStore((state) => state.user?.role?.name || state.user?.role || null)
-  console.log("TThis is the role", role)
 
   let roleBgClass = ""
   if (role === "Admin" || role === "ADMIN" || role === "System Admin") {
