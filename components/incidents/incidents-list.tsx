@@ -49,7 +49,7 @@ export function IncidentsList() {
         if (mounted) {
           if (res.success) {
             setIncidents(res.data)
-            console.log(res.data)
+            // console.log(res.data)
           } else {
             setError(res.message || "Failed to fetch incidents")
           }

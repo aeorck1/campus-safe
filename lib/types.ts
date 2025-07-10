@@ -40,7 +40,7 @@ export type User = {
   username: string // Optional for API login
   profile_picture: string
   bio: string // Optional bio field
-  role: any // Adjust based on your role type
+  role: string // Adjust based on your role type
   key?: string // Unique key for React lists
   number_of_reported_incidents?: number // Optional field for reported incidents
   notifications_enabled?: boolean // Optional field for notification preferences

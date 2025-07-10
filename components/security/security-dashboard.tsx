@@ -71,7 +71,7 @@ useEffect(() => {
       const response = await getSecurityStats()
       if(response && response.success ===true){
         setSecurityStats(response.data) 
-        console.log("Security stats fetched successfully:", response.data)
+        // console.log("Security stats fetched successfully:", response.data)
       }
     }
     catch(err){
@@ -88,7 +88,7 @@ useEffect(() => {
         if (response && response.success === true) {
           // Assuming the response data is an array of incidents
           setIncidentLists(response.data)
-          console.log("Incidents fetched successfully:", response.data)
+          // console.log("Incidents fetched successfully:", response.data)
          
         }
 

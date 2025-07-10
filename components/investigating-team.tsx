@@ -41,7 +41,7 @@ function InvestigatingTeamTabContent() {
         const res = await getInvestigatingTeam();
         if (res && res.success && Array.isArray(res.data)) {
          setAllTeams(res.data.map((team: any) => ({ id: team.id, name: team.name })));
-            console.log("Here is data", res.data);
+            // console.log("Here is data", res.data);
         }
       } catch {}
     }
@@ -70,7 +70,7 @@ function InvestigatingTeamTabContent() {
         const res = await getInvestigatingTeamMembers();
         if (res && res.success && Array.isArray(res.data)) {
           setTeam(res.data);
-          console.log("Here is the team", res.data);
+          // console.log("Here is the team", res.data);
         } else {
           setTeam([]);
           setError(res?.message || 'Failed to fetch team.');

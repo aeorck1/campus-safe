@@ -48,12 +48,12 @@ useEffect(() => {
   const fetchIncident = async () => {
     if (typeof incidents === "function") {
       const result = await incidents();
-      console.log("Incidents fetched:", result)
+      // console.log("Incidents fetched:", result)
       if (result && result.success && Array.isArray(result.data)) {
         const found = result.data.find((inc: any) => inc.id === id);
       
         setIncident(found);
-        console.log("Foind ths",found)
+        // console.log("Foind ths",found)
       }
     }
   };

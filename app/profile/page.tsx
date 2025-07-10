@@ -23,7 +23,7 @@ export default function ProfilePage() {
   const router = useRouter()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
-  const { user, isRefreshing } = useAuthStore()
+  const { user } = useAuthStore()
   const [isMounted, setIsMounted] = useState(false)
   const updateUser = useAuthStore((state) => state.updateUserProfile)
   const [notificationEnabled, setNotificationEnabled] = useState(true)
@@ -82,14 +82,9 @@ export default function ProfilePage() {
     }
   }
   // const []
-
-useEffect(() => {
-  if (!isRefreshing && !user) {
-    router.push("/login")
-  }
-}, [user, isRefreshing])
-
-
+  useEffect(() => {
+    setIsMounted(true)
+   }, [user, router])
 
   async function onSubmit(values: z.infer<typeof profileFormSchema>) {
     setIsLoading(true)
@@ -220,11 +215,11 @@ useEffect(() => {
                     <p className="font-medium">{user.first_name} {user.middle_name} {user.last_name}</p>
                      <div
                       className={`rounded px-3 py-1 text-sm font-semibold text-white text-muted-foreground ${
-                        user.role?.name === "Student"
+                        user.role?.id === "STUDENT"
                           ? "bg-green-600"
-                          : user.role?.name === "SECURITY_PERSONNEL"
+                          : user.role?.id === "SECURITY_PERSONNEL"
                           ? "bg-orange-500"
-                          : user.role?.name === "Admin" || "System Admin"
+                          : user.role?.id === "ADMIN" || user.role?.id === "SYSTEM_ADMIN"
                           ? "bg-orange-500"
                           : "bg-secondary"
                       }`}
@@ -232,7 +227,7 @@ useEffect(() => {
                       {user.role?.name === "Admin" && "Administrator"}
                       {user.role?.name === "System Admin" && "System Admin"}
                       {user.role?.name === "Student" && "Student"}
-                      {user.role?.name === "SECURITY_PERSONNEL" && "Security Personnel"}
+                      {user.role?.name === "Security Personnel" && "Security Personnel"}
                     </div>
                     <p className="text-xs text-muted-foreground">
                       Joined: {user.date_joined ? new Date(user.date_joined).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) : ""}

@@ -124,10 +124,10 @@ const isStep2Disabled = watchedLocation.trim().length < 10 || watchedCoordinates
     const getTags = async () => {
       try {
         const data = await fetchTags()
-        console.log("Tags Data:🚀🚀", data.data)
+        // console.log("Tags Data:🚀🚀", data.data)
         setTagsData(data.data)
       } catch (error) {
-        console.error("Error fetching tags:", error)
+        // console.error("Error fetching tags:", error)
       }
     }
     getTags()
@@ -159,7 +159,7 @@ const handleLocationSearch = async (query: string) => {
         if (result && result.success && Array.isArray(result.data)) {
           const titles = result.data.map((inc: any) => inc.title)
           setIncidentTitles(titles)
-          console.log("Incident Titles: ", titles)
+          // console.log("Incident Titles: ", titles)
         }
       }
     }
@@ -264,7 +264,7 @@ const handleDetectLocation = () => {
       const address = await reverseGeocode(latitude, longitude);
 
       setCoordinates([latitude, longitude]);
-      console.log("Here is the coordinates", coordinates);
+      // console.log("Here is the coordinates", coordinates);
       form.setValue("location", address); // Set in the text box
 toast({
   title: "Location Detected",

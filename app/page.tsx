@@ -77,10 +77,10 @@ useEffect(() => {
     const fetchIncidents = async () => {
       try {
         const data = await incidentsMap()
-        console.log("Here are the incident data", data.data)
+        // console.log("Here are the incident data", data.data)
         setIncidents(data.data)
       } catch (error) {
-        console.error("Failed to fetch incidents:", error)
+        // console.error("Failed to fetch incidents:", error)
       }
     }
     fetchIncidents()
@@ -90,13 +90,13 @@ useEffect(() => {
     const fetchStats = async () => {
       try {
         const data = await publicStats()
-        console.log("Public stats data:", data.data)
+        // console.log("Public stats data:", data.data)
         setTotalIncidents(data.data?.total_incidents || 0)
         setResolvedIncidents(data.data?.resolved_incidents || 0)
         setInvestigatingIncidents(data.data?.investigating_incidents||0)
         setActiveIncidents(data.data?.active_incidents || 0)
       } catch (error) {
-        console.error("Failed to fetch public stats:", error)
+        // console.error("Failed to fetch public stats:", error)
       }
     }
     fetchStats()

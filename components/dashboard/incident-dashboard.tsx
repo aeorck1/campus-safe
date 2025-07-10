@@ -46,7 +46,7 @@ export function IncidentDashboard() {
     fetchIncidents()
   .then ((data)=> {
     setIncidents(data.data)
-    console.log("Incidents Data:🚀🚀", data.data)
+    // console.log("Incidents Data:🚀🚀", data.data)
   })
   // Add dependency array to useEffect
   .catch ((error) => {

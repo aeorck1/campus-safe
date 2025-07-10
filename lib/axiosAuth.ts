@@ -4,8 +4,8 @@ import { useAuthStore } from './auth';
 
 const axiosAuth = axios.create({
   // baseURL: 'http://192.168.73.62:8000/api/v1/',
-  baseURL: 'http://127.0.0.1:8000/api/v1/',
-  // baseURL: 'https://campussecuritybackend.onrender.com/api/v1/',
+  // baseURL: 'http://127.0.0.1:8000/api/v1/',
+  baseURL: 'https://campussecuritybackend.onrender.com/api/v1/',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -65,8 +65,8 @@ axiosAuth.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const res = await axios.post('http://127.0.0.1:8000/api/v1/token/refresh/', {
-          // const res = await axios.post('http://127.0.0.1:8000/api/v1/token/refresh/', {
+        // const res = await axios.post('http://127.0.0.1:8000/api/v1/token/refresh/', {
+          const res = await axios.post('https://campussecuritybackend.onrender.com/api/v1/token/refresh', {
           refresh: authStore.refreshToken,
         });
 
@@ -78,7 +78,7 @@ axiosAuth.interceptors.response.use(
       } catch (err) {
         processQueue(err, null);
         authStore.logout();
-        window.location.href = '/login';
+        // window.location.href = '/login';
         return Promise.reject(err);
       } finally {
         isRefreshing = false;

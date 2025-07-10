@@ -33,11 +33,11 @@ useEffect(() => {
     const fetchIncidents = async () => {
       try {
         const data = await incidents()
-        console.log("Here are the incident data",data.data)
+        // console.log("Here are the incident data",data.data)
         setIncidents(data.data)
       }
       catch(error){
-        console.log("Error fetching incidents:", error)
+        // console.log("Error fetching incidents:", error)
       }
     }
     fetchIncidents()

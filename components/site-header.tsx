@@ -21,7 +21,7 @@ import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { AuthStatus } from "@/components/auth-status"
 import { useAuthStore } from "@/lib/auth"
-import { Notification } from "@/lib/auth"
+import { Notification } from "@/lib/types"
 
 export function SiteHeader() {
   const [sidebarOpen, setSidebarOpen] = useState(false)

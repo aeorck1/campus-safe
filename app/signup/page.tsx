@@ -87,7 +87,7 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
       })
       router.push("/login")
     } else {
-      console.log("Signup error:", result)
+      // console.log("Signup error:", result)
       toast({
         title: "Signup failed",
         description: result.message || "An error occurred during registration.",

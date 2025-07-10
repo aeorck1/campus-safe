@@ -14,7 +14,7 @@ export function IncidentStats() {
       try {
         const data = await fetchStats()
         setIncidentsStats(data.data)
-        console.log("Here is the incident stats", data.data)
+        // console.log("Here is the incident stats", data.data)
       } catch (error) {
         console.error(error)
       }

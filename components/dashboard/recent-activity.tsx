@@ -15,9 +15,9 @@ export function RecentActivity() {
         try {
           const data = await getRecentActivity()
           setActivities(data.data)
-          console.log("Activities Data:🚀🚀", data.data)
+          // console.log("Activities Data:🚀🚀", data.data)
         } catch (error) {
-          console.error("Error fetching activities:", error)
+          // console.error("Error fetching activities:", error)
         }
       }
       fetchActivities()

@@ -18,7 +18,7 @@ import {
   Users,
 } from "lucide-react"
 import IncidentComposedChart from "./donut"
-
+import InvestigatingTeamTabContent from "../investigating-team"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -47,7 +47,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
-import {User} from "@/lib/auth"
+import {User} from "@/lib/types"
 // import IncidentComposedChart from "@/components/investigating-team"
 import { SubscriptionsList } from "@/components/subscriptions"
 
@@ -182,10 +182,10 @@ export function AdminDashboard() {
     async function fetchUsers() {
       try {
         const response = await getUsers()
-        console.log("Fetched Users", response.data)
+        // console.log("Fetched Users", response.data)
         if (response && response.success && Array.isArray(response.data)) {
           setUsers(response.data)
-          console.log("Fetched users:", response.data)
+          // console.log("Fetched users:", response.data)
         } else {
           setUsers([])
           toast({
@@ -215,7 +215,7 @@ export function AdminDashboard() {
         setLoading(true)
         if (response && response.success && Array.isArray(response.data)) {
           setIncidents(response.data)
-          console.log("Fetched incidents:", response.data)
+          // console.log("Fetched incidents:", response.data)
         } else {
           setIncidents([])
           toast({
@@ -534,8 +534,9 @@ export function AdminDashboard() {
     <>
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <Tabs defaultValue="users" className="w-full" onValueChange={setActiveTab}>
-            <TabsList className="grid md:w-full grid-cols-5 gap-0 rounded-lg md:overflow-hidden border bg-muted w-[600px] place-items-center h-full">
+          <Tabs defaultValue="users" className="w-full" onValueChange={setActiveTab} >
+            <div className="w-full overflow-x-auto">
+              <TabsList className="grid md:w-full grid-cols-5 gap-0 rounded-lg md:overflow-hidden border bg-muted min-w-[600px] place-items-center h-full">
               <TabsTrigger value="users" className="w-full flex justify-center items-center py-2 rounded-none border-0">
                 <Users className="mr-2 h-4 w-4" />
                 Users
@@ -558,6 +559,7 @@ export function AdminDashboard() {
                 Subscription
               </TabsTrigger>
             </TabsList>
+            </div>
 
             <div className="flex items-center mt-4">
               <div className="relative flex-1 max-w-sm">
@@ -1027,7 +1029,7 @@ export function AdminDashboard() {
                   <CardDescription>List, add, and remove investigating team members</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <IncidentComposedChart />
+                  <InvestigatingTeamTabContent/>
                 </CardContent>
               </Card>
             </TabsContent>
