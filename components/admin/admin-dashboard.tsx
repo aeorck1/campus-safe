@@ -160,6 +160,7 @@ export function AdminDashboard() {
   })
   const [addUserError, setAddUserError] = useState<string | null>(null)
   const [incidentsData, setIncidents] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
 
   // Add state for delete confirmation dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -211,6 +212,7 @@ export function AdminDashboard() {
     async function fetchIncidents() {
       try {
         const response = await incidents()
+        setLoading(true)
         if (response && response.success && Array.isArray(response.data)) {
           setIncidents(response.data)
           console.log("Fetched incidents:", response.data)
@@ -222,6 +224,7 @@ export function AdminDashboard() {
             variant: "destructive",
           })
         }
+        
       } catch (error) {
         console.error("Failed to fetch incidents:", error)
         toast({
@@ -798,7 +801,13 @@ export function AdminDashboard() {
       }}>
         <DialogContent className="max-w-2xl p-0">
           {userDetailsLoading ? (
-            <div className="text-center py-16">Loading...</div>
+            <div className="p-8 text-center flex flex-col items-center justify-center">
+          <svg className="animate-spin h-8 w-8 text-blue-500 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+          </svg>
+          Loading...
+        </div>
           ) : userDetails ? (
             <div className="flex flex-col md:flex-row gap-6 p-10">
               <div className="flex flex-col items-center md:items-start md:w-1/3 border-r border-gray-200 pr-6">
@@ -1303,7 +1312,13 @@ function RolesTabContent() {
             </form>
           {error && <div className="text-destructive mb-2">{error}</div>}
           {loading ? (
-            <div>Loading roles...</div>
+            <div className="p-8 text-center flex flex-col items-center justify-center">
+          <svg className="animate-spin h-8 w-8 text-blue-500 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+          </svg>
+          Loading Roles...
+        </div>
           ) : (
             <Table>
               <TableHeader>

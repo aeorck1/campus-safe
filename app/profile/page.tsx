@@ -23,7 +23,7 @@ export default function ProfilePage() {
   const router = useRouter()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
-  const { user } = useAuthStore()
+  const { user, isRefreshing } = useAuthStore()
   const [isMounted, setIsMounted] = useState(false)
   const updateUser = useAuthStore((state) => state.updateUserProfile)
   const [notificationEnabled, setNotificationEnabled] = useState(true)
@@ -82,12 +82,14 @@ export default function ProfilePage() {
     }
   }
   // const []
-  useEffect(() => {
-    setIsMounted(true)
-    if (!user) {
-      router.push("/login")
-    }
-  }, [user, router])
+
+useEffect(() => {
+  if (!isRefreshing && !user) {
+    router.push("/login")
+  }
+}, [user, isRefreshing])
+
+
 
   async function onSubmit(values: z.infer<typeof profileFormSchema>) {
     setIsLoading(true)

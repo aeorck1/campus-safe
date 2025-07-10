@@ -109,7 +109,15 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace("/dashboard") // or your desired page
+      // Redirect based on user's role
+      const user = useAuthStore.getState().user
+      if (user?.role.id === "ADMIN" || user?.role.id === "SYSTEM_ADMIN") {
+        router.replace("/admin")
+      } else if (user?.role.id === "SECURITY_PERSONNEL") {
+        router.replace("/security")
+      }  else {
+        router.replace("/dashboard")
+      }
     }
   }, [isAuthenticated, router])
 

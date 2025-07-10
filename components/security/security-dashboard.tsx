@@ -25,7 +25,7 @@ import { mockIncidents } from "@/lib/mock-data"
 // Update the import path if use-toast is actually in a subfolder like 'ui'
 import { useToast } from "@/hooks/use-toast"
 import { useAuthStore } from "@/lib/auth"
-import {Incident, Statistics} from "@/lib/type"
+import {Incident, Statistics} from "@/lib/types"
 
 // Dynamically import the CampusMap component with no SSR
 const CampusMap = dynamic(() => import("@/components/map/campus-map").then((mod) => mod.CampusMap), {
