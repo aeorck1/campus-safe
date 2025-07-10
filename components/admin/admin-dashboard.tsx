@@ -17,6 +17,7 @@ import {
   UserCog,
   Users,
 } from "lucide-react"
+import IncidentComposedChart from "./donut"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -47,7 +48,7 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import {User} from "@/lib/auth"
-import InvestigatingTeamTabContent from "@/components/investigating-team"
+// import IncidentComposedChart from "@/components/investigating-team"
 import { SubscriptionsList } from "@/components/subscriptions"
 
 
@@ -531,7 +532,7 @@ export function AdminDashboard() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <Tabs defaultValue="users" className="w-full" onValueChange={setActiveTab}>
-            <TabsList className="grid md:w-full grid-cols-5 gap-0 rounded-lg md:overflow-hidden border bg-muted w-[600px] place-items-center">
+            <TabsList className="grid md:w-full grid-cols-5 gap-0 rounded-lg md:overflow-hidden border bg-muted w-[600px] place-items-center h-full">
               <TabsTrigger value="users" className="w-full flex justify-center items-center py-2 rounded-none border-0">
                 <Users className="mr-2 h-4 w-4" />
                 Users
@@ -872,6 +873,8 @@ export function AdminDashboard() {
                   <CardTitle>Incident Management</CardTitle>
                   <CardDescription>Review, update, and manage reported incidents</CardDescription>
                 </CardHeader>
+
+                <IncidentComposedChart />
                 <CardContent>
                   <Table>
                     <TableHeader>
@@ -1015,7 +1018,7 @@ export function AdminDashboard() {
                   <CardDescription>List, add, and remove investigating team members</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <InvestigatingTeamTabContent />
+                  <IncidentComposedChart />
                 </CardContent>
               </Card>
             </TabsContent>

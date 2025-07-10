@@ -40,9 +40,7 @@ function InvestigatingTeamTabContent() {
       try {
         const res = await getInvestigatingTeam();
         if (res && res.success && Array.isArray(res.data)) {
-          // If your backend has a separate endpoint for teams, use it. Here, we assume each member has a team property.
-          // const teams = Array.from(new Set(res.data.map((m: any) => m.team))).filter(Boolean);
-            setAllTeams(res.data.map((team: any) => ({ id: team.id, name: team.name })));
+         setAllTeams(res.data.map((team: any) => ({ id: team.id, name: team.name })));
             console.log("Here is data", res.data);
         }
       } catch {}
@@ -133,12 +131,12 @@ function InvestigatingTeamTabContent() {
   // Create Investigation Team
   const handleCreateTeam = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTeam.id.trim() || !newTeam.name.trim()) return;
+    if ( !newTeam.name.trim()) return;
     // Check if team with the same id already exists
-    const exists = allTeams.some((team) => team.id === newTeam.id.trim());
+    const exists = allTeams.some((team) => team.id === newTeam.name.trim());
     if (exists) {
-      setError('A team with this ID already exists.');
-      toast({ title: 'Error', description: 'A team with this ID already exists.', variant: 'destructive' });
+      setError('Error Creating Team.');
+      toast({ title: 'Error', description: 'A team with this name already exists.', variant: 'destructive' });
       return;
     }
     setCreatingTeam(true);
@@ -238,15 +236,7 @@ function InvestigatingTeamTabContent() {
         <CardContent className="flex flex-col flex-1 w-full">
           {/* Create Investigation Team Box */}
           <form onSubmit={handleCreateTeam} className="flex flex-col md:flex-row gap-2 mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4 shadow-sm w-full">
-            <Input
-              type="text"
-              placeholder="Team ID (e.g. TEAM1)"
-              value={newTeam.id}
-              onChange={e => setNewTeam({ ...newTeam, id: e.target.value })}
-              disabled={creatingTeam}
-              required
-              className="md:w-1/4"
-            />
+         
             <Input
               type="text"
               placeholder="Team Name (e.g. Main Investigation Team)"
@@ -256,14 +246,58 @@ function InvestigatingTeamTabContent() {
               required
               className="md:w-1/2"
             />
-            <Button type="submit" disabled={creatingTeam || !newTeam.id.trim() || !newTeam.name.trim()} className="flex gap-2">
+            <Button type="submit" disabled={creatingTeam  || !newTeam.name.trim()} className="flex gap-2">
               <UserPlus className="w-4 h-4" />
               {creatingTeam ? 'Creating...' : 'Create Team'}
             </Button>
           </form>
 
           {/* Add Member Form */}
-          <form onSubmit={handleAddMember} className="flex flex-col md:flex-row gap-2 mb-6 items-center bg-white border border-gray-200 rounded-lg p-4 shadow-sm w-full">
+        
+         
+
+          {/* Teams List Section */}
+          <div className="mt-8">
+            <h3 className="text-lg font-semibold mb-2">Teams</h3>
+            <Table className="w-full">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Team ID</TableHead>
+                  <TableHead>Team Name</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {allTeams.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center">
+                      No teams found.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  allTeams.map((team: any) => (
+                    <TableRow key={team.id}>
+                      <TableCell>{team.id}</TableCell>
+                      <TableCell>{team.name}</TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDeleteTeam(team.id)}
+                          disabled={deletingTeamId === team.id}
+                        >
+                          {deletingTeamId === team.id ? "Deleting..." : "Delete"}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+
+  <form onSubmit={handleAddMember} className="flex flex-col md:flex-row gap-2 mb-6 items-center bg-white border border-gray-200 rounded-lg p-4 shadow-sm w-full">
             {/* Team Combobox */}
             <div className="w-full md:w-1/4">
               <Combobox
@@ -279,7 +313,7 @@ function InvestigatingTeamTabContent() {
             {/* User Combobox */}
             <div className="w-full md:w-1/2">
               <Combobox
-                options={allUsers.map((u) => ({ value: u.id, label: `${u.first_name} ${u.last_name} (${u.username})` }))}
+                options={allUsers.map((u) => ({ value: u.id, label: `${u.first_name} ${u.last_name}` }))}
                 value={newMember.id}
                 onChange={val => {
                   const user = allUsers.find((u) => u.id === val);
@@ -300,7 +334,9 @@ function InvestigatingTeamTabContent() {
               {creating ? 'Adding...' : 'Add Member'}
             </Button>
           </form>
-          <div className="flex-1 w-full overflow-auto">
+           <div className="flex-1 w-full overflow-auto">
+
+            <div className="b"> Team Assignment </div>
             {loading ? (
               <div className="text-center py-8">Loading team...</div>
             ) : (
@@ -350,46 +386,6 @@ function InvestigatingTeamTabContent() {
               </TableBody>
               </Table>
             )}
-          </div>
-
-          {/* Teams List Section */}
-          <div className="mt-8">
-            <h3 className="text-lg font-semibold mb-2">Teams</h3>
-            <Table className="w-full">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Team ID</TableHead>
-                  <TableHead>Team Name</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {allTeams.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={3} className="text-center">
-                      No teams found.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  allTeams.map((team: any) => (
-                    <TableRow key={team.id}>
-                      <TableCell>{team.id}</TableCell>
-                      <TableCell>{team.name}</TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDeleteTeam(team.id)}
-                          disabled={deletingTeamId === team.id}
-                        >
-                          {deletingTeamId === team.id ? "Deleting..." : "Delete"}
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
           </div>
 
         </CardContent>

@@ -16,9 +16,6 @@ import { useToast } from "@/hooks/use-toast"
 import { useAuthStore } from "@/lib/auth"
 
 const formSchema = z.object({
-  // email: z.string().email({
-  //   message: "Please enter a valid email address.",
-  // }),
   username: z.string(),
   password: z.string().min(1, {
     message: "Password is required.",
@@ -33,6 +30,7 @@ export default function LoginPage() {
   // Use the login method from the zustand store
   const login = useAuthStore((state) => state.loginWithApi)
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+  const { user } = useAuthStore()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -47,15 +45,30 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
 
   try {
     const result = await login({ username: values.username, password: values.password })
-console.log("Login result:", result)
+// console.log("Login result:", result)
     if (result.success) {
       toast({
         title: "Login successful",
         description: `Welcome back to Crowd Source, ${result.message.first_name} 😁`,
         variant: "success",
       })
-      const searchParams = new URLSearchParams(window.location.search)
-      const redirectTo = searchParams.get("redirect") || "/dashboard"
+      // const searchParams = new URLSearchParams(window.location.search)
+      // let redirectTo = searchParams.get("redirect")
+      let redirectTo: string | null = null
+      // If you want to support redirect via query param, uncomment and use the next line:
+      // redirectTo = searchParams.get("redirect")
+      if (!redirectTo) {
+        // Redirect based on user's role
+        const role = result?.message?.role.id
+        // console.log("My role", role)
+        if (role === "Admin" || role === "ADMIN" || role === "SYSTEM_ADMIN") {
+          redirectTo = "/admin"
+        } else if (role === "Security" || role === "SECURITY_PERSONNEL") {
+          redirectTo = "/security"
+        } else {
+          redirectTo = "/dashboard"
+        }
+      }
       router.push(redirectTo)
     } else {
       toast({
