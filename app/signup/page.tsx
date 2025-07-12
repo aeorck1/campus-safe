@@ -13,10 +13,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { useAuthStore } from "@/lib/auth"
-import { error } from "console"
 
 const formSchema = z
   .object({
@@ -67,45 +65,47 @@ export default function SignupPage() {
     },
   })
 
-const onSubmit = async (values: z.infer<typeof formSchema>) => {
-  setIsLoading(true)
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    setIsLoading(true)
 
-  try {
-    const result = await signup({
-      first_name: values.first_name,
-      last_name: values.last_name,
-      email: values.email,
-      username: values.username,
-      password: values.password,
-    })
+    try {
+      // Capitalize the first letter of the username
+      const capitalizedUsername = values.username.charAt(0).toUpperCase() + values.username.slice(1);
 
-    if (result.success) {
-      toast({
-        title: "Account created",
-        description: result.message,
-        variant: "success",
+      const result = await signup({
+        first_name: values.first_name,
+        last_name: values.last_name,
+        email: values.email,
+        username: capitalizedUsername, // Use the capitalized username
+        password: values.password,
       })
-      router.push("/login")
-    } else {
-      // console.log("Signup error:", result)
+
+      if (result.success) {
+        toast({
+          title: "Account created",
+          description: result.message,
+          variant: "success",
+        })
+        router.push("/login")
+      } else {
+        // console.log("Signup error:", result)
+        toast({
+          title: "Signup failed",
+          description: result.message || "An error occurred during registration.",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+
       toast({
-        title: "Signup failed",
-        description: result.message || "An error occurred during registration.",
+        title: "Unexpected error",
+        description: "Something went wrong. Please try again.",
         variant: "destructive",
       })
+    } finally {
+      setIsLoading(false)
     }
-  } catch (error) {
-    
-    toast({
-      title: "Unexpected error",
-      description: "Something went wrong. Please try again.",
-      variant: "destructive",
-    })
-  } finally {
-    setIsLoading(false)
   }
-}
-
 
   useEffect(() => {
     if (isAuthenticated) {

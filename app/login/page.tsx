@@ -44,23 +44,27 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
   setIsLoading(true)
 
   try {
-    const result = await login({ username: values.username, password: values.password })
-// console.log("Login result:", result)
+    // Capitalize the first letter of the username
+    const capitalizedUsername = values.username.charAt(0).toUpperCase() + values.username.slice(1);
+    
+    const result = await login({ 
+      username: capitalizedUsername,  // Send the capitalized username
+      password: values.password 
+    })
+
     if (result.success) {
       toast({
         title: "Login successful",
         description: `Welcome back to Crowd Source, ${result.message.first_name} 😁`,
         variant: "success",
       })
-      // const searchParams = new URLSearchParams(window.location.search)
-      // let redirectTo = searchParams.get("redirect")
+      
       let redirectTo: string | null = null
       // If you want to support redirect via query param, uncomment and use the next line:
       // redirectTo = searchParams.get("redirect")
       if (!redirectTo) {
         // Redirect based on user's role
         const role = result?.message?.role.id
-        // console.log("My role", role)
         if (role === "Admin" || role === "ADMIN" || role === "SYSTEM_ADMIN") {
           redirectTo = "/admin"
         } else if (role === "Security" || role === "SECURITY_PERSONNEL") {
