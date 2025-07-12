@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm, useWatch } from "react-hook-form"
@@ -91,6 +91,81 @@ export function ReportIncidentForm() {
   const incidents = useAuthStore((state)=> state.incidents)
 const [searchResults, setSearchResults] = useState<any[]>([]);
 const [searching, setSearching] = useState(false);
+const [showCamera, setShowCamera] = useState(false);
+const videoRef = useRef(null);
+const canvasRef = useRef(null);
+
+const startCamera = async () => {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    if (videoRef.current) {
+      videoRef.current.srcObject = stream;
+    }
+  } catch (err) {
+    console.error("Camera error:", err);
+    toast({ title: "Camera access failed", variant: "destructive" });
+  }
+};
+
+const handleFileChange = (e) => {
+  const files = Array.from(e.target.files || []);
+  let newFiles = [...selectedMedia, ...files];
+
+  if (newFiles.length > 3) {
+    toast({
+      title: "Too many files",
+      description: "You can only upload up to 3 media files.",
+      variant: "destructive"
+    });
+    newFiles = newFiles.slice(0, 3);
+  }
+
+  setSelectedMedia(newFiles);
+  form.setValue(
+    "media",
+    newFiles.map(file => ({ name: file.name, type: file.type }))
+  );
+  form.trigger("media");
+  e.target.value = "";
+};
+
+
+const stopCamera = () => {
+  const stream = videoRef.current?.srcObject;
+  if (stream && stream.getTracks) {
+    stream.getTracks().forEach((track) => track.stop());
+  }
+  setShowCamera(false);
+};
+
+const capturePhoto = () => {
+  const video = videoRef.current;
+  const canvas = canvasRef.current;
+  if (!video || !canvas) return;
+
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  canvas.toBlob((blob) => {
+    if (!blob) return;
+    const file = new File([blob], `photo-${Date.now()}.jpg`, { type: "image/jpeg" });
+    const newFiles = [...selectedMedia, file].slice(0, 3);
+
+    setSelectedMedia(newFiles);
+    form.setValue(
+      "media",
+      newFiles.map((f) => ({ name: f.name, type: f.type }))
+    );
+    form.trigger("media");
+    stopCamera();
+  }, "image/jpeg");
+};
+
+useEffect(() => {
+  if (showCamera) startCamera();
+}, [showCamera]);
 
 
 const form = useForm<z.infer<typeof formSchema>>({
@@ -650,41 +725,40 @@ useEffect(() => {
               <FormLabel>Upload Media (optional, max 3)</FormLabel>
               <div className="flex gap-2">
                 {/* Camera */}
-                <label className="cursor-pointer flex flex-col items-center">
-                  <span className="text-xs mb-1 font-semibold flex items-center gap-1">
-        <Camera className="h-5 w-5 font-bold text-primary" /> Camera
-      </span>
-                  <input
-                    type="file"
-                    accept="image/*,video/*,audio/*"
-                    capture="environment"
-                    multiple
-                    hidden
-                    onChange={e => {
-                      const files = Array.from(e.target.files || []);
-                      let newFiles = [...selectedMedia, ...files];
-                      if (newFiles.length > 3) {
-                        toast({
-                          title: "Too many files",
-                          description: "You can only upload up to 3 media files.",
-                          variant: "destructive"
-                        });
-                        newFiles = newFiles.slice(0, 3);
-                      }
-                      setSelectedMedia(newFiles);
-                      form.setValue(
-                        "media",
-                        newFiles.map(file => ({
-                          name: file.name,
-                          type: file.type
-                        }))
-                      );
-                      form.trigger("media");
-                      e.target.value = "";
-                    }}
-                  />
-               
-                </label>
+                <div className="cursor-pointer flex flex-col items-center">
+  <label
+  className="cursor-pointer flex flex-row items-center justify-center "
+  onClick={() => {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    );
+
+    if (isMobile) {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*,video/*";
+      input.capture = "environment"; // Rear camera hint
+      input.style.display = "none";
+
+      input.onchange = (e) => {
+        const files = Array.from((e.target as HTMLInputElement)?.files || []);
+        handleFileChange({ target: { files } });
+        document.body.removeChild(input);
+      };
+
+      document.body.appendChild(input);
+      input.click();
+    } else {
+      setShowCamera(true); // Open desktop webcam modal
+    }
+  }}
+>
+  <Camera className="h-6 w-6 text-primary" />
+  <span className="text-xs mt-1 font-semibold">Take Photo</span>
+</label>
+
+</div>
+
                 {/* Gallery/File */}
                 <label className="cursor-pointer flex flex-col items-center">
                   <span className="text-xs mb-1 font-semibold flex items-center gap-1">
@@ -756,6 +830,38 @@ useEffect(() => {
                   />
                 
                 </label>
+
+
+                {showCamera && (
+  <div className="fixed inset-0 z-50 bg-black bg-opacity-60 flex items-center justify-center">
+    <div className="bg-white p-4 rounded-lg relative w-[600px] max-w-[95vw]">
+      <h3 className="text-lg font-semibold mb-2">Take a Photo</h3>
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        className="w-full rounded-md"
+      />
+      <canvas ref={canvasRef} className="hidden" />
+      <div className="flex justify-between mt-3">
+        <button
+          onClick={capturePhoto}
+          className="bg-primary text-white py-2 px-4 rounded-md flex items-center"
+        >
+          <Camera className="h-4 w-4 mr-2" /> Capture
+        </button>
+        <button
+          onClick={stopCamera}
+          className="py-2 px-4 rounded-md border border-gray-300"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
               </div>
               <FormDescription>Attach up to 3 media files (images, audio, or video).</FormDescription>
               <div className="flex gap-2 mt-2 flex-wrap">
