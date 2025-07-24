@@ -295,11 +295,11 @@ export function AdminDashboard() {
         })
       }
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error?.message || "Failed to delete user.",
-        variant: "destructive"
-      })
+      // toast({
+        // title: "Error",
+      //   description: error?.message || "Failed to delete user.",
+      //   variant: "destructive"
+      // })
     }
   }
 
@@ -320,11 +320,11 @@ export function AdminDashboard() {
         });
       }
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error?.message || "Failed to assign incident.",
-        variant: "destructive"
-      });
+      // toast({
+      //   title: "Error",
+      //   description: error?.message || "Failed to assign incident.",
+      //   variant: "destructive"
+      // });
     }
   }
 
