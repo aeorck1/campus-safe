@@ -250,7 +250,7 @@ useEffect(() => {
             style={heroAnimation}
             className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold mb-4 sm:mb-6 text-white drop-shadow-lg"
           >
-            Campus Incident Reporting Platform
+            Secure-UI: Crowd sourced campus security reporting
           </animated.h1>
           <animated.p
             style={useSpring({

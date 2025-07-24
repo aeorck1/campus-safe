@@ -394,6 +394,7 @@ useEffect(() => {
   onKeyDown={e => {
     if (
       e.key === "Enter" &&
+      e.target.tagName !== "TEXTAREA" && // Allow Enter in textareas
       // Prevent Enter from submitting if not all required fields are valid
       (!form.formState.isValid || isButtonDisabled || isDuplicate || isStep2Disabled)
     ) {
@@ -411,6 +412,10 @@ useEffect(() => {
             </div>
 
             {/* Show anonymous info if not authenticated */}
+<p className="text-s text-muted-foreground mb-2">
+  <span className="text-red-500">*</span> Indicates a required field
+</p>
+
             {(!isAuthenticated || form.watch("anonymous")) && (
               <div className="mb-4 p-3 rounded-md bg-yellow-50 border border-yellow-300 text-yellow-800 flex items-center gap-2 border-l-4">
                 <AlertTriangle className="h-5 w-5 text-yellow-500" />
@@ -467,7 +472,7 @@ useEffect(() => {
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Incident Title</FormLabel>
+                  <FormLabel>Incident Title<span className="text-red-500">*</span></FormLabel>
                   <FormControl>
                     <Input placeholder="Brief title describing the incident" {...field} />
                   </FormControl>
@@ -487,7 +492,7 @@ useEffect(() => {
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>Description<span className="text-red-500">*</span></FormLabel>
                   <FormControl>
                     <Textarea placeholder="Describe what happened in detail" className="min-h-[120px]" {...field} />
                   </FormControl>
@@ -504,7 +509,7 @@ useEffect(() => {
               name="severity"
               render={({ field }) => (
                 <FormItem className="space-y-3">
-                  <FormLabel>Severity Level</FormLabel>
+                  <FormLabel>Severity Level<span className="text-red-500">*</span></FormLabel>
                   <FormControl>
                     <RadioGroup
                       onValueChange={field.onChange}
@@ -546,13 +551,21 @@ useEffect(() => {
             />
 
      <div className="pt-4 flex justify-end">
+      
   <TooltipProvider>
     <Tooltip>
       <TooltipTrigger asChild>
         <span>
           <Button
             type="button"
-            onClick={() => setStep(2)}
+            onClick={() => {
+              setStep(2);
+              window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+              });
+            }}
+            
             disabled={isButtonDisabled || isDuplicate}
           >
             Next Step
@@ -573,20 +586,22 @@ useEffect(() => {
         )}
 
         {step === 2 && (
-          <div className="space-y-6">
+          <div className="space-y-6" id="report-location-categories">
             <div className="flex items-center space-x-2">
               <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
                 2
               </div>
               <h2 className="text-xl font-semibold">Location & Categories</h2>
             </div>
-
+<p className="text-s text-muted-foreground mb-2">
+  <span className="text-red-500">*</span> Indicates a required field
+</p>
             <FormField
               control={form.control}
               name="location"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Location</FormLabel>
+                  <FormLabel>Location<span className="text-red-500">*</span></FormLabel>
                   <FormControl>
                     <div className="flex flex-col space-y-1 relative">
                       <div className="flex space-x-2">
@@ -685,8 +700,8 @@ useEffect(() => {
               name="tags"
               render={() => (
                 <FormItem>
-                  <div className="mb-4">
-                    <FormLabel className="text-base">Categories</FormLabel>
+                  <div className="mb-4" id="report-categories">
+                    <FormLabel className="text-base">Categories<span className="text-red-500">*</span></FormLabel>
                     <FormDescription>Select all categories that apply to this incident</FormDescription>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
@@ -912,8 +927,13 @@ useEffect(() => {
         <span>
           <Button
             type="button"
-            onClick={() => setStep(3)}
-            // disabled={isButtonDisabled}
+            onClick={() => {setStep(3)
+              window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+              });
+            }}
+            
             disabled={isStep2Disabled}
           >
             Next Step
@@ -934,7 +954,7 @@ useEffect(() => {
         )}
 
         {step === 3 && (
-          <div className="space-y-6">
+          <div className="space-y-6" id="report-preview">
             <div className="flex items-center space-x-2">
               <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
                 3
@@ -947,9 +967,7 @@ useEffect(() => {
               name="anonymous"
               render={({ field }) => (
                 <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                  {/* <FormControl>
-                    <Checkbox checked={field.value} onCheckedChange={field.onChange} disabled={!isAuthenticated} />
-                  </FormControl> */}
+               
                   <div className="space-y-1 leading-none">
                     <FormLabel>Submit this report anonymously</FormLabel>
                     <FormDescription>
@@ -981,6 +999,7 @@ useEffect(() => {
                   <div>
                     <h4 className="text-sm font-medium">Location</h4>
                     <p className="text-sm text-muted-foreground">{form.watch("location") || "Not provided"}</p>
+                  
                   </div>
                   <div>
                     <h4 className="text-sm font-medium">Severity</h4>
