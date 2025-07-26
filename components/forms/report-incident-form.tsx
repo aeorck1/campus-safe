@@ -749,39 +749,48 @@ onClick={(e) => {
   );
 
   if (isMobile) {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*,video/*";
-    input.capture = "environment";
-    input.style.display = "none";
+    <input
+                    type="file"
+                    accept="image/*,video/*,audio/*"
+                    multiple
+                    hidden
+                    onChange={e => {
+                      const files = Array.from(e.target.files || []);
+                      let newFiles = [...selectedMedia, ...files];
+                      if (newFiles.length > 3) {
+                        toast({
+                          title: "Too many files",
+                          description: "You can only upload up to 3 media files.",
+                          variant: "destructive"
+                        });
+                        newFiles = newFiles.slice(0, 3);
+                      }
+                      setSelectedMedia(newFiles);
+                      form.setValue(
+                        "media",
+                        newFiles.map(file => ({
+                          name: file.name,
+                          type: file.type
+                        }))
+                      );
+                      form.trigger("media");
+                      e.target.value = "";
+                    }}
+                  />
 
-    input.onchange = (e: Event) => {
-      const target = e.target as HTMLInputElement;
-      const files = [...(target?.files ?? [])];
-
-      if (files.length > 0) {
-        console.log("Mobile camera files selected:", files);
-        handleFileChange({ target: { files } });
-      } else {
-        console.log("No files selected from mobile camera");
-      }
-
-      document.body.removeChild(input);
-    };
-
-    try {
-      document.body.appendChild(input);
-      input.click();
-    } catch (error) {
-      console.error("Error triggering mobile camera input:", error);
-      toast({
-        title: "Camera Error",
-        description: "Failed to access camera. Please try again.",
-        variant: "destructive",
-      });
-    }
+    // try {
+    //   document.body.appendChild(input);
+    //   input.click();
+    // } catch (error) {
+    //   console.error("Error triggering mobile camera input:", error);
+    //   toast({
+    //     title: "Camera Error",
+    //     description: "Failed to access camera. Please try again.",
+    //     variant: "destructive",
+    //   });
+    // }
   } else {
-    console.log("Opening desktop webcam modal");
+    
     setShowCamera(true);
   }
 }}
