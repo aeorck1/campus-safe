@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import dynamic from "next/dynamic"
-import { AlertTriangle, ArrowLeft, Clock, MapPin, MessageSquare, Share2, ThumbsUp, ThumbsDown, User } from "lucide-react"
+import { AlertTriangle, ArrowLeft, Clock, MapPin, MessageSquare, Share2, ThumbsUp, ThumbsDown, User, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -33,7 +33,8 @@ export function IncidentDetails({ id }: { id: string }) {
   const [comment, setComment] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [upvoted, setUpvoted] = useState(false)
-  const [downvoted, setDownvoted] = useState (false)
+  const [downvoted, setDownvoted] = useState(false)
+  const [loading, setLoading] = useState(true) // <-- Add loading state
 
 // Find the incident by ID
 // Find the incident by ID
@@ -46,19 +47,27 @@ const loggedIn= useAuthStore((state) => state.user) !== null;
 
 useEffect(() => {
   const fetchIncident = async () => {
+    setLoading(true); // Start loading
     if (typeof incidents === "function") {
       const result = await incidents();
-      // console.log("Incidents fetched:", result)
       if (result && result.success && Array.isArray(result.data)) {
         const found = result.data.find((inc: any) => inc.id === id);
-      
         setIncident(found);
-        // console.log("Foind ths",found)
       }
     }
+    setLoading(false); // End loading
   };
   fetchIncident();
 }, [incidents, id]);
+
+if (loading) {
+  return (
+    <div className="flex flex-col items-center justify-center py-24">
+      <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+      <span className="text-lg text-muted-foreground">Loading incident...</span>
+    </div>
+  );
+}
 
 if (!incident) {
   return (
