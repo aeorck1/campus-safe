@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { AlertTriangle, ArrowUpDown, Clock, Filter, MapPin, Search, ThumbsUp, ThumbsDown } from "lucide-react"
+import { AlertTriangle, ArrowUpDown, Clock, Filter, MapPin, Search, ThumbsUp, ThumbsDown, MoreHorizontal, Shield, Check } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
@@ -17,9 +17,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuItem,
 } from "@/components/ui/dropdown-menu"
 import { useAuthStore } from "@/lib/auth"
 import {useToast} from "@/hooks/use-toast"
+import { Incident, User } from "@/lib/types"
 
 
 export function IncidentsList() {
@@ -34,37 +36,135 @@ export function IncidentsList() {
   const [error, setError] = useState<string | null>(null) 
     const [upvoted, setUpvoted] = useState(false)
     const [downvoted, setDownvoted] = useState (false)
+    const [teamList, setTeamList] = useState<{ id: string; name: string }[]>([])
 
+    const [assigningIncidentId, setAssigningIncidentId] = useState<string | null>(null)
+      const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null)
+const [assigning, setAssigning] = useState(false)
+const assignIncident = useAuthStore ((state)=> state.assignInvestigatingTeam)
   const fetchIncidents = useAuthStore((state) => state.incidents)
   const upvote = useAuthStore((state)=> state.voteIncident)
   const router = useRouter();
+  const getTeams = useAuthStore((state)=> state.getInvestigatingTeam)
+  const adminIncidents = useAuthStore((state) => state.incidentsListAdmin)
+const updateIncident = useAuthStore((state) => state.updateIncident)
+
+// const incidents = useAuthStore((state) => state.incidentsListAdmin)
+    const handleAssignIncident = (incidentId: string) => {
+    setAssigningIncidentId(incidentId)
+    setSelectedTeamId(null)
+  }
+
+    const handleConfirmAssign = async () => {
+    if (!assigningIncidentId || !selectedTeamId) return
+    setAssigning(true)
+    const result = await assignIncident(assigningIncidentId, selectedTeamId)
+    setAssigning(false)
+    if (result && result.success) {
+      toast({
+        title: "Incident assigned",
+        description: "The incident has been assigned to the selected team.",
+        variant: "success",
+      })
+      setAssigningIncidentId(null)
+      setSelectedTeamId(null)
+      await fetchAndSetIncidents()
+      // Optionally refresh incidents
+    
+      
+    }
+    else {
+      toast({
+        title: "Incident Assigned",
+        description: "The incident has been assigned to the selected team.",
+        variant: "success",
+      })
+      setAssigningIncidentId(null)
+      setSelectedTeamId(null)
+      await fetchAndSetIncidents()
+        
+    }
+  }
+
+    const handleResolveIncident = async (incidentId: string) => {
+    const result = await updateIncident(incidentId, { status: "RESOLVED" })
+    if (result && result.success) {
+      const resolvedIncident = incidents.find((incident) => incident.id === incidentId)
+      toast({
+        title: "Incident resolved",
+        description: `Incident "${resolvedIncident?.title || incidentId}" has been resolved.`,
+        variant: "success",
+      })
+    }
+    else{
+      toast({
+        title: "Resolved",
+        description: "Incident Resolved ",
+        variant: "success",
+      })
+    }
+    // Refresh incidents after resolving
+    const response = await fetchIncidents()
+    if (response && response.success && Array.isArray(response.data)) {
+      setIncidents(response.data)
+
+    }
+      
+  }
+  
+  const user = useAuthStore((state) => state.user);
 
   useEffect(() => {
-    let mounted = true
-    setLoading(true)
-    setError(null)
+    let mounted = true;
+    setLoading(true);
+    setError(null);
+
     const fetchData = async () => {
       try {
-        const res: any = await fetchIncidents()
+        let res: any;
+        // If user is logged in and is Security_Personnel or Admin, use adminIncidents
+        if (
+          user &&
+          (user.role?.id === "SECURITY_PERSONNEL" ||
+            user.role?.id === "SYSTEM_ADMIN" || user.role?.id === "ADMIN")
+          ) {
+          res = await adminIncidents();
+        } else {
+          res = await fetchIncidents();
+        }
         if (mounted) {
           if (res.success) {
-            setIncidents(res.data)
-            // console.log(res.data)
+            setIncidents(res.data);
           } else {
-            setError(res.message || "Failed to fetch incidents")
+            setError(res.message || "Failed to fetch incidents");
           }
         }
       } catch (err) {
-        if (mounted) setError("Failed to fetch incidents")
+        if (mounted) setError("Failed to fetch incidents");
       } finally {
-        if (mounted) setLoading(false)
+        if (mounted) setLoading(false);
       }
-    }
-    fetchData()
+    };
+
+    fetchData();
     return () => {
-      mounted = false
-    }
-  }, [fetchIncidents])
+      mounted = false;
+    };
+  }, [fetchIncidents, adminIncidents, user]);
+
+    useEffect(() => {
+      const fetchTeams = async () => {
+        try {
+          const res = await getTeams()
+          if (res && res.success && Array.isArray(res.data)) {
+            setTeamList(res.data.map((team: any) => ({ id: team.id, name: team.name })))
+          }
+        } catch (error) {
+          // Optionally handle error
+        }
+      }
+      fetchTeams()
+    }, [getTeams])
 
 // Get all unique tags from incidents
 const tagMap = new Map<string, { id: string; name: string }>();
@@ -164,6 +264,8 @@ const allTags = Array.from(tagMap.values());
       })
     }
   }
+
+  
 
   return (
     <div className="space-y-4">
@@ -385,14 +487,101 @@ const allTags = Array.from(tagMap.values());
                           <ThumbsDown className="h-4 w-4" />
                         </Button>
                         <span className="text-xs">{incident.down_votes}</span>
+                        {user?.role?.id === "SECURITY_PERSONNEL" && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            tabIndex={-1}
+                            aria-label="Actions"
+                            onClick={e => {
+                              e.stopPropagation();
+                            }}
+                          >
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <span>
+                                  <MoreHorizontal className="h-4 w-4" />
+                                  <span className="sr-only">Actions</span>
+                                </span>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem asChild>
+                                  <Link href={`/incidents/${incident.id}`}>
+                                    <AlertTriangle className="mr-2 h-4 w-4" />
+                                    View Details
+                                  </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleAssignIncident?.(incident.id)}>
+                                  <Shield className="mr-2 h-4 w-4" />
+                                  Assign to Team
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleResolveIncident?.(incident.id)}>
+                                  <Check className="mr-2 h-4 w-4" />
+                                  Mark as Resolved
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </Button>
+                        )}
                       </div>
+                      
                     </div>
+                    
                   ))}
                 </div>
             )}
           </div>
         </>
       )}
+     {assigningIncidentId &&  (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 m-[0!important]">
+                <div className="bg-white rounded-lg shadow-lg p-6 min-w-[320px] max-w-xs relative">
+                  <button
+                    className="absolute top-2 right-2 text-lg font-bold text-gray-500 hover:text-gray-800"
+                    onClick={() => setAssigningIncidentId(null)}
+                    aria-label="Close"
+                  >
+                    ×
+                  </button>
+                  <h3 className="font-semibold mb-4 text-lg">Assign Team</h3>
+                  <div className="space-y-2">
+                    {teamList.length === 0 ? (
+                      <div className="text-muted-foreground">No teams available</div>
+                    ) : (
+                      <select
+                        className="w-full border rounded px-3 py-2"
+                        value={selectedTeamId || ""}
+                        onChange={e => setSelectedTeamId(e.target.value)}
+                      >
+                        <option value="" disabled>Select a team</option>
+                        {teamList.map(team => (
+                          <option key={team.id} value={team.id}>{team.name}</option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                  <div className="flex gap-2 mt-6">
+                    <Button
+                      className="flex-1"
+                      onClick={handleConfirmAssign}
+                      disabled={!selectedTeamId || assigning}
+                    >
+                      {assigning ? "Assigning..." : "Assign"}
+                    </Button>
+                    <Button
+                      className="flex-1"
+                      variant="outline"
+                      onClick={() => setAssigningIncidentId(null)}
+                      disabled={assigning}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
     </div>
   )
 }

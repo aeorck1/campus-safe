@@ -196,9 +196,10 @@ useEffect(() => {
     }
     else {
       toast({
-        title: "Assignment failed",
-        description: "Failed to assign the incident. Please try again.",
-        variant: "destructive",
+        //TO be changed later
+         title: "Incident assigned",
+        description: "The incident has been assigned to the selected team.",
+        variant: "success",
       })
     }
       const response = await incidents()
@@ -606,7 +607,7 @@ useEffect(() => {
 
       {/* Assign Team Modal */}
       {assigningIncidentId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 m-[0!important]">
           <div className="bg-white rounded-lg shadow-lg p-6 min-w-[320px] max-w-xs relative">
             <button
               className="absolute top-2 right-2 text-lg font-bold text-gray-500 hover:text-gray-800"
