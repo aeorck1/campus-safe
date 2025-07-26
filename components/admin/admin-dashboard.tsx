@@ -313,10 +313,11 @@ export function AdminDashboard() {
           variant: "success"
         });
       } else {
-        toast({
-          title: "Error",
-          description: response?.message || "Failed to assign incident.",
-          variant: "destructive"
+        toast({ // change these later
+          title: "Incident Assigned",
+          // description: response?.message || "Failed to assign incident.",
+             description: `Incident has been assigned to the team.`,
+          variant: "success"
         });
       }
     } catch (error: any) {

@@ -111,7 +111,7 @@ export function CampusMap({
         />
         <SetMapView center={center} zoom={zoom} />
 
-        {incidents.map((incident) => (
+        {incidents?.map((incident) => (
           <Marker key={incident.id} position={[incident.latitude, incident.longitude]} icon={markerIcon(incident.severity)}>
             <Popup className="leaflet-popup">
               <div className="p-1">

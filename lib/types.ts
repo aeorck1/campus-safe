@@ -40,7 +40,7 @@ export type User = {
   username: string // Optional for API login
   profile_picture: string
   bio: string // Optional bio field
-  role: string // Adjust based on your role type
+  role: string | any // Adjust based on your role type
   key?: string // Unique key for React lists
   number_of_reported_incidents?: number // Optional field for reported incidents
   notifications_enabled?: boolean // Optional field for notification preferences
@@ -167,7 +167,7 @@ export type AuthState = {
   ) => Promise<{ success: boolean; message: string }>
   loginWithApi: (
     credentials: Login
-  ) => Promise<{ success: boolean; message: string }>
+  ) => Promise<{ success: boolean; message:string | any; data?: User }>
   setAccessToken: (refreshToken: RefreshToken) => Promise<{ success: boolean; data?: any; message?: string }>
   // Chat Endpoints
 

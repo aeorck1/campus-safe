@@ -368,7 +368,13 @@ useEffect(() => {
                   {filteredIncidents
                     .filter((incident) => incident.status !== "RESOLVED")
                     .map((incident) => (
-                      <TableRow key={incident.id}>
+                      <TableRow
+                        key={incident.id}
+                        className="cursor-pointer hover:bg-orange-50"
+                        onClick={() => {
+                          window.location.href = `/incidents/${incident.id}`;
+                        }}
+                      >
                         <TableCell>
                           <div className="flex items-center gap-3">
                             <div
@@ -394,8 +400,8 @@ useEffect(() => {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>{incident.location}</TableCell>
-                        <TableCell>
+                        <TableCell onClick={e => e.stopPropagation()}>{incident.location}</TableCell>
+                        <TableCell onClick={e => e.stopPropagation()}>
                           <Badge
                             variant={
                               incident.status === "RESOLVED"
@@ -408,19 +414,19 @@ useEffect(() => {
                             {incident.status}
                           </Badge>
                         </TableCell>
-                        <TableCell>
+                        <TableCell onClick={e => e.stopPropagation()}>
                           <div className="flex items-center">
                             <Clock className="mr-1 h-3 w-3 text-muted-foreground" />
-                            <span className="text-sm">{incident.date_created?
-                          new Date(incident.date_created).toLocaleDateString("en-GB", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          }) : "N/A" 
-                          }</span>
+                            <span className="text-sm">{incident.date_created ?
+                              new Date(incident.date_created).toLocaleDateString("en-GB", {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              }) : "N/A"
+                            }</span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right" onClick={e => e.stopPropagation()}>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="icon">

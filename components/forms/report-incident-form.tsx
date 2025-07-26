@@ -21,10 +21,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Alert } from "@/components/ui/alert"
 
 
-
-
-
-
 const formSchema = z.object({
   title: z.string().min(5, {
     message: "Title must be at least 5 characters.",
@@ -115,11 +111,12 @@ const handleFileChange = (e) => {
     toast({
       title: "Too many files",
       description: "You can only upload up to 3 media files.",
-      variant: "destructive"
+      variant: "destructive",
     });
     newFiles = newFiles.slice(0, 3);
   }
 
+  console.log("Updating selectedMedia with files:", newFiles); // Debug log
   setSelectedMedia(newFiles);
   form.setValue(
     "media",
@@ -139,8 +136,8 @@ const stopCamera = () => {
 };
 
 const capturePhoto = () => {
-  const video = videoRef.current;
-  const canvas = canvasRef.current;
+  const video:any = videoRef.current;
+  const canvas:any = canvasRef.current;
   if (!video || !canvas) return;
 
   canvas.width = video.videoWidth;
@@ -148,16 +145,16 @@ const capturePhoto = () => {
   const ctx = canvas.getContext("2d");
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-  canvas.toBlob((blob) => {
+  canvas.toBlob((blob:any) => {
     if (!blob) return;
     const file = new File([blob], `photo-${Date.now()}.jpg`, { type: "image/jpeg" });
     const newFiles = [...selectedMedia, file].slice(0, 3);
 
     setSelectedMedia(newFiles);
-    form.setValue(
-      "media",
-      newFiles.map((f) => ({ name: f.name, type: f.type }))
-    );
+    // form.setValue(
+    //   "media",
+    //   newFiles.map((f) => ({ name: f.name, type: f.type }))
+    // );
     form.trigger("media");
     stopCamera();
   }, "image/jpeg");
@@ -257,6 +254,7 @@ const handleLocationSearch = async (query: string) => {
       if (selectedMedia && selectedMedia.length > 0) {
         selectedMedia.forEach((file) => {
           formData.append("media", file);
+        console.log(`Appened media file: ${file.name}`) // Log the file name
         });
       }
       const result = await report(formData);
@@ -363,7 +361,6 @@ toast({
 };
 
 
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [selectedMedia, setSelectedMedia] = useState<File[]>([]);
   // Duplicate detection state
 const [isDuplicate, setIsDuplicate] = useState(false)
@@ -378,11 +375,11 @@ useEffect(() => {
   }
 }, [form.watch("title"), incidentTitles])
   return ( 
-       
+     
     <Form {...form}>
       
       <form
-  onSubmit={form.handleSubmit((values) => {
+      onSubmit={form.handleSubmit((values) => {
     if (values.anonymous) {
       onSubmitAnonymous(values)
     } else {
@@ -394,7 +391,8 @@ useEffect(() => {
   onKeyDown={e => {
     if (
       e.key === "Enter" &&
-      e.target.tagName !== "TEXTAREA" && // Allow Enter in textareas
+      e.target.tagName !== "TEXTAREA" && 
+      // Allow Enter in textareas
       // Prevent Enter from submitting if not all required fields are valid
       (!form.formState.isValid || isButtonDisabled || isDuplicate || isStep2Disabled)
     ) {
@@ -412,9 +410,9 @@ useEffect(() => {
             </div>
 
             {/* Show anonymous info if not authenticated */}
-<p className="text-s text-muted-foreground mb-2">
-  <span className="text-red-500">*</span> Indicates a required field
-</p>
+            <p className="text-s text-muted-foreground mb-2">
+              <span className="text-red-500">*</span> Indicates a required field
+            </p>
 
             {(!isAuthenticated || form.watch("anonymous")) && (
               <div className="mb-4 p-3 rounded-md bg-yellow-50 border border-yellow-300 text-yellow-800 flex items-center gap-2 border-l-4">
@@ -743,30 +741,46 @@ useEffect(() => {
                 <div className="cursor-pointer flex flex-col items-center">
   <label
   className="cursor-pointer flex flex-row items-center justify-center "
-  onClick={() => {
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-      navigator.userAgent
-    );
+ onClick={(e) => {
+  e.stopPropagation(); // Prevent click bubbling to form
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent
+  );
 
-    if (isMobile) {
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = "image/*,video/*";
-      input.capture = "environment"; // Rear camera hint
-      input.style.display = "none";
+  if (isMobile) {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*,video/*";
+    input.capture = "environment";
+    input.style.display = "none";
 
-      input.onchange = (e) => {
-        const files = Array.from((e.target as HTMLInputElement)?.files || []);
+    input.onchange = (e) => {
+      const files = Array.from((e.target as HTMLInputElement)?.files || []);
+      if (files.length > 0) {
+        console.log("Mobile camera files selected:", files); // Debug log
         handleFileChange({ target: { files } });
-        document.body.removeChild(input);
-      };
+      } else {
+        console.log("No files selected from mobile camera"); // Debug log
+      }
+      document.body.removeChild(input);
+    };
 
+    try {
       document.body.appendChild(input);
       input.click();
-    } else {
-      setShowCamera(true); // Open desktop webcam modal
+    } catch (error) {
+      console.error("Error triggering mobile camera input:", error);
+      toast({
+        title: "Camera Error",
+        description: "Failed to access camera. Please try again.",
+        variant: "destructive",
+      });
     }
-  }}
+  } else {
+    console.log("Opening desktop webcam modal"); // Debug log
+    setShowCamera(true);
+  }
+}}
 >
   <Camera className="h-6 w-6 text-primary" />
   <span className="text-xs mt-1 font-semibold">Take Photo</span>
@@ -859,18 +873,20 @@ useEffect(() => {
       />
       <canvas ref={canvasRef} className="hidden" />
       <div className="flex justify-between mt-3">
-        <button
+        <Button
+          type="button"
           onClick={capturePhoto}
           className="bg-primary text-white py-2 px-4 rounded-md flex items-center"
         >
           <Camera className="h-4 w-4 mr-2" /> Capture
-        </button>
-        <button
+        </Button>
+        <Button
+          type="button"
           onClick={stopCamera}
           className="py-2 px-4 rounded-md border border-gray-300"
         >
           Cancel
-        </button>
+        </Button>
       </div>
     </div>
   </div>
@@ -954,7 +970,7 @@ useEffect(() => {
         )}
 
         {step === 3 && (
-          <div className="space-y-6" id="report-preview">
+          <div className="space-y-6">
             <div className="flex items-center space-x-2">
               <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
                 3
