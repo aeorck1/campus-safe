@@ -5,7 +5,7 @@ export type Incident = {
     title: string
     description: string
     location: string
-    status: "ACTIVE" | "RESOLVED" | "INVESTIGATING"
+    status: "ACTIVE" | "RESOLVED" | "INVESTIGATING" | "ALL"
     severity: "LOW" | "MEDIUM" | "HIGH"
     date_created: string
     date_updated: string
@@ -145,6 +145,8 @@ export interface AddUser {
   username: string,
   password: string
 }
+
+export type Status = "ACTIVE" | "RESOLVED" | "INVESTIGATING" | "ALL"
 
 export type Comment = {
   object_id: string,

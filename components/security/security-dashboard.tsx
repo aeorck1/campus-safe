@@ -40,7 +40,7 @@ const CampusMap = dynamic(() => import("@/components/map/campus-map").then((mod)
 export function SecurityDashboard() {
   const { toast } = useToast()
   const [searchQuery, setSearchQuery] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
+  const [statusFilter, setStatusFilter] = useState("ALL")
   const [severityFilter, setSeverityFilter] = useState("all")
   const [sortBy, setSortBy] = useState("newest")
 
@@ -63,7 +63,9 @@ export function SecurityDashboard() {
   })
 
 
-  const incidents = useAuthStore((state) => state.incidents)
+  const incidents = useAuthStore((state) => state.incidentsListAdmin)
+  const [incidentState, setIncidentState] = useState("Active Incidents")
+  const [incidentSubState, setIncidentSubState] = useState("Incidents requiring security team attention")
 
 useEffect(() => {
   const fetchStats = async () =>{
@@ -125,7 +127,7 @@ useEffect(() => {
         incident.location.toLowerCase().includes(searchQuery.toLowerCase())
 
       // Status filter
-      const matchesStatus = statusFilter === "all" || incident.status === statusFilter
+      const matchesStatus = statusFilter === "ALL" || incident.status === statusFilter
 
       // Severity filter
       const matchesSeverity = severityFilter === "all" || incident.severity === severityFilter
@@ -242,7 +244,7 @@ useEffect(() => {
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="ALL">All Statuses</SelectItem>
                 <SelectItem value="ACTIVE">Active</SelectItem>
                 <SelectItem value="INVESTIGATING">Investigating</SelectItem>
                 <SelectItem value="RESOLVED">Resolved</SelectItem>
@@ -287,7 +289,12 @@ useEffect(() => {
 
         <TabsContent value="active" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Card className="border-campus-primary/30 bg-campus-primary/10 shadow-lg">
+            <Card className="border-campus-primary/30 bg-campus-primary/10 shadow-lg cursor-pointer"
+            onClick={() => {
+              setStatusFilter("ALL")
+              setIncidentState("All Incidents")
+              setIncidentSubState("All Incidents")
+            }}>
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg text-blue-900">Total Incidents</CardTitle>
                 <CardDescription className="text-blue-800">Total number of incidents</CardDescription>
@@ -297,7 +304,12 @@ useEffect(() => {
               </CardContent>
             </Card>
 
-            <Card className="border-campus-warning/30 bg-campus-warning/10 shadow-lg">
+            <Card className="border-campus-warning/30 bg-campus-warning/10 shadow-lg cursor-pointer"
+            onClick={() => {
+              setStatusFilter("INVESTIGATING")
+              setIncidentState("Incidents Under Investigation")
+              setIncidentSubState("Incidents Currently Under Investigation")
+            }}>
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg text-yellow-900">Under Investigation</CardTitle>
                 <CardDescription className="text-yellow-800">Currently being addressed</CardDescription>
@@ -307,7 +319,12 @@ useEffect(() => {
               </CardContent>
             </Card>
 
-            <Card className=" bg-green-200 border-green-400/70 shadow-lg">
+            <Card className=" bg-green-200 border-green-400/70 shadow-lg cursor-pointer"
+            onClick={() => {
+              setStatusFilter("RESOLVED")
+              setIncidentState("Resolved Today")
+              setIncidentSubState("Incidents Resolved Today")
+            }}>
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg text-green-900">Recently Resolved</CardTitle>
                 <CardDescription className="text-green-800">Incidents Resolved Today</CardDescription>
@@ -350,8 +367,8 @@ useEffect(() => {
 
           <Card>
             <CardHeader>
-              <CardTitle>Active Incidents</CardTitle>
-              <CardDescription>Incidents requiring security team attention</CardDescription>
+              <CardTitle>{incidentState}</CardTitle>
+              <CardDescription>{incidentSubState}</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
@@ -366,13 +383,15 @@ useEffect(() => {
                 </TableHeader>
                 <TableBody>
                   {filteredIncidents
-                    .filter((incident) => incident.status !== "RESOLVED")
+                    .filter(incident => incident.status !== "RESOLVED")
                     .map((incident) => (
+                      
                       <TableRow
                         key={incident.id}
                         className="cursor-pointer hover:bg-orange-50"
                         onClick={() => {
-                          window.location.href = `/incidents/${incident.id}`;
+                          window.location.href = `/incidents/${incident.id}`
+                        
                         }}
                       >
                         <TableCell>
