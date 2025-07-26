@@ -741,8 +741,9 @@ useEffect(() => {
                 <div className="cursor-pointer flex flex-col items-center">
   <label
   className="cursor-pointer flex flex-row items-center justify-center "
- onClick={(e) => {
-  e.stopPropagation(); // Prevent click bubbling to form
+onClick={(e) => {
+  e.stopPropagation();
+
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
     navigator.userAgent
   );
@@ -754,14 +755,17 @@ useEffect(() => {
     input.capture = "environment";
     input.style.display = "none";
 
-    input.onchange = (e) => {
-      const files = Array.from((e.target as HTMLInputElement)?.files || []);
+    input.onchange = (e: Event) => {
+      const target = e.target as HTMLInputElement;
+      const files = [...(target?.files ?? [])];
+
       if (files.length > 0) {
-        console.log("Mobile camera files selected:", files); // Debug log
+        console.log("Mobile camera files selected:", files);
         handleFileChange({ target: { files } });
       } else {
-        console.log("No files selected from mobile camera"); // Debug log
+        console.log("No files selected from mobile camera");
       }
+
       document.body.removeChild(input);
     };
 
@@ -777,10 +781,11 @@ useEffect(() => {
       });
     }
   } else {
-    console.log("Opening desktop webcam modal"); // Debug log
+    console.log("Opening desktop webcam modal");
     setShowCamera(true);
   }
 }}
+
 >
   <Camera className="h-6 w-6 text-primary" />
   <span className="text-xs mt-1 font-semibold">Take Photo</span>
