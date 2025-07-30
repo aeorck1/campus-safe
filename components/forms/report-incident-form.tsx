@@ -88,6 +88,7 @@ export function ReportIncidentForm() {
 const [searchResults, setSearchResults] = useState<any[]>([]);
 const [searching, setSearching] = useState(false);
 const [showCamera, setShowCamera] = useState(false);
+const [showMobileCamera, setShowMobileCamera] = useState(false);
 const videoRef = useRef(null);
 const canvasRef = useRef(null);
 
@@ -103,28 +104,29 @@ const startCamera = async () => {
   }
 };
 
-const handleFileChange = (e) => {
-  const files = Array.from(e.target.files || []);
-  let newFiles = [...selectedMedia, ...files];
+const [cameraFacingMode, setCameraFacingMode] = useState<"user" | "environment">("environment");
 
-  if (newFiles.length > 3) {
-    toast({
-      title: "Too many files",
-      description: "You can only upload up to 3 media files.",
-      variant: "destructive",
+const startMobileCamera = async (facingMode: "user" | "environment" = cameraFacingMode) => {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode }
     });
-    newFiles = newFiles.slice(0, 3);
+    if (videoRef.current) {
+      videoRef.current.srcObject = stream;
+    }
+  } catch (err) {
+    console.error("Camera error:", err);
+    toast({ title: "Camera access failed", variant: "destructive" });
   }
-
-  console.log("Updating selectedMedia with files:", newFiles); // Debug log
-  setSelectedMedia(newFiles);
-  form.setValue(
-    "media",
-    newFiles.map(file => ({ name: file.name, type: file.type }))
-  );
-  form.trigger("media");
-  e.target.value = "";
 };
+
+const switchCamera = () => {
+  const newMode = cameraFacingMode === "environment" ? "user" : "environment";
+  setCameraFacingMode(newMode);
+  stopCamera();
+  setTimeout(() => startCamera(newMode), 200); // restart camera with new mode
+};
+
 
 
 const stopCamera = () => {
@@ -151,10 +153,6 @@ const capturePhoto = () => {
     const newFiles = [...selectedMedia, file].slice(0, 3);
 
     setSelectedMedia(newFiles);
-    // form.setValue(
-    //   "media",
-    //   newFiles.map((f) => ({ name: f.name, type: f.type }))
-    // );
     form.trigger("media");
     stopCamera();
   }, "image/jpeg");
@@ -163,6 +161,10 @@ const capturePhoto = () => {
 useEffect(() => {
   if (showCamera) startCamera();
 }, [showCamera]);
+
+useEffect(() => {
+  if (showMobileCamera) startMobileCamera();
+}, [showMobileCamera]);
 
 
 const form = useForm<z.infer<typeof formSchema>>({
@@ -778,7 +780,7 @@ onClick={(e) => {
     //                 }}
     //               />
 
-    setShowCamera(true);
+    setShowMobileCamera(true);
 
     // try {
     //   document.body.appendChild(input);
@@ -908,6 +910,36 @@ onClick={(e) => {
   </div>
 )}
 
+{showMobileCamera && (
+  <div className="fixed inset-0 z-50 bg-black bg-opacity-60 flex items-center justify-center">
+    <div className="bg-white p-4 rounded-lg relative w-[600px] max-w-[95vw]">
+      <h3 className="text-lg font-semibold mb-2">Take a Photo</h3>
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        className="w-full rounded-md"
+      />
+      <canvas ref={canvasRef} className="hidden" />
+      <div className="flex justify-between mt-3">
+        <Button
+          type="button"
+          onClick={capturePhoto}
+          className="bg-primary text-white py-2 px-4 rounded-md flex items-center"
+        >
+          <Camera className="h-4 w-4 mr-2" /> Capture
+        </Button>
+        <Button
+          type="button"
+          onClick={stopCamera}
+          className="py-2 px-4 rounded-md border border-gray-300"
+        >
+          Cancel
+        </Button>
+      </div>
+    </div>
+  </div>
+)}
 
               </div>
               <FormDescription>Attach up to 3 media files (images, audio, or video).</FormDescription>
