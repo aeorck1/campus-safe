@@ -749,34 +749,36 @@ onClick={(e) => {
   );
 
   if (isMobile) {
-    <input
-                    type="file"
-                    accept="image/*,video/*,audio/*"
-                    multiple
-                    hidden
-                    onChange={e => {
-                      const files = Array.from(e.target.files || []);
-                      let newFiles = [...selectedMedia, ...files];
-                      if (newFiles.length > 3) {
-                        toast({
-                          title: "Too many files",
-                          description: "You can only upload up to 3 media files.",
-                          variant: "destructive"
-                        });
-                        newFiles = newFiles.slice(0, 3);
-                      }
-                      setSelectedMedia(newFiles);
-                      form.setValue(
-                        "media",
-                        newFiles.map(file => ({
-                          name: file.name,
-                          type: file.type
-                        }))
-                      );
-                      form.trigger("media");
-                      e.target.value = "";
-                    }}
-                  />
+    // <input
+    //                 type="file"
+    //                 accept="image/*,video/*,audio/*"
+    //                 multiple
+    //                 hidden
+    //                 onChange={e => {
+    //                   const files = Array.from(e.target.files || []);
+    //                   let newFiles = [...selectedMedia, ...files];
+    //                   if (newFiles.length > 3) {
+    //                     toast({
+    //                       title: "Too many files",
+    //                       description: "You can only upload up to 3 media files.",
+    //                       variant: "destructive"
+    //                     });
+    //                     newFiles = newFiles.slice(0, 3);
+    //                   }
+    //                   setSelectedMedia(newFiles);
+    //                   form.setValue(
+    //                     "media",
+    //                     newFiles.map(file => ({
+    //                       name: file.name,
+    //                       type: file.type
+    //                     }))
+    //                   );
+    //                   form.trigger("media");
+    //                   e.target.value = "";
+    //                 }}
+    //               />
+
+    setShowCamera(true);
 
     // try {
     //   document.body.appendChild(input);
