@@ -154,6 +154,7 @@ const capturePhoto = () => {
     setSelectedMedia(newFiles);
     form.trigger("media");
     stopCamera();
+    stopMobileCamera();
   }, "image/jpeg");
 };
 
