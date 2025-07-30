@@ -120,14 +120,13 @@ const startMobileCamera = async (facingMode: "user" | "environment" = cameraFaci
   }
 };
 
-const switchCamera = () => {
-  const newMode = cameraFacingMode === "environment" ? "user" : "environment";
-  setCameraFacingMode(newMode);
-  stopCamera();
-  setTimeout(() => startCamera(newMode), 200); // restart camera with new mode
+const stopMobileCamera = () => {
+  const stream = videoRef.current?.srcObject;
+  if (stream && stream.getTracks) {
+    stream.getTracks().forEach((track) => track.stop());
+  }
+  setShowMobileCamera(false);
 };
-
-
 
 const stopCamera = () => {
   const stream = videoRef.current?.srcObject;
@@ -931,7 +930,7 @@ onClick={(e) => {
         </Button>
         <Button
           type="button"
-          onClick={stopCamera}
+          onClick={stopMobileCamera}
           className="py-2 px-4 rounded-md border border-gray-300"
         >
           Cancel
