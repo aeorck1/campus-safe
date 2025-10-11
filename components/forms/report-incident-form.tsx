@@ -44,7 +44,7 @@ const formSchema = z.object({
   tags: z.array(z.string()).default([]),
   anonymous: z.boolean().default(false),
   contactInfo: z.string().email("Please enter a valid email address.").optional().or(z.literal("")),
-  media: z
+  images: z
     .array(
       z.object({
         name: z.string(),
