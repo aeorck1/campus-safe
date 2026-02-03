@@ -20,7 +20,7 @@ export function SiteFooter() {
             </span>
           </div>
           <p className="text-center text-sm text-muted-foreground md:text-left">
-            &copy; {new Date().getFullYear()} Secure UI. All rights reserved.
+            &copy; {new Date().getFullYear()} Secure UI. All rights reserved. Developed by AEO.
           </p>
         </div>
         <div className="flex items-center gap-6 text-sm text-muted-foreground">
