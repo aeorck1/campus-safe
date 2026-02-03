@@ -20,7 +20,15 @@ export function SiteFooter() {
             </span>
           </div>
           <p className="text-center text-sm text-muted-foreground md:text-left">
-            &copy; {new Date().getFullYear()} Secure UI. All rights reserved. Developed by AEO.
+            &copy; {new Date().getFullYear()} Secure UI. All rights reserved. Developed by{" "}
+            <a 
+              href="https://daniel-godwin.vercel.app" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors underline"
+            >
+              Godwin Daniel
+            </a>.
           </p>
         </div>
         <div className="flex items-center gap-6 text-sm text-muted-foreground">
